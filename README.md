@@ -27,12 +27,35 @@ La moneda base es el quetzal (GTQ). El conversor tiene únicamente **dólares a 
 
 1. **Core:** abre `finanzas-core/pom.xml` en IntelliJ y ejecuta `mvn clean install`.
 2. **App:** abre la carpeta `finanzas-app/` en Android Studio, sincroniza Gradle y ejecuta `app`.
+3. **Pruebas de Room:** con un emulador abierto, `.\gradlew.bat :app:connectedDebugAndroidTest` desde `finanzas-app`.
 
 El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`. Se necesita JDK 17 o superior. Las herramientas y dependencias que todavía no estén en caché requieren internet para descargarse.
 
 ## Estado real
 
-Último incremento cerrado: **1 — reglas del core**. Siguiente: **2 — Room v1 y operaciones atómicas**.
+Último incremento cerrado: **2 — Room v1 y operaciones atómicas**. Siguiente: **3 — Inicio y Formulario**.
+
+### Incremento 2 — Room v1 sobre SQLite
+
+| Comprobación | Estado | Detalle |
+|---|---|---|
+| Tablas `Usuario`, `Categoria`, `Transaccion`, DAO e implementaciones Room de los contratos | ✅ Creados y compilados | Recorrido y clases en el [mapa](docs/MAPA_DEL_CODIGO.md#3-app-persistencia-room-incremento-2) |
+| `mvn clean install` del core | ✅ Ejecutado | 54 pruebas, 0 fallos, `BUILD SUCCESS` (core sin cambios: 0.2.0) |
+| `assembleDebug` con Room 2.8.5, KSP 2.3.12 y desugaring | ✅ Ejecutado | `BUILD SUCCESSFUL` |
+| Esquema v1 exportado | ✅ Generado y versionado | `finanzas-app/app/schemas/gt.edu.umg.finanzas.app.datos.local.AppDatabase/1.json`: 3 tablas, 2 FK `RESTRICT`, 5 índices |
+| `connectedDebugAndroidTest` en emulador API 37 | ✅ Ejecutado | 14 pruebas, 0 fallos, 0 errores (informe XML de Gradle) |
+| Caso a (Q 70 → Q 80 → Q 100) y caso b (… → Q 0) | ✅ Probados en Room | `ServicioSobreRoomTest`, recorrido servicio → contrato → Room → SQLite |
+| Caso c: falla al guardar el saldo después de escribir el movimiento | ✅ Probado | Crear, editar y eliminar devuelven `ErrorAlmacenamiento`; movimientos y saldo sin cambios |
+| Caso d: cerrar y volver a abrir el archivo SQLite | ✅ Probado | `PersistenciaTest`: 2 movimientos y saldo Q 70 tras reabrir; sin duplicar usuario ni categorías |
+| Caso j: desborde del saldo en Room | ✅ Probado | `ErrorNegocio` antes de escribir; 0 movimientos y saldo intacto |
+| 1 usuario y 12 categorías aunque se inicialice varias veces | ✅ Probado | `InicializadorDatosTest` y `PersistenciaTest`; repetir no reinicia el saldo |
+| Claves foráneas activas | ✅ Probado | Rechazan `idCategoria` inexistente y borrar una categoría con movimientos |
+| Flow de saldo, totales, anillo y movimientos | ✅ Probado | Incluye una nueva emisión del resumen después de guardar |
+| Desugaring de `java.time` para minSdk 24 | ✅ Comprobado en el APK | `dexdump`: `Periodo` del core y `Mapeos` llaman a `j$.time.LocalDate` |
+| `java.time` ejecutándose en un dispositivo API 24–25 | ⏳ Pendiente | Solo hay imagen API 37 y no está instalado `sdkmanager` para descargar otra |
+| Arranque de la app real crea y siembra `finanzas.db` | ⏳ Pendiente | La app se instaló y abrió (`Status: ok`), pero no pude capturar la lista de bases ni la consulta con `sqlite3`; lo cubren las pruebas, no la app instalada |
+| Forzar el cierre de la app y conservar datos desde la interfaz | ⏳ Pendiente (Inc. 3) | Todavía no hay pantalla que registre movimientos |
+| Movimientos en USD | ⏳ Pendiente (Inc. 6) | La v1 los rechaza con `ErrorNegocio` en el campo moneda |
 
 ### Incremento 0 — conexión core → JAR → Android
 
@@ -54,7 +77,6 @@ El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`.
 | `dependencyInsight` resuelve `finanzas-core:0.2.0` | ✅ Ejecutado | Trae `kotlinx-coroutines-core` 1.10.2 de forma transitiva |
 | `assembleDebug` con 0.2.0 | ✅ Ejecutado | `BUILD SUCCESSFUL` |
 | El emulador muestra `finanzas-core 0.2.0 conectado…` | ✅ Ejecutado | AVD API 37 |
-| Uso de `java.time` del core en Android 7.0–7.1 (API 24–25) | ⏳ Pendiente (Inc. 2) | Necesita `coreLibraryDesugaring`; la app todavía no llama a esas clases |
-| Implementaciones Room de los contratos | ⏳ Pendiente (Inc. 2) | Las pruebas usan dobles en memoria |
+| Desugaring e implementaciones Room | ➡️ Resueltos en el Inc. 2 | Ver la tabla del incremento 2 |
 
 Cómo se ejecutaron las comprobaciones en esta computadora: Maven 3.9.16 incluido en IntelliJ IDEA con su JDK 25, y Gradle con el JDK de Android Studio. Los pasos están en la [guía](docs/GUIA_WINDOWS.md).

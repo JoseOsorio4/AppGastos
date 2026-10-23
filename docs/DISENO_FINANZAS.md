@@ -1,6 +1,6 @@
 # Diseño — App de finanzas personales (Kotlin · Android)
 
-> **Versión 3.3 · 23/10/2026.** Existen la pantalla de diagnóstico del Incremento 0 y las reglas del core del Incremento 1 (con pruebas). Las pantallas financieras, Room y las APIs todavía son diseño; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
+> **Versión 3.4 · 23/10/2026.** Existen la pantalla de diagnóstico del Incremento 0, las reglas del core del Incremento 1 y la persistencia Room v1 del Incremento 2, todas con pruebas. Las pantallas financieras y las APIs todavía son diseño; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
 > **Referencias revisadas:** captura de Canva y HTML compartidos en el chat; documentación Mi Pisto y guía de clase 14. La captura principal y las decisiones de adaptación están en [referencias/INTERFAZ.md](referencias/INTERFAZ.md). Los ejemplos del curso y del compañero sirven como apoyo; las reglas de este documento definen nuestro proyecto.
 > **Esqueletos y pseudocódigo** de este documento no están compilados.
 > Mapa del código y preguntas de defensa: **[MAPA_DEL_CODIGO.md](MAPA_DEL_CODIGO.md)**. Construcción en Windows: **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**.
@@ -195,7 +195,7 @@ app/src/main/java/gt/edu/umg/finanzas/app/
     Migraciones.kt                        [6] Migration(1,2) explícita
     Convertidores.kt                      [6] BigDecimal ↔ TEXT
     entidades/{UsuarioEntity, CategoriaEntity, TransaccionEntity}.kt   [2]
-    dao/{UsuarioDao, CategoriaDao, TransaccionDao}.kt                  [2]
+    dao/{UsuarioDao, CategoriaDao, TransaccionDao, MovimientoFila}.kt  [2]
     Mapeos.kt                             [2] entity ↔ dominio
     RepositorioUsuarioRoom.kt, RepositorioCategoriaRoom.kt, RepositorioTransaccionRoom.kt  [2]
     OperacionesMovimientoRoom.kt          [2] withTransaction: el límite atómico
@@ -295,7 +295,7 @@ app/src/main/res/
 **Índices:** `Transaccion(fechaEpochDay)`, `Transaccion(tipo, fechaEpochDay)` y `Transaccion(idCategoria)` (Room pide indexar la columna hija de una FK). Las sumas por período **no** cuestan lo mismo siempre: recorren las filas del intervalo, y los índices evitan recorrer toda la tabla.
 
 ### 6.2 Migraciones
-- `exportSchema = true` y el plugin Gradle de Room guarda `app/schemas/1.json`, `2.json`. Nunca `fallbackToDestructiveMigration`.
+- `exportSchema = true` y el plugin Gradle de Room guarda `app/schemas/gt.edu.umg.finanzas.app.datos.local.AppDatabase/1.json` (y `2.json` en el Inc. 6). Nunca `fallbackToDestructiveMigration`.
 - **`Migracion1a2` (Inc. 6), manual y explícita**, dentro de la transacción que Room abre para migrar:
   ```sql
   ALTER TABLE Transaccion ADD COLUMN monedaOriginal TEXT NOT NULL DEFAULT 'GTQ';
@@ -626,7 +626,7 @@ La combinación AGP 9.1.1, Gradle 9.3.1, JDK 17 y compileSdk 37 coincide con la 
 |---|---|---|
 | 0 | `androidx.appcompat:appcompat:1.7.1` | Activity y tema provisional |
 | 1 | `kotlinx-coroutines-core:1.10.2` (core); `junit-bom:5.14.4` + `junit-jupiter`, `kotlin-test-junit5:2.2.10` y `kotlinx-coroutines-test:1.10.2` (solo pruebas) | `Flow` en los contratos; pruebas. Se eligió 1.10.2 porque 1.11.0 exige `kotlin-stdlib` 2.2.20, más nuevo que el Kotlin 2.2.10 del core |
-| 2 | Room 2.8.5 (`runtime`, `ktx`, `compiler` con KSP 2.3.12, plugin Room para esquemas), `desugar_jdk_libs`, `room-testing`, AndroidX Test | Persistencia, `java.time` en API 24, pruebas de migración |
+| 2 | Room 2.8.5 (`room-runtime`, `room-compiler` con KSP 2.3.12, plugin `androidx.room` para esquemas), `desugar_jdk_libs:2.1.5`, `androidx.test:runner:1.7.0`, `androidx.test.ext:junit:1.3.0` | Persistencia, `java.time` en API 24, pruebas instrumentadas. No se añade `room-ktx`: desde Room 2.7 está vacío y `withTransaction` vive en `room-runtime`. `room-testing` (`MigrationTestHelper`) se añade en el Inc. 6, cuando exista una migración que probar |
 | 3 | Material Components, RecyclerView, `lifecycle-viewmodel-ktx`, `lifecycle-runtime-ktx`, `lifecycle-viewmodel-savedstate` | Interfaz, ViewModel, `repeatOnLifecycle`, `SavedStateHandle` |
 | 6 | Ninguna biblioteca; permiso `INTERNET` | HTTP y XML incluidos en Android |
 | 7 | `org.json:json` solo en pruebas locales | Las clases `org.json` de Android no funcionan en pruebas JVM |
@@ -652,7 +652,9 @@ Numeración trazable con la versión anterior. Tus 7 puntos corresponden así: 1
 
 ### 14.1 Casos con resultado conocido
 
-Ejecutados en el Inc. 1 con `mvn clean install`: a, b, f, g, h, la parte pura de e (US$ 10.00 × 7.66000 = 7660 y la tasa guardada como `"7.66000"`), i en el core y la parte pura de j. Las pruebas viven en `finanzas-core/src/test/kotlin/` y el mapa indica cuál cubre cada caso. Siguen pendientes c, d, la parte de Room de e y j (Inc. 2 y 6) y la interfaz de i (Inc. 6).
+Ejecutados en el Inc. 1 con `mvn clean install`: a, b, f, g, h, la parte pura de e (US$ 10.00 × 7.66000 = 7660 y la tasa guardada como `"7.66000"`), i en el core y la parte pura de j. Las pruebas viven en `finanzas-core/src/test/kotlin/` y el mapa indica cuál cubre cada caso. 
+
+Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b sobre Room, c (falla al guardar el saldo en crear, editar y eliminar), d (cerrar y reabrir el archivo) y el rollback de j. Siguen pendientes: d desde la interfaz (cerrar la app a la fuerza, Inc. 3), la parte de Room de e (Inc. 6) y la interfaz de i (Inc. 6).
 
 - **a.** Saldo inicial Q 0. Ingreso Q 100 → **Q 70** tras un gasto de Q 30. Editar el gasto a Q 20 → **Q 80**. Eliminar el gasto → **Q 100**.
 - **b.** Q 1,000 ingreso → Q 750 (gasto Q 250) → Q 700 (gasto editado a Q 300) → Q 1,300 (ese movimiento pasa a ingreso Q 300) → Q 300 (se borra el ingreso de Q 1,000) → **Q 0** (se borra el ingreso restante de Q 300).
@@ -669,7 +671,7 @@ Ejecutados en el Inc. 1 con `mvn clean install`: a, b, f, g, h, la parte pura de
 
 ## 15. Estado real
 
-El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. El Inc. 0 y el Inc. 1 están cerrados; el siguiente es el Inc. 2 (Room).
+El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. Los incrementos 0, 1 y 2 están cerrados; el siguiente es el Inc. 3 (Inicio y Formulario).
 
 ---
 
@@ -696,3 +698,4 @@ No habrá `ARQUITECTURA.md`, `GUIA_DEFENSA.md` ni `PLAN_INCREMENTOS.md` separado
 - **v3.1:** todo pasa al repositorio `AppGastos` (proyectos en la raíz, documentos en `docs/`); `README.md` y `AGENTS.md`; el estado real se mueve al README; §3.0 registra que las referencias visuales siguen sin recibirse.
 - **v3.2:** se revisan la captura y el HTML de Canva; se guarda la referencia visual y la guía para Kiro IDE. Se limitan las conversiones a dos direcciones GTQ/USD, se nombran los modelos de totales, se comprueba el saldo final antes de escribir y se precisan la reconstrucción y los comentarios.
 - **v3.3:** Inc. 1 implementado. `CalculoSaldo.aplicar` y `saldoDesde` devuelven `Resultado<Long>`, así el desborde es un `ErrorNegocio` antes de escribir. `Resultado` agrupa sus fallos en `Fallo` y `ErrorNegocio` lleva el campo con error. `ValidadorMovimiento.validar` recibe `idCategoriaAnterior` para conservar categorías archivadas al editar. Se añaden `CampoMovimiento`, `FiltroPeriodo` y `CategoriaInicial`, y se fijan las versiones de las dependencias del core.
+- **v3.4:** Inc. 2 implementado: entidades, DAO (con `MovimientoFila` para el JOIN de Operaciones), implementaciones Room de los contratos, `OperacionesMovimientoRoom`, `InicializadorDatos`, `Dependencias` y `FinanzasApp`. Se añade el índice `Transaccion(idUsuario)` porque Room pide indexar cada FK. La base v1 rechaza movimientos USD con `ErrorNegocio` hasta la v2. **Decisión pendiente para el Inc. 3:** `ServicioFinanzas` necesita un `ReconstructorSaldo`, pero `ReconstructorSaldoRoom` está planificado para el Inc. 5; hay que adelantarlo o definir cómo se construye el servicio mientras tanto.

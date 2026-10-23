@@ -3,6 +3,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     // AGP 9 incluye el soporte de Kotlin: no se aplica org.jetbrains.kotlin.android.
     alias(libs.plugins.android.application)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
 }
 
 android {
@@ -15,6 +17,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -27,6 +30,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // java.time (LocalDate del core y de los mapeos) no existe antes de API 26:
+        // el desugaring lo incluye en el APK para minSdk 24.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     buildFeatures {
@@ -40,7 +46,18 @@ kotlin {
     }
 }
 
+// Room escribe aquí el esquema de cada versión; app/schemas se versiona en Git.
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 dependencies {
     implementation(libs.finanzas.core)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
 }
