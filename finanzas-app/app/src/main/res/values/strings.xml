@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Finanzas</string>
+    <string name="titulo_conexion">Prueba de conexión con el core</string>
+</resources>

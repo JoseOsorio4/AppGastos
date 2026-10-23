@@ -1,0 +1,6 @@
+# gradlew debe conservar finales LF para ejecutarse en Linux/macOS; gradlew.bat, CRLF para Windows.
+gradlew      text eol=lf
+*.bat        text eol=crlf
+*.jar        binary
+*.png        binary
+*.webp       binary

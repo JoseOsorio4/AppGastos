@@ -1,0 +1,41 @@
+# Compilaciones
+target/
+build/
+out/
+*.class
+*.apk
+*.aab
+
+# Cachés de Gradle, Kotlin y del IDE
+.gradle/
+.kotlin/
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Configuración local de cada computadora (ruta del SDK)
+local.properties
+
+# Credenciales y claves de firma
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+.env
+*.pem
+
+# Bases de datos personales (los esquemas de Room en app/schemas/*.json SÍ se versionan)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Entregas comprimidas: se generan aparte, no forman parte del historial
+*.zip
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
