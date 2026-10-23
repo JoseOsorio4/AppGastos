@@ -3,7 +3,7 @@
 El proyecto continúa en este repositorio:
 https://github.com/JoseOsorio4/AppGastos
 
-La cuenta anterior ya dejó la estructura y el incremento 0. Para continuar se abre el mismo código; no se crea otro proyecto Android ni otra librería.
+El repositorio ya contiene la estructura, el incremento 0 (conexión core → Android) y el incremento 1 (reglas del core con pruebas). Para continuar se abre el mismo código; no se crea otro proyecto Android ni otra librería.
 
 ## 1. Obtener y abrir el repositorio
 
@@ -41,16 +41,16 @@ Copia este mensaje en un chat de Kiro IDE con AppGastos abierto:
 >
 > Solo se admiten GTQ y USD. El conversor tendrá exactamente dos direcciones: USD a GTQ y GTQ a USD. El saldo siempre se conserva en quetzales.
 >
-> Primero resume brevemente el estado real y continúa con el cierre del incremento 0 en esta computadora. Comprueba JDK, Maven y Android SDK. Construye e instala finanzas-core con mvn clean install; desde finanzas-app comprueba la dependencia con .\gradlew.bat :app:dependencyInsight --dependency finanzas-core --configuration debugRuntimeClasspath y construye con .\gradlew.bat :app:assembleDebug. Ejecuta la app en un emulador o dispositivo disponible y comprueba el mensaje recibido del JAR.
+> Primero resume brevemente el estado real del README y desarrolla únicamente el siguiente incremento pendiente según §14 del diseño. Antes de cambiar la app, comprueba que mvn clean install pase las pruebas del core y que .\gradlew.bat :app:assembleDebug termine correctamente.
 >
-> Corrige los errores concretos que aparezcan conservando el trabajo existente. Ajusta versiones solo ante una incompatibilidad comprobada. Si falta una herramienta o un acceso, informa del paso exacto pendiente y completa las verificaciones independientes disponibles.
+> Corrige los errores concretos que aparezcan conservando el trabajo existente. Ajusta versiones solo ante una incompatibilidad comprobada. Si falta una herramienta o un acceso, informa del paso exacto pendiente y completa las verificaciones independientes disponibles. No incluyas en el commit rutas de esta computadora, copias .bak ni configuración local del IDE.
 >
-> Al terminar, actualiza README.md y el mapa con lo comprobado; guarda los cambios con commit y push normal al repositorio conectado. Entrega los resultados, la rama y el enlace del commit. Cierra esta tarea en el incremento 0; el incremento 1 se implementará en la siguiente tarea.
+> Al terminar, actualiza README.md y el mapa con lo comprobado; guarda los cambios con commit y push normal al repositorio conectado. Entrega los resultados, la rama y el enlace del commit.
 
 ## 4. Punto de cierre
 
-El incremento 0 está terminado cuando Maven instala el JAR, Gradle resuelve la coordenada correcta, assembleDebug termina correctamente y la pantalla Android muestra el mensaje del core.
+Cada incremento termina cuando se observa lo indicado en la tabla de §14 del diseño. El incremento 0 (conexión) y el 1 (reglas del core, 54 pruebas) ya cumplen ese criterio; el siguiente es el 2 (Room v1).
 
-La aplicación financiera, Room y las APIs aún se implementarán por incrementos. Una revisión de documentación o una comprobación de archivos no sustituye esos resultados.
+Room, las pantallas financieras y las APIs aún se implementarán por incrementos. Una revisión de documentación o una comprobación de archivos no sustituye esos resultados.
 
 La guía detallada de compilación y errores está en [GUIA_WINDOWS.md](GUIA_WINDOWS.md). El [README](../README.md#estado-real) conserva el estado de las verificaciones.

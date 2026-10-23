@@ -15,8 +15,9 @@ captures/
 .externalNativeBuild/
 .cxx/
 
-# Configuración local de cada computadora (ruta del SDK)
+# Configuración local de cada computadora (ruta del SDK) y copias de respaldo
 local.properties
+*.bak
 
 # Credenciales y claves de firma
 *.jks

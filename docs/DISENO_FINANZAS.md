@@ -1,6 +1,6 @@
 # Diseño — App de finanzas personales (Kotlin · Android)
 
-> **Versión 3.2 · 23/10/2026.** Existe la pantalla de diagnóstico del Incremento 0. Las pantallas financieras, Room y las APIs todavía son diseño; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
+> **Versión 3.3 · 23/10/2026.** Existen la pantalla de diagnóstico del Incremento 0 y las reglas del core del Incremento 1 (con pruebas). Las pantallas financieras, Room y las APIs todavía son diseño; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
 > **Referencias revisadas:** captura de Canva y HTML compartidos en el chat; documentación Mi Pisto y guía de clase 14. La captura principal y las decisiones de adaptación están en [referencias/INTERFAZ.md](referencias/INTERFAZ.md). Los ejemplos del curso y del compañero sirven como apoyo; las reglas de este documento definen nuestro proyecto.
 > **Esqueletos y pseudocódigo** de este documento no están compilados.
 > Mapa del código y preguntas de defensa: **[MAPA_DEL_CODIGO.md](MAPA_DEL_CODIGO.md)**. Construcción en Windows: **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**.
@@ -149,9 +149,11 @@ src/main/kotlin/gt/edu/umg/finanzas/core/
     TipoMovimiento.kt                     [1] enum INGRESO, GASTO
     Transaccion.kt                        [1] sealed + Ingreso/Gasto; impactoEnSaldo()
     Categoria.kt                          [1] id, clave, nombre, tipo, activa
-    CategoriasIniciales.kt                [1] lista sembrada (clave, nombre, tipo)
+    CategoriasIniciales.kt                [1] CategoriaInicial (clave, nombre, tipo) y la lista sembrada
     Usuario.kt                            [1] saldoCentavos, reconstruccionPendiente
     DatosMovimiento.kt                    [1] lo escrito en el formulario, sin validar
+    CampoMovimiento.kt                    [1] campo que marca un error de validación
+    FiltroPeriodo.kt                      [1] enum DIA, SEMANA, MES, ANIO
     Periodo.kt                            [1] intervalo, filtros Día/Semana/Mes/Año, zona GT
     ResumenPeriodo.kt                     [1] saldo disponible + ingresos, gastos, resultado
     TotalesPeriodo.kt                     [1] ingresosCentavos y gastosCentavos, sin Pair
@@ -177,7 +179,7 @@ src/main/kotlin/gt/edu/umg/finanzas/core/
   resultado/Resultado.kt                  [1]
 src/test/kotlin/...                       [1] pruebas + dobles en memoria (fakes/)
 ```
-`Moneda`, `TasaCambio` y `ConversorMoneda` se crean en el Inc. 1 porque son reglas puras y se prueban ahí. La interfaz no ofrece USD hasta el Inc. 6.
+Todo el árbol anterior ya existe (Inc. 1). `Moneda`, `TasaCambio` y `ConversorMoneda` se crean en el Inc. 1 porque son reglas puras y se prueban ahí. La interfaz no ofrece USD hasta el Inc. 6. La descripción de cada clase y sus conexiones están en el [mapa del código](MAPA_DEL_CODIGO.md#2-core-qué-hace-cada-clase).
 
 ### 4.2 `finanzas-app/` — paquete `gt.edu.umg.finanzas.app`
 ```
@@ -329,7 +331,7 @@ app/src/main/res/
 - Se **rechaza** la coma, con el mensaje "Usa punto para los decimales". Así `12,50` nunca se convierte en `1250`.
 - También se rechazan el signo, los espacios internos, más de dos decimales y el cero.
 - Máximo por movimiento: 9,999,999.99 (`999_999_999` centavos), tanto en la moneda original como en el equivalente en Q.
-- Dentro de `withTransaction` se lee el saldo actual y se calcula el saldo final con `CalculoSaldo.aplicar(saldoActual, delta)`, que usa `Math.addExact`. Se escribe ese valor ya comprobado; no se delega la suma a un `UPDATE saldo = saldo + delta`. Un desborde revierte la operación.
+- Dentro de `withTransaction` se lee el saldo actual y se calcula el saldo final con `CalculoSaldo.aplicar(saldoActual, delta)`, que usa `Math.addExact`. Se escribe ese valor ya comprobado; no se delega la suma a un `UPDATE saldo = saldo + delta`. Un desborde devuelve `ErrorNegocio` antes de la primera escritura.
 
 ### 7.2 Tasa y conversión (`ConversorMoneda`)
 - `t` = **quetzales por 1 USD**, guardada como `BigDecimal` sin recortar.
@@ -433,7 +435,10 @@ suspend fun editar(id, datos, hoy): Resultado<Unit> =
       val usuario = usuarioDao.obtenerPorId(1) ?: throw EstadoInconsistente("usuario")
       val anterior = Mapeos.aDominio(anteriorEnt)
       val delta = CalculoSaldo.deltaEditar(anterior, nueva)
-      val saldoNuevo = CalculoSaldo.aplicar(usuario.saldoCentavos, delta)
+      val saldoNuevo = when (val saldo = CalculoSaldo.aplicar(usuario.saldoCentavos, delta)) {
+        is Resultado.Ok -> saldo.valor
+        is Resultado.Fallo -> return@withTransaction saldo   // desborde: todavía no se escribió nada
+      }
       if (transaccionDao.actualizar(Mapeos.aEntity(id, nueva)) != 1) throw EstadoInconsistente("transaccion")
       if (usuarioDao.actualizarSaldo(saldoNuevo) != 1) throw EstadoInconsistente("usuario")
       Resultado.Ok(Unit)
@@ -512,11 +517,12 @@ data class SegmentoGasto(val clave: String, val nombre: String, val totalCentavo
 // reglas (puras)
 object Dinero { fun desdeTexto(t: String): Resultado<Long>; fun formatear(c: Long, m: Moneda): String }
 object ConversorMoneda { fun usdAGtq(c: Long, t: TasaCambio): Long; fun gtqAUsd(c: Long, t: TasaCambio): Long }
-object ValidadorMovimiento { fun validar(d: DatosMovimiento, c: Categoria, hoy: LocalDate): Resultado<Transaccion> }
+object ValidadorMovimiento { fun validar(d: DatosMovimiento, c: Categoria, hoy: LocalDate,
+                                         idCategoriaAnterior: Long? = null): Resultado<Transaccion> }  // anterior: solo al editar
 object CalculoSaldo { fun deltaCrear(n: Transaccion): Long; fun deltaEditar(a: Transaccion, n: Transaccion): Long
                       fun deltaEliminar(a: Transaccion): Long
-                      fun aplicar(saldoActual: Long, delta: Long): Long
-                      fun saldoDesde(ts: Sequence<Transaccion>): Long }
+                      fun aplicar(saldoActual: Long, delta: Long): Resultado<Long>   // ErrorNegocio si desborda
+                      fun saldoDesde(ts: Sequence<Transaccion>): Resultado<Long> }
 
 // contratos: Flow para lo que se observa; suspend para lecturas puntuales y escrituras
 interface RepositorioUsuario { fun observarUsuario(): Flow<Usuario> }
@@ -546,9 +552,10 @@ class ServicioFinanzas(usuarios: RepositorioUsuario, categorias: RepositorioCate
   suspend fun eliminar(id: Long): Resultado<Unit>
   suspend fun reconstruirSaldo(): Resultado<Long> }
 ```
-- `Flow` viene de `kotlinx-coroutines-core`, una biblioteca JVM sin Android. El core la declara en el Inc. 1.
+- `Flow` viene de `kotlinx-coroutines-core` 1.10.2, una biblioteca JVM sin Android, declarada en el `pom.xml` del core.
 - Los fakes de prueba (`src/test/.../fakes`) implementan **estos** contratos y usan `ValidadorMovimiento` y `CalculoSaldo`, sin repetir los cálculos. Comparten un único almacén de prueba para que las lecturas, los movimientos y el saldo representen el mismo estado.
-- `Resultado` = `Ok`, `ErrorNegocio(mensaje)`, `NoEncontrado`, `ErrorAlmacenamiento(causa: Exception)`.
+- `Resultado` = `Ok` o un `Fallo`: `ErrorNegocio(mensaje, campo: CampoMovimiento?)`, `NoEncontrado`, `ErrorAlmacenamiento(causa: Exception)`. Agrupar los fallos permite propagarlos con un solo `is Resultado.Fallo -> return`; `campo` dice qué control marca el formulario.
+- `Transaccion` valida sus invariantes al construirse (monto entre 1 y 999 999 999 centavos, descripción de 1 a 60 caracteres), también al reconstruirse desde la base. `conId(id)` devuelve la misma transacción con el ID asignado al insertar.
 
 ---
 
@@ -605,20 +612,20 @@ class ServicioFinanzas(usuarios: RepositorioUsuario, categorias: RepositorioCate
 | Pieza | Valor | Estado |
 |---|---|---|
 | JDK que ejecuta Maven/Gradle | 17 o superior | requisito de AGP 9.1.1 (según sus notas) |
-| Bytecode del core y de Android | 11 (`<jvmTarget>` en Maven; `compileOptions` + `kotlin { compilerOptions }` en Android) | en los archivos del Inc. 0 |
-| Kotlin del core | 2.2.10; en Android lo trae AGP 9 (Kotlin integrado) | en los archivos |
-| Gradle wrapper / AGP | 9.3.1 / 9.1.1 | en los archivos |
-| minSdk / compileSdk / targetSdk | 24 / 37 / 36 | en los archivos |
-| `mavenLocal()` | `exclusiveContent` solo para `gt.edu.umg.finanzas` | en los archivos |
+| Bytecode del core y de Android | 11 (`<jvmTarget>` en Maven; `compileOptions` + `kotlin { compilerOptions }` en Android) | comprobado: clases del JAR 0.2.0 con versión 55 |
+| Kotlin del core | 2.2.10; en Android lo trae AGP 9 (Kotlin integrado) | compilado |
+| Gradle wrapper / AGP | 9.3.1 / 9.1.1 | `assembleDebug` correcto |
+| minSdk / compileSdk / targetSdk | 24 / 37 / 36 | ejecutado en emulador API 37; API 24 sin probar |
+| `mavenLocal()` | `exclusiveContent` solo para `gt.edu.umg.finanzas` | `dependencyInsight` resuelve `finanzas-core:0.2.0` |
 
-La combinación AGP 9.1.1, Gradle 9.3.1, JDK 17 y compileSdk 37 coincide con la [tabla oficial de compatibilidad](https://developer.android.com/build/releases/agp-9-1-0-release-notes). Esto comprueba la elección de versiones; la construcción real sigue pendiente en el README.
+La combinación AGP 9.1.1, Gradle 9.3.1, JDK 17 y compileSdk 37 coincide con la [tabla oficial de compatibilidad](https://developer.android.com/build/releases/agp-9-1-0-release-notes). La construcción real ya se comprobó; el detalle está en el README.
 
 **Dependencias por incremento.** La versión exacta de cada una se fija **al añadirla**, comprobándola en su página oficial. No se adelantan números que no pude verificar.
 
 | Inc. | Se añade | Para qué |
 |---|---|---|
 | 0 | `androidx.appcompat:appcompat:1.7.1` | Activity y tema provisional |
-| 1 | `kotlinx-coroutines-core` (core); JUnit 5 + `kotlin-test` + `kotlinx-coroutines-test` (pruebas del core) | `Flow` en los contratos; pruebas |
+| 1 | `kotlinx-coroutines-core:1.10.2` (core); `junit-bom:5.14.4` + `junit-jupiter`, `kotlin-test-junit5:2.2.10` y `kotlinx-coroutines-test:1.10.2` (solo pruebas) | `Flow` en los contratos; pruebas. Se eligió 1.10.2 porque 1.11.0 exige `kotlin-stdlib` 2.2.20, más nuevo que el Kotlin 2.2.10 del core |
 | 2 | Room 2.8.5 (`runtime`, `ktx`, `compiler` con KSP 2.3.12, plugin Room para esquemas), `desugar_jdk_libs`, `room-testing`, AndroidX Test | Persistencia, `java.time` en API 24, pruebas de migración |
 | 3 | Material Components, RecyclerView, `lifecycle-viewmodel-ktx`, `lifecycle-runtime-ktx`, `lifecycle-viewmodel-savedstate` | Interfaz, ViewModel, `repeatOnLifecycle`, `SavedStateHandle` |
 | 6 | Ninguna biblioteca; permiso `INTERNET` | HTTP y XML incluidos en Android |
@@ -643,7 +650,10 @@ Numeración trazable con la versión anterior. Tus 7 puntos corresponden así: 1
 | **6** | GTQ/USD con Banguat, `Migracion1a2`, conversor | Caso e y comprobación de i en la interfaz; la migración conserva datos (§6.2); sin red: GTQ funciona y USD indica la tasa guardada o que falta | SOAP/XML, `BigDecimal`, fotografía de la tasa |
 | **7** | Clima de Jutiapa y reflexión | Cada tarjeta muestra sus estados; desactivar la red no afecta las finanzas ni las demás tarjetas | Caché con fecha, errores recuperables |
 
-### 14.1 Casos con resultado conocido (criterios; aún no ejecutados)
+### 14.1 Casos con resultado conocido
+
+Ejecutados en el Inc. 1 con `mvn clean install`: a, b, f, g, h, la parte pura de e (US$ 10.00 × 7.66000 = 7660 y la tasa guardada como `"7.66000"`), i en el core y la parte pura de j. Las pruebas viven en `finanzas-core/src/test/kotlin/` y el mapa indica cuál cubre cada caso. Siguen pendientes c, d, la parte de Room de e y j (Inc. 2 y 6) y la interfaz de i (Inc. 6).
+
 - **a.** Saldo inicial Q 0. Ingreso Q 100 → **Q 70** tras un gasto de Q 30. Editar el gasto a Q 20 → **Q 80**. Eliminar el gasto → **Q 100**.
 - **b.** Q 1,000 ingreso → Q 750 (gasto Q 250) → Q 700 (gasto editado a Q 300) → Q 1,300 (ese movimiento pasa a ingreso Q 300) → Q 300 (se borra el ingreso de Q 1,000) → **Q 0** (se borra el ingreso restante de Q 300).
 - **c.** Una falla provocada en `actualizarSaldo` (DAO de prueba que lanza) después del INSERT: el número de movimientos y el saldo **no cambian**; el resultado es `ErrorAlmacenamiento`.
@@ -659,7 +669,7 @@ Numeración trazable con la versión anterior. Tus 7 puntos corresponden así: 1
 
 ## 15. Estado real
 
-El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. El Inc. 1 empieza cuando el emulador muestre el texto del core.
+El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. El Inc. 0 y el Inc. 1 están cerrados; el siguiente es el Inc. 2 (Room).
 
 ---
 
@@ -685,3 +695,4 @@ No habrá `ARQUITECTURA.md`, `GUIA_DEFENSA.md` ni `PLAN_INCREMENTOS.md` separado
 - **v3 (esta):** navegación de tres destinos con Activities; Inicio con período, resultado y anillo; observación con `Flow` de Room; GTQ/USD con fotografía de la tasa y `Migracion1a2`; Banguat, Open-Meteo y reflexión con caché; tema DayNight; `DatosMovimiento` con datos crudos validados en el core; categorías con `clave` y política para claves desconocidas; paquetes `ui/` y `datos/local|remoto|repositorios|preferencias`; `MAPA_DEL_CODIGO.md`.
 - **v3.1:** todo pasa al repositorio `AppGastos` (proyectos en la raíz, documentos en `docs/`); `README.md` y `AGENTS.md`; el estado real se mueve al README; §3.0 registra que las referencias visuales siguen sin recibirse.
 - **v3.2:** se revisan la captura y el HTML de Canva; se guarda la referencia visual y la guía para Kiro IDE. Se limitan las conversiones a dos direcciones GTQ/USD, se nombran los modelos de totales, se comprueba el saldo final antes de escribir y se precisan la reconstrucción y los comentarios.
+- **v3.3:** Inc. 1 implementado. `CalculoSaldo.aplicar` y `saldoDesde` devuelven `Resultado<Long>`, así el desborde es un `ErrorNegocio` antes de escribir. `Resultado` agrupa sus fallos en `Fallo` y `ErrorNegocio` lleva el campo con error. `ValidadorMovimiento.validar` recibe `idCategoriaAnterior` para conservar categorías archivadas al editar. Se añaden `CampoMovimiento`, `FiltroPeriodo` y `CategoriaInicial`, y se fijan las versiones de las dependencias del core.

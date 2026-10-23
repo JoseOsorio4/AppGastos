@@ -7,7 +7,7 @@
     <!-- Coordenadas de la librería que consume finanzas-app. -->
     <groupId>gt.edu.umg.finanzas</groupId>
     <artifactId>finanzas-core</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <packaging>jar</packaging>
 
     <name>finanzas-core</name>
@@ -16,16 +16,56 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>2.2.10</kotlin.version>
+        <!-- 1.10.2 pide kotlin-stdlib 2.1.0; 1.11.0 pediría 2.2.20, más nuevo que nuestro Kotlin 2.2.10. -->
+        <coroutines.version>1.10.2</coroutines.version>
+        <junit.version>5.14.4</junit.version>
         <!-- Bytecode generado. Debe coincidir con compileOptions/compilerOptions de finanzas-app.
              Es independiente del JDK que ejecuta Maven (17 recomendado). -->
         <bytecode.jvm>11</bytecode.jvm>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Alinea junit-jupiter con la versión que trae kotlin-test-junit5. -->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
             <version>${kotlin.version}</version>
+        </dependency>
+        <!-- Flow en los contratos: es una biblioteca JVM, no de Android. -->
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core</artifactId>
+            <version>${coroutines.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test-junit5</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-test</artifactId>
+            <version>${coroutines.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
