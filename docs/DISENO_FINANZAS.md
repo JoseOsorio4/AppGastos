@@ -1,7 +1,7 @@
 # Diseño — App de finanzas personales (Kotlin · Android)
 
-> **Versión 3.1 · 23/10/2026.** Fase de diseño: **no** hay pantallas, Room ni APIs implementadas. Lo único que existe en código es el Incremento 0, todavía **sin compilar con Maven/Gradle**; su estado real está en el [README](../README.md#estado-real).
-> **Material que no pude abrir:** las capturas de Gestor de gastos y el HTML de Canva **no llegaron al entorno** (§3.0). Tampoco `MiPisto_Documentacion.md`, `Texto pegado(3).txt` ni los ZIP y guías del curso. Lo que digo sobre ellos sale de tus mensajes.
+> **Versión 3.2 · 23/10/2026.** Existe la pantalla de diagnóstico del Incremento 0. Las pantallas financieras, Room y las APIs todavía son diseño; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
+> **Referencias revisadas:** captura de Canva y HTML compartidos en el chat; documentación Mi Pisto y guía de clase 14. La captura principal y las decisiones de adaptación están en [referencias/INTERFAZ.md](referencias/INTERFAZ.md). Los ejemplos del curso y del compañero sirven como apoyo; las reglas de este documento definen nuestro proyecto.
 > **Esqueletos y pseudocódigo** de este documento no están compilados.
 > Mapa del código y preguntas de defensa: **[MAPA_DEL_CODIGO.md](MAPA_DEL_CODIGO.md)**. Construcción en Windows: **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**.
 
@@ -70,11 +70,20 @@
 
 Referencia visual: verde oscuro `#1E463E`, amarillo de acento `#FFC229`, fondo claro `#F2F5F3`. Se recrea con componentes nativos (Material Components); **no** se usa WebView ni scripts de Canva.
 
-### 3.0 Contraste con las referencias visuales — pendiente
-- **Archivos recibidos:** ninguno. En la sesión del 23/10/2026 busqué las capturas y el HTML de Canva en todo el entorno y no aparecieron; los adjuntos del chat no llegaron como archivos. Por eso **no cambié** la descripción visual de §3.1–3.4: sigue basada en tus mensajes, no en la maqueta.
-- **Prioridad acordada:** Canva es la referencia principal; las capturas de Gestor de gastos, complementarias.
-- **Qué se contrastará** al subirlas (por ejemplo, a `docs/referencias/` del repositorio): orden de bloques en Inicio, forma y posición del botón amarillo, aspecto de los filtros de período, tarjetas y anillo; campos y accesos rápidos del Formulario; filas, encabezados y detalle en Operaciones; iconos y colores de categoría, y la versión oscura.
-- **Regla:** cada diferencia se anota aquí (pantalla, elemento, decisión) y en el XML/ID del mapa. La maqueta solo aporta apariencia e interacción. No se reutilizan sus arrays en memoria, tasas fijas, totales sintéticos por período, segmentos del anillo, cálculos con `Number` ni su eliminación sin confirmación: lista, totales y anillo saldrán de los mismos datos de SQLite.
+### 3.0 Contraste con las referencias visuales
+
+La captura de Inicio está guardada en [referencias/canva-inicio.png](referencias/canva-inicio.png). Se revisó también el HTML de Canva compartido en el chat para entender las tres vistas. [INTERFAZ.md](referencias/INTERFAZ.md) conserva la distribución y las diferencias acordadas; el HTML del editor y sus SDK no forman parte de la aplicación.
+
+| Elemento de la maqueta | Adaptación acordada |
+|---|---|
+| Cabecera verde, acentos amarillos, tarjetas claras y botón central Añadir | Se conservan con recursos de tema nativos |
+| Inicio, Añadir y Operaciones | Tres vistas; Formulario vuelve a su origen al guardar o cancelar |
+| Cuadrícula de categorías con icono y nombre | Se conserva; “Más” abre la lista completa |
+| Balance y anillo con valores de ejemplo | Saldo disponible histórico arriba; gasto del período en el centro del anillo |
+| Selector de varias monedas del HTML | Solo dos sentidos: USD → GTQ y GTQ → USD |
+| Datos en memoria y tasas fijas | SQLite/Room para movimientos y una tasa Banguat con fecha desde el Inc. 6 |
+
+La lista, las tarjetas y el anillo se alimentan de los mismos datos persistidos. En el Inc. 3 se comparará la pantalla Android con la referencia en el emulador; esa comprobación visual todavía está pendiente.
 
 ### 3.1 Barra inferior y regreso
 
@@ -111,8 +120,8 @@ flowchart LR
 | Personalizado | elegido | elegido (`desde ≤ hasta`, ambos inclusive) |
 
 ### 3.3 Formulario (`ui/formulario`) — crear y editar
-- `grupoTipo` (Ingreso/Gasto), `campoMonto`, `grupoMoneda` (GTQ/USD: **solo aparece desde el Inc. 6**), categorías de acceso rápido en chips + `chipMasCategorias` (abre la lista completa; "Más" nunca se guarda), `campoFecha`, `campoDescripcion` (obligatoria, 1–60 caracteres).
-- Accesos rápidos `chipSumar10/50/100`: suman en la moneda elegida y no evitan la validación.
+- `grupoTipo` (Ingreso/Gasto), `campoMonto`, `grupoMoneda` (GTQ/USD: **solo aparece desde el Inc. 6**), categorías en una cuadrícula de iconos y nombres + `botonMasCategorias` (abre la lista completa; "Más" nunca se guarda), `campoFecha`, `campoDescripcion` (obligatoria, 1–60 caracteres).
+- Accesos rápidos `chipSumar5/10/20/50`, como en la maqueta: suman en la moneda elegida y no evitan la validación.
 - Con USD: `textoConversionPrevia` = "Equivale a Q 94.56 · tasa 7.66285 · Banguat 21/10/2026" (valores de ejemplo).
 - `botonGuardar` queda deshabilitado mientras `guardando = true`; `botonCancelar` cierra sin guardar.
 - En edición, el título cambia a "Editar movimiento" y los campos vienen del movimiento guardado.
@@ -145,15 +154,18 @@ src/main/kotlin/gt/edu/umg/finanzas/core/
     DatosMovimiento.kt                    [1] lo escrito en el formulario, sin validar
     Periodo.kt                            [1] intervalo, filtros Día/Semana/Mes/Año, zona GT
     ResumenPeriodo.kt                     [1] saldo disponible + ingresos, gastos, resultado
+    TotalesPeriodo.kt                     [1] ingresosCentavos y gastosCentavos, sin Pair
+    TotalCategoria.kt                     [1] categoría y total antes de calcular porcentajes
     SegmentoGasto.kt                      [1] categoría, total, porcentaje del anillo
     MovimientoVista.kt                    [1] fila de Operaciones
     Moneda.kt                             [1] enum GTQ, USD
     TasaCambio.kt                         [1] GTQ por 1 USD, fecha de referencia, fuente
+    ConversionAplicada.kt                  [1] monto original USD y tasa histórica aplicada
   reglas/
     Dinero.kt                             [1] texto ↔ centavos y formato "Q 1,000.00"
     ConversorMoneda.kt                    [1] USD↔GTQ con BigDecimal y redondeo único
     ValidadorMovimiento.kt                [1] DatosMovimiento + Categoria → Transaccion o error
-    CalculoSaldo.kt                       [1] deltas de crear/editar/eliminar; suma de reconstrucción
+    CalculoSaldo.kt                       [1] deltas, aplicar al saldo y suma de reconstrucción
     DistribucionGastos.kt                 [1] totales por categoría → porcentajes del anillo
   contratos/
     RepositorioUsuario.kt                 [1]
@@ -234,7 +246,7 @@ app/src/main/res/
 | `reglas/Dinero.kt` | Convertir texto ↔ centavos y formatear `Q`/`US$` | `"12.50"` → `1250` / error | Validador, ViewModels |
 | `reglas/ConversorMoneda.kt` | USD↔GTQ con la tasa recibida y redondeo `HALF_UP` | centavos + `TasaCambio` → centavos | Validador, ViewModel del formulario, conversor |
 | `reglas/ValidadorMovimiento.kt` | Validar todo y construir `Ingreso`/`Gasto` con el monto base en Q | `DatosMovimiento`, `Categoria`, hoy → `Resultado<Transaccion>` | `OperacionesMovimientoRoom`, servicio (vista previa) |
-| `reglas/CalculoSaldo.kt` | Deltas de saldo con `Math.addExact` | transacciones → `Long` | `OperacionesMovimientoRoom`, reconstructor |
+| `reglas/CalculoSaldo.kt` | Deltas y saldo final con `Math.addExact` | saldo actual + delta → saldo nuevo | `OperacionesMovimientoRoom`, reconstructor |
 | `reglas/DistribucionGastos.kt` | Porcentajes que suman exactamente 100 % (mayor residuo) | totales por categoría → `List<SegmentoGasto>` | Servicio |
 | `dominio/Periodo.kt` | Límites de Día/Semana/Mes/Año/Personalizado | filtro + hoy → `Periodo` | ViewModels |
 | `servicio/ServicioFinanzas.kt` | Punto de entrada: observa resumen y listas, registra, edita, elimina, reconstruye | — | ViewModels |
@@ -249,7 +261,7 @@ app/src/main/res/
 | `Dependencias.kt` | Crear y conectar objetos; nada de reglas ni SQL | — | Activities (vía fábricas de ViewModel) |
 | `ui/*/…Activity.kt` | Inflar XML, enviar acciones al ViewModel, pintar el estado, navegar | eventos de vista → llamadas al ViewModel | — |
 | `ui/*/…ViewModel.kt` | Estado de su pantalla; llama al servicio o repositorio | acciones → `StateFlow<UiState>` | Activity |
-| `ui/inicio/GraficoAnilloView.kt` | Dibujar arcos con `Canvas`; no consulta ni calcula | `List<SegmentoAnillo>` → dibujo | `InicioActivity` |
+| `ui/inicio/GraficoAnilloView.kt` | Dibujar arcos y tomar colores de recursos; no consulta ni calcula totales financieros | `List<SegmentoGasto>` → dibujo | `InicioActivity` |
 
 ---
 
@@ -310,12 +322,14 @@ app/src/main/res/
 
 ## 7. Dinero y monedas
 
+`Moneda` contiene exactamente `GTQ` y `USD`. El conversor ofrece dos direcciones: **USD → GTQ** y **GTQ → USD**, con un selector de sentido. No se ofrecen conversiones a la misma moneda ni otras divisas. GTQ es siempre la moneda base del saldo y los reportes. La captura conserva los símbolos del prototipo; la interfaz Android utilizará Q y US$.
+
 ### 7.1 Entrada y límites (`Dinero.desdeTexto`)
 - Formato aceptado: dígitos con punto decimal opcional y hasta 2 decimales: `12`, `12.5`, `12.50`.
 - Se **rechaza** la coma, con el mensaje "Usa punto para los decimales". Así `12,50` nunca se convierte en `1250`.
 - También se rechazan el signo, los espacios internos, más de dos decimales y el cero.
 - Máximo por movimiento: 9,999,999.99 (`999_999_999` centavos), tanto en la moneda original como en el equivalente en Q.
-- El saldo se ajusta con `Math.addExact`: un desborde lanza una excepción y revierte la operación.
+- Dentro de `withTransaction` se lee el saldo actual y se calcula el saldo final con `CalculoSaldo.aplicar(saldoActual, delta)`, que usa `Math.addExact`. Se escribe ese valor ya comprobado; no se delega la suma a un `UPDATE saldo = saldo + delta`. Un desborde revierte la operación.
 
 ### 7.2 Tasa y conversión (`ConversorMoneda`)
 - `t` = **quetzales por 1 USD**, guardada como `BigDecimal` sin recortar.
@@ -366,7 +380,7 @@ classDiagram
 
 | Pilar | Dónde | Para qué |
 |---|---|---|
-| Encapsulamiento | Solo `ValidadorMovimiento` construye una `Transaccion`; solo `OperacionesMovimientoRoom` cambia `saldoCentavos` | Ningún monto inválido ni saldo arbitrario |
+| Encapsulamiento | `ValidadorMovimiento` construye desde el formulario y `Mapeos` reconstruye datos persistidos respetando las invariantes; el saldo cambia mediante operaciones atómicas de movimientos o reconstrucción | Montos válidos y escritura controlada |
 | Abstracción (interfaces) | `contratos/*` | El core no conoce Room; las pruebas usan fakes |
 | Herencia | `Ingreso` y `Gasto` heredan monto, fecha, categoría y conversión | Sin duplicar campos |
 | Polimorfismo | `CalculoSaldo`: `saldo + nuevo.impactoEnSaldo()` | El cálculo no pregunta "¿es gasto?" |
@@ -385,22 +399,23 @@ sequenceDiagram
   participant S as ServicioFinanzas
   participant Op as OperacionesMovimientoRoom
   participant DB as SQLite (Room)
-  participant I as InicioViewModel / OperacionesViewModel
+
   A->>VM: onMontoCambiado / onDescripcionCambiada… (cada campo)
   A->>VM: botonGuardar → guardar()
   VM->>VM: si guardando: ignorar · guardando = true
   VM->>S: registrar(datos)  [viewModelScope]
   S->>Op: crear(datos, hoy)
   Note over Op,DB: withTransaction INICIO
-  Op->>DB: leer categoría
+  Op->>DB: leer categoría y usuario
   Op->>Op: ValidadorMovimiento.validar → Transaccion (o error, sin escribir)
+  Op->>Op: CalculoSaldo.aplicar(saldoActual, impactoEnSaldo)
   Op->>DB: INSERT Transaccion
-  Op->>DB: UPDATE Usuario saldo += impactoEnSaldo()
+  Op->>DB: UPDATE Usuario con el saldo nuevo comprobado
   Note over Op,DB: COMMIT (cualquier excepción → ROLLBACK)
   Op-->>VM: Resultado.Ok
   VM-->>A: estado.guardadoExitoso = true → finish()
-  DB-->>I: Room emite de nuevo saldo, totales y lista
 ```
+Después del commit, los observadores de Room actualizan el saldo, los totales y la lista de las pantallas visibles.
 
 ### 9.2 Límite transaccional (pseudocódigo; se implementa en el Inc. 2)
 ```
@@ -410,19 +425,24 @@ suspend fun editar(id, datos, hoy): Resultado<Unit> =
       val anteriorEnt = transaccionDao.obtenerPorId(id) ?: return@withTransaction Resultado.NoEncontrado
       val categoria = categoriaDao.obtenerPorId(datos.idCategoria)
         ?: return@withTransaction Resultado.ErrorNegocio("Categoría inexistente")
-      val validacion = ValidadorMovimiento.validar(datos, categoria, hoy)
-      if (validacion !is Resultado.Ok) return@withTransaction validacion   // todavía no se escribió nada
+      val nueva = when (val validacion = ValidadorMovimiento.validar(datos, categoria, hoy)) {
+        is Resultado.Ok -> validacion.valor
+        is Resultado.ErrorNegocio -> return@withTransaction validacion
+        else -> throw EstadoInconsistente("resultado del validador")
+      }
+      val usuario = usuarioDao.obtenerPorId(1) ?: throw EstadoInconsistente("usuario")
       val anterior = Mapeos.aDominio(anteriorEnt)
-      val delta = CalculoSaldo.deltaEditar(anterior, validacion.valor)    // −efecto anterior + efecto nuevo
-      if (transaccionDao.actualizar(Mapeos.aEntity(id, validacion.valor)) != 1) throw EstadoInconsistente("transaccion")
-      if (usuarioDao.ajustarSaldo(delta) != 1) throw EstadoInconsistente("usuario")
+      val delta = CalculoSaldo.deltaEditar(anterior, nueva)
+      val saldoNuevo = CalculoSaldo.aplicar(usuario.saldoCentavos, delta)
+      if (transaccionDao.actualizar(Mapeos.aEntity(id, nueva)) != 1) throw EstadoInconsistente("transaccion")
+      if (usuarioDao.actualizarSaldo(saldoNuevo) != 1) throw EstadoInconsistente("usuario")
       Resultado.Ok(Unit)
     }
   } catch (e: CancellationException) { throw e }
     catch (e: Exception) { Resultado.ErrorAlmacenamiento(e) }   // ya se aplicó el ROLLBACK
 ```
-- **crear:** leer categoría → validar → `insertar` → `ajustarSaldo(+efecto)`.
-- **eliminar:** leer el anterior (si no existe, `NoEncontrado`) → `borrar` → `ajustarSaldo(−efecto)`.
+- **crear:** leer categoría y usuario → validar → comprobar saldo actual + efecto → insertar → escribir el saldo nuevo.
+- **eliminar:** leer movimiento y usuario → comprobar saldo actual − efecto anterior → borrar → escribir el saldo nuevo. Si el movimiento no existe, se devuelve `NoEncontrado` antes de escribir.
 - **Regla:** solo se retorna normalmente antes de la primera escritura o al terminar con éxito. Después de escribir, toda anomalía **lanza**, y el bloque completo se revierte.
 - El delta se calcula dentro del bloque, nunca en la pantalla. Si se pide editar un ID inexistente, se responde `NoEncontrado`; nunca se inserta.
 
@@ -463,12 +483,21 @@ GROUP BY c.idCategoria ORDER BY total DESC;
 - **Doble toque:** el estado `guardando` hace que `guardar()` ignore la segunda llamada, además de deshabilitar el botón.
 - **Éxito:** `guardadoExitoso = true` en el estado. La Activity hace `finish()` al verlo; si se recrea, lo ve de nuevo y vuelve a cerrar, lo cual es correcto. El ViewModel no guarda ninguna referencia a la Activity.
 
+### 9.6 Reconstrucción excepcional del saldo (Inc. 5)
+
+`ReconstructorSaldoRoom` abre una transacción, lee al usuario y comprueba `reconstruccionPendiente`. Si la bandera está apagada, devuelve el saldo actual sin modificarlo. Si está encendida, lee el historial una sola vez, calcula el saldo con `CalculoSaldo.saldoDesde` y asigna ese resultado junto con `reconstruccionPendiente = false` en la misma transacción. Nunca suma el resultado al saldo anterior ni utiliza `saldo == 0` como condición.
+
+Un fallo revierte saldo y bandera. Repetir la llamada tras el éxito no cambia los datos. Esta lectura completa es una operación excepcional; Inicio sigue leyendo el saldo guardado y agregaciones del intervalo.
+
 ---
 
 ## 10. Contratos y firmas esenciales (esqueletos)
 
 ```kotlin
 // dominio
+enum class Moneda { GTQ, USD }
+data class TotalesPeriodo(val ingresosCentavos: Long, val gastosCentavos: Long)
+data class TotalCategoria(val clave: String, val nombre: String, val totalCentavos: Long)
 data class DatosMovimiento(            // tal como lo escribió el usuario
   val tipo: TipoMovimiento, val montoTexto: String, val moneda: Moneda,
   val tasa: TasaCambio?,               // obligatoria si moneda == USD
@@ -485,7 +514,9 @@ object Dinero { fun desdeTexto(t: String): Resultado<Long>; fun formatear(c: Lon
 object ConversorMoneda { fun usdAGtq(c: Long, t: TasaCambio): Long; fun gtqAUsd(c: Long, t: TasaCambio): Long }
 object ValidadorMovimiento { fun validar(d: DatosMovimiento, c: Categoria, hoy: LocalDate): Resultado<Transaccion> }
 object CalculoSaldo { fun deltaCrear(n: Transaccion): Long; fun deltaEditar(a: Transaccion, n: Transaccion): Long
-                      fun deltaEliminar(a: Transaccion): Long; fun saldoDesde(ts: Sequence<Transaccion>): Long }
+                      fun deltaEliminar(a: Transaccion): Long
+                      fun aplicar(saldoActual: Long, delta: Long): Long
+                      fun saldoDesde(ts: Sequence<Transaccion>): Long }
 
 // contratos: Flow para lo que se observa; suspend para lecturas puntuales y escrituras
 interface RepositorioUsuario { fun observarUsuario(): Flow<Usuario> }
@@ -493,7 +524,7 @@ interface RepositorioCategoria { fun observarActivasPorTipo(t: TipoMovimiento): 
                                  suspend fun obtenerPorId(id: Long): Categoria? }
 interface RepositorioTransaccion {
   suspend fun obtenerPorId(id: Long): Transaccion?
-  fun observarTotales(p: Periodo): Flow<Pair<Long, Long>>                 // (ingresos, gastos)
+  fun observarTotales(p: Periodo): Flow<TotalesPeriodo>
   fun observarGastosPorCategoria(p: Periodo): Flow<List<TotalCategoria>>
   fun observarMovimientos(p: Periodo, tipo: TipoMovimiento?): Flow<List<MovimientoVista>> }
 interface OperacionesMovimiento {
@@ -516,7 +547,7 @@ class ServicioFinanzas(usuarios: RepositorioUsuario, categorias: RepositorioCate
   suspend fun reconstruirSaldo(): Resultado<Long> }
 ```
 - `Flow` viene de `kotlinx-coroutines-core`, una biblioteca JVM sin Android. El core la declara en el Inc. 1.
-- Los fakes de prueba (`src/test/.../fakes`) implementan **estos** contratos y usan `ValidadorMovimiento` y `CalculoSaldo`, sin repetir los cálculos.
+- Los fakes de prueba (`src/test/.../fakes`) implementan **estos** contratos y usan `ValidadorMovimiento` y `CalculoSaldo`, sin repetir los cálculos. Comparten un único almacén de prueba para que las lecturas, los movimientos y el saldo representen el mismo estado.
 - `Resultado` = `Ok`, `ErrorNegocio(mensaje)`, `NoEncontrado`, `ErrorAlmacenamiento(causa: Exception)`.
 
 ---
@@ -580,6 +611,8 @@ class ServicioFinanzas(usuarios: RepositorioUsuario, categorias: RepositorioCate
 | minSdk / compileSdk / targetSdk | 24 / 37 / 36 | en los archivos |
 | `mavenLocal()` | `exclusiveContent` solo para `gt.edu.umg.finanzas` | en los archivos |
 
+La combinación AGP 9.1.1, Gradle 9.3.1, JDK 17 y compileSdk 37 coincide con la [tabla oficial de compatibilidad](https://developer.android.com/build/releases/agp-9-1-0-release-notes). Esto comprueba la elección de versiones; la construcción real sigue pendiente en el README.
+
 **Dependencias por incremento.** La versión exacta de cada una se fija **al añadirla**, comprobándola en su página oficial. No se adelantan números que no pude verificar.
 
 | Inc. | Se añade | Para qué |
@@ -602,23 +635,25 @@ Numeración trazable con la versión anterior. Tus 7 puntos corresponden así: 1
 | Inc. | Objetivo | Terminado cuando se observa… | Debes poder explicar |
 |---|---|---|---|
 | **0** | Conexión core → JAR → Android | `mvn clean install` con `BUILD SUCCESS`; `dependencyInsight` muestra `finanzas-core:0.1.0`; `assembleDebug` correcto; el emulador muestra "finanzas-core 0.1.0 conectado…" | Maven → `.m2` → Gradle; proyecto/módulo/paquete; JDK vs bytecode |
-| **1** | Reglas del core (dinero, categorías, períodos, conversión, validación, saldo, contratos, fakes) | `mvn test` en verde con los casos de §14.1 a, b, f, g, h | Herencia, polimorfismo, centavos, redondeo |
-| **2** | Room v1, inicialización, operaciones atómicas | Pruebas instrumentadas: 1 usuario y 12 categorías tras abrir dos veces; casos a, b, c, d; `schemas/1.json` exportado | `withTransaction`, rollback, idempotencia, FK |
+| **1** | Reglas del core (dinero, categorías, períodos, conversión, validación, saldo, contratos, fakes) | `mvn test` en verde con los casos de §14.1 a, b, f, g, h y las partes puras de i y j | Herencia, polimorfismo, centavos, redondeo |
+| **2** | Room v1, inicialización, operaciones atómicas | Pruebas instrumentadas: 1 usuario y 12 categorías tras abrir dos veces; casos a, b, c, d y rollback de j; `schemas/1.json` exportado | `withTransaction`, rollback, idempotencia, FK |
 | **3** | Inicio + Formulario (solo GTQ), barra inferior, tema y colores | En el emulador: registrar y ver el saldo, los totales y el anillo actualizados al volver; rotar y cambiar de tema sin perder lo escrito; doble toque = un solo movimiento | MVVM, `Flow` de Room, `SavedStateHandle`, SQL `SUM`/`GROUP BY` |
 | **4** | Operaciones: lista, filtros, detalle, editar, eliminar con confirmación | Caso a completo desde la interfaz; cancelar la confirmación no borra; los filtros coinciden con Inicio | Formulario compartido, `NoEncontrado` |
 | **5** | Reconstrucción del saldo, selector de tema y comprobaciones locales | Una BD de prueba con bandera pendiente y saldo erróneo queda correcta, la bandera se apaga y repetir no cambia nada; el selector Sistema/Claro/Oscuro persiste | Dato derivado ≠ migración de esquema |
-| **6** | GTQ/USD con Banguat, `Migracion1a2`, conversor | Caso e; la migración conserva datos (§6.2); sin red: GTQ funciona y USD indica la tasa guardada o que falta | SOAP/XML, `BigDecimal`, fotografía de la tasa |
+| **6** | GTQ/USD con Banguat, `Migracion1a2`, conversor | Caso e y comprobación de i en la interfaz; la migración conserva datos (§6.2); sin red: GTQ funciona y USD indica la tasa guardada o que falta | SOAP/XML, `BigDecimal`, fotografía de la tasa |
 | **7** | Clima de Jutiapa y reflexión | Cada tarjeta muestra sus estados; desactivar la red no afecta las finanzas ni las demás tarjetas | Caché con fecha, errores recuperables |
 
 ### 14.1 Casos con resultado conocido (criterios; aún no ejecutados)
 - **a.** Saldo inicial Q 0. Ingreso Q 100 → **Q 70** tras un gasto de Q 30. Editar el gasto a Q 20 → **Q 80**. Eliminar el gasto → **Q 100**.
-- **b.** Q 1,000 ingreso → Q 750 (gasto Q 250) → Q 700 (gasto editado a Q 300) → Q 1,300 (ese movimiento pasa a ingreso Q 300) → Q 300 (se borra el ingreso de Q 1,000) → **Q 0**.
-- **c.** Una falla provocada en `ajustarSaldo` (DAO de prueba que lanza) después del INSERT: el número de movimientos y el saldo **no cambian**; el resultado es `ErrorAlmacenamiento`.
+- **b.** Q 1,000 ingreso → Q 750 (gasto Q 250) → Q 700 (gasto editado a Q 300) → Q 1,300 (ese movimiento pasa a ingreso Q 300) → Q 300 (se borra el ingreso de Q 1,000) → **Q 0** (se borra el ingreso restante de Q 300).
+- **c.** Una falla provocada en `actualizarSaldo` (DAO de prueba que lanza) después del INSERT: el número de movimientos y el saldo **no cambian**; el resultado es `ErrorAlmacenamiento`.
 - **d.** Cerrar y volver a abrir la base (y en la interfaz, cerrar la app a la fuerza): los movimientos y el saldo se conservan.
 - **e.** Registrar US$ 10.00 con una tasa ficticia de 7.66000 guarda `montoCentavos = 7660`. Guardar después una tasa nueva de 7.70000: el movimiento sigue en 7660 con `tasaGtqPorUsd = "7.66000"` y el saldo no cambia.
 - **f.** `"12,50"` → error. `"12.505"` → error. `"0"` → error. `"12.5"` → 1250.
 - **g.** Redondeo con la tasa 7.66285: US$ 12.34 → Q 94.56; Q 100.00 → US$ 13.05.
 - **h.** Períodos para el 22/10/2026 según la tabla de §3.2. El anillo con gastos de Q 30 y Q 20 da 6000 y 4000 puntos básicos (60 % y 40 %).
+- **i.** `Moneda` tiene exactamente GTQ y USD; las dos funciones del conversor se prueban en ambos sentidos. La interfaz del Inc. 6 solo ofrece USD → GTQ y GTQ → USD.
+- **j.** Un desborde en `CalculoSaldo.aplicar` produce error y ninguna escritura. En Room, se comprueba el saldo final dentro de la transacción antes de insertar, editar o borrar.
 
 ---
 
@@ -637,6 +672,8 @@ El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo
 | `docs/DISENO_FINANZAS.md` (este) | Alcance, decisiones, modelo, flujos, plan |
 | [`docs/MAPA_DEL_CODIGO.md`](MAPA_DEL_CODIGO.md) | Acción visible → XML/ID → Activity → ViewModel → core → DAO/cliente; preguntas de defensa |
 | [`docs/GUIA_WINDOWS.md`](GUIA_WINDOWS.md) | Pasos detallados en IntelliJ y Android Studio, y solución de errores |
+| [`docs/CONTINUAR_EN_KIRO_IDE.md`](CONTINUAR_EN_KIRO_IDE.md) | Cambio de cuenta, apertura del repositorio y prompt de continuidad |
+| [`docs/referencias/INTERFAZ.md`](referencias/INTERFAZ.md) | Captura de Canva y contrato visual para construir los XML |
 
 No habrá `ARQUITECTURA.md`, `GUIA_DEFENSA.md` ni `PLAN_INCREMENTOS.md` separados: su contenido ya está en este documento y en el mapa. El archivo se llama `DISENO_FINANZAS.md` (sin Ñ) para evitar nombres alterados al descomprimir el ZIP en Windows.
 
@@ -647,3 +684,4 @@ No habrá `ARQUITECTURA.md`, `GUIA_DEFENSA.md` ni `PLAN_INCREMENTOS.md` separado
 - **v2:** se eliminó `OperacionesDao` (ahora `withTransaction`); se añadieron funciones `suspend`, el repositorio de transacciones, la inicialización temprana, el estado del formulario, el `jvmTarget` de Maven y la FK compuesta como opción; `kotlinOptions` pasó a `compilerOptions`.
 - **v3 (esta):** navegación de tres destinos con Activities; Inicio con período, resultado y anillo; observación con `Flow` de Room; GTQ/USD con fotografía de la tasa y `Migracion1a2`; Banguat, Open-Meteo y reflexión con caché; tema DayNight; `DatosMovimiento` con datos crudos validados en el core; categorías con `clave` y política para claves desconocidas; paquetes `ui/` y `datos/local|remoto|repositorios|preferencias`; `MAPA_DEL_CODIGO.md`.
 - **v3.1:** todo pasa al repositorio `AppGastos` (proyectos en la raíz, documentos en `docs/`); `README.md` y `AGENTS.md`; el estado real se mueve al README; §3.0 registra que las referencias visuales siguen sin recibirse.
+- **v3.2:** se revisan la captura y el HTML de Canva; se guarda la referencia visual y la guía para Kiro IDE. Se limitan las conversiones a dos direcciones GTQ/USD, se nombran los modelos de totales, se comprueba el saldo final antes de escribir y se precisan la reconstrucción y los comentarios.

@@ -5,10 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import gt.edu.umg.finanzas.app.databinding.ActivityInicioBinding
 import gt.edu.umg.finanzas.core.InfoCore
 
-/**
- * Pantalla Inicio. En el Incremento 0 solo demuestra que la app ejecuta código del JAR del core;
- * en el Incremento 3 mostrará saldo, período y gráfico observando InicioViewModel.
- */
+/** Muestra el mensaje del core para comprobar que la app está usando el JAR. */
 class InicioActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityInicioBinding

@@ -2,14 +2,10 @@ package gt.edu.umg.finanzas.core
 
 import java.util.Properties
 
-/**
- * Diagnóstico del core: permite que la app muestre qué versión del JAR quedó empaquetada.
- *
- * La versión no se escribe a mano: Maven la copia desde pom.xml a finanzas-core.properties
- * al construir. Si Android mostrara una versión distinta de la esperada, estaría usando otro JAR.
- */
+/** Permite comprobar desde Android qué versión del core contiene el JAR. */
 object InfoCore {
 
+    // Maven copia la versión del pom.xml a este recurso al construir el JAR.
     private const val RECURSO = "/gt/edu/umg/finanzas/core/finanzas-core.properties"
     private const val SIN_VERSION = "desconocida"
 

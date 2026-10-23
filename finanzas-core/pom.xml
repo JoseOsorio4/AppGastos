@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Coordenadas propias: no coinciden con los ejercicios del curso ni con el JAR del compañero. -->
+    <!-- Coordenadas de la librería que consume finanzas-app. -->
     <groupId>gt.edu.umg.finanzas</groupId>
     <artifactId>finanzas-core</artifactId>
     <version>0.1.0</version>

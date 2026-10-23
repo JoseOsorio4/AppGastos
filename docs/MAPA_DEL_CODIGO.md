@@ -4,7 +4,7 @@ Relaciona cada función visible con el archivo que la dibuja, el que recibe la a
 
 Rutas relativas a `finanzas-app/app/src/main/` (app) y `finanzas-core/src/main/kotlin/gt/edu/umg/finanzas/core/` (core), ambas en la raíz del repositorio.
 
-> Los IDs de las filas pendientes siguen el diseño actual. Pueden cambiar al contrastar con la maqueta de Canva, que todavía no se ha recibido ([diseño §3.0](DISENO_FINANZAS.md#30-contraste-con-las-referencias-visuales--pendiente)).
+> Los IDs pendientes siguen el diseño y la [referencia visual revisada](referencias/INTERFAZ.md). Se comprobarán contra los XML reales al implementar cada pantalla.
 
 ## 1. Funciones visibles
 
@@ -14,14 +14,14 @@ Rutas relativas a `finanzas-app/app/src/main/` (app) y `finanzas-core/src/main/k
 | Ver saldo disponible | Pendiente (Inc. 3) | `activity_inicio.xml` · `textoSaldoDisponible` | `InicioActivity` | `InicioViewModel.estado` | `ServicioFinanzas.observarResumen` | `UsuarioDao.observarUsuario` |
 | Filtrar período en Inicio | Pendiente (Inc. 3) | `chipDia` … `chipPersonalizado` | `InicioActivity` | `InicioViewModel.seleccionarFiltro` | `Periodo.de` | `TransaccionDao.observarTotales` |
 | Dibujar anillo de gastos | Pendiente (Inc. 3) | `graficoGastos` (`GraficoAnilloView`) | `InicioActivity` | `InicioViewModel.estado` | `DistribucionGastos.calcular` | `TransaccionDao.observarGastosPorCategoria` |
-| Registrar movimiento | Pendiente (Inc. 3) | `botonAgregarMovimiento` → `activity_formulario.xml` · `botonGuardar` | `FormularioActivity` | `FormularioViewModel.guardar` | `ValidadorMovimiento.validar`, `CalculoSaldo.deltaCrear` | `OperacionesMovimientoRoom.crear` |
+| Registrar movimiento | Pendiente (Inc. 3) | `botonAgregarMovimiento` → `activity_formulario.xml` · `botonGuardar` | `FormularioActivity` | `FormularioViewModel.guardar` | `ValidadorMovimiento.validar`, `CalculoSaldo.deltaCrear` y `aplicar` | `OperacionesMovimientoRoom.crear` |
 | Editar movimiento | Pendiente (Inc. 4) | `dialogo_detalle_movimiento.xml` · `botonEditar` → `botonGuardar` | `OperacionesActivity` → `FormularioActivity` | `FormularioViewModel.guardar` | `CalculoSaldo.deltaEditar` | `OperacionesMovimientoRoom.editar` |
 | Eliminar movimiento | Pendiente (Inc. 4) | `botonEliminar` + diálogo de confirmación | `OperacionesActivity` | `OperacionesViewModel.eliminar` | `CalculoSaldo.deltaEliminar` | `OperacionesMovimientoRoom.eliminar` |
 | Filtrar operaciones | Pendiente (Inc. 4) | `chipTodos/chipIngresos/chipGastos`, rango | `OperacionesActivity` | `OperacionesViewModel.seleccionarFiltro` | `Periodo.de` | `TransaccionDao.observarMovimientos` |
 | Recalcular saldo | Pendiente (Inc. 5) | aviso `botonRecalcularSaldo` | `InicioActivity` | `InicioViewModel.recalcularSaldo` | `CalculoSaldo.saldoDesde` | `ReconstructorSaldoRoom` |
 | Cambiar tema | Pendiente (Inc. 5) | menú `opcionTema` | `InicioActivity` | — | — | `PreferenciaTema` |
 | Consultar tasa | Pendiente (Inc. 6) | `tarjeta_tasa.xml` · `botonReintentarTasa` | `InicioActivity` | `InicioViewModel.estadoTasa` | `TasaCambio` | `RepositorioTipoCambio` → `ClienteBanguat` |
-| Convertir moneda | Pendiente (Inc. 6) | `dialogo_conversor.xml`; `textoConversionPrevia` en el formulario | `ConversorDialogo`, `FormularioActivity` | `FormularioViewModel.onMontoCambiado` | `ConversorMoneda` | — (usa la tasa ya cargada) |
+| Convertir USD → GTQ o GTQ → USD | Pendiente (Inc. 6) | `dialogo_conversor.xml` · selector de sentido; `textoConversionPrevia` en el formulario | `ConversorDialogo`, `FormularioActivity` | `FormularioViewModel.onMontoCambiado` | `ConversorMoneda.usdAGtq` / `gtqAUsd` | — (usa la tasa ya cargada; solo dos direcciones) |
 | Clima / Reflexión | Pendiente (Inc. 7) | `tarjeta_clima.xml`, `tarjeta_reflexion.xml` | `InicioActivity` | `estadoClima`, `estadoReflexion` | — | `RepositorioClima`, `RepositorioReflexion` |
 
 ## 2. Recorrido real: Incremento 0
@@ -42,7 +42,7 @@ Estado: archivos creados; **Maven, Gradle y la ejecución siguen pendientes** de
 | ¿Qué pasa al presionarlo? | La Activity llama a `guardar()`; el ViewModel ignora toques repetidos y llama al servicio | `FormularioActivity`, `FormularioViewModel.guardar` | Inc. 3 |
 | ¿Quién valida el monto? | El core: `Dinero.desdeTexto` dentro de `ValidadorMovimiento.validar` | `reglas/` | Inc. 1 |
 | ¿Quién guarda? | `OperacionesMovimientoRoom` dentro de un `withTransaction` | `datos/local/` | Inc. 2 |
-| ¿Cómo cambia el saldo? | Se suma `impactoEnSaldo()` del nuevo y se resta el del anterior, en la misma transacción | `Transaccion`, `CalculoSaldo` | Inc. 1–2 |
+| ¿Cómo cambia el saldo? | Se calcula el delta y se aplica al saldo actual con `Math.addExact`; se escribe el saldo final dentro de la misma transacción | `Transaccion`, `CalculoSaldo.aplicar`, `OperacionesMovimientoRoom` | Inc. 1–2 |
 | ¿Qué pasa si falla a mitad? | La excepción revierte la inserción y el saldo | `OperacionesMovimientoRoom` | Inc. 2 |
 | ¿Qué pasa sin internet? | Las finanzas funcionan; USD usa la última tasa guardada o queda deshabilitado | `RepositorioTipoCambio` | Inc. 6 |
 
