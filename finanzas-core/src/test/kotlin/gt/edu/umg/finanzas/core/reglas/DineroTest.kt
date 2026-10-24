@@ -44,6 +44,16 @@ class DineroTest {
     }
 
     @Test
+    fun `aTexto produce un texto que desdeTexto vuelve a aceptar`() {
+        assertEquals("12.50", Dinero.aTexto(1_250))
+        assertEquals("0.05", Dinero.aTexto(5))
+        assertEquals("9999999.99", Dinero.aTexto(999_999_999))
+        listOf(1L, 1_250L, 100_000L, 999_999_999L).forEach { centavos ->
+            assertEquals(centavos, Dinero.desdeTexto(Dinero.aTexto(centavos)).esperarOk())
+        }
+    }
+
+    @Test
     fun `formatea con simbolo coma de miles y signo`() {
         assertEquals("Q 1,000.00", Dinero.formatear(100_000))
         assertEquals("-Q 30.00", Dinero.formatear(-3_000))

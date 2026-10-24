@@ -3,7 +3,6 @@ package gt.edu.umg.finanzas.app.datos.local
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import gt.edu.umg.finanzas.core.contratos.ReconstructorSaldo
 import gt.edu.umg.finanzas.core.dominio.DatosMovimiento
 import gt.edu.umg.finanzas.core.dominio.Moneda
 import gt.edu.umg.finanzas.core.dominio.TipoMovimiento
@@ -24,18 +23,13 @@ object BaseDePrueba {
     fun enMemoria(): AppDatabase =
         Room.inMemoryDatabaseBuilder(contexto, AppDatabase::class.java).build()
 
-    /**
-     * Recorrido completo servicio → contrato → Room. La reconstrucción del saldo es del Inc. 5;
-     * estas pruebas no la usan.
-     */
+    /** Recorrido completo servicio → contrato → Room, armado igual que en Dependencias. */
     fun servicioSobre(baseDatos: AppDatabase): ServicioFinanzas = ServicioFinanzas(
         usuarios = RepositorioUsuarioRoom(baseDatos.usuarioDao()),
         categorias = RepositorioCategoriaRoom(baseDatos.categoriaDao()),
         transacciones = RepositorioTransaccionRoom(baseDatos.transaccionDao()),
         operaciones = OperacionesMovimientoRoom(baseDatos),
-        reconstructor = object : ReconstructorSaldo {
-            override suspend fun reconstruirSiPendiente(): Resultado<Long> = error("ReconstructorSaldoRoom llega en el Inc. 5")
-        },
+        reconstructor = ReconstructorSaldoRoom(baseDatos),
     )
 
     suspend fun idCategoria(baseDatos: AppDatabase, clave: String): Long =

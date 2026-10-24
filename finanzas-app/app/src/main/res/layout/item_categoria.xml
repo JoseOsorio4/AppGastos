@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Celda de la cuadrícula de categorías del formulario: icono en círculo y nombre. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_horizontal"
+    android:minHeight="88dp"
+    android:orientation="vertical"
+    android:paddingHorizontal="2dp"
+    android:paddingVertical="6dp">
+
+    <ImageView
+        android:id="@+id/iconoCategoria"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/fondo_circulo"
+        android:importantForAccessibility="no"
+        android:padding="12dp"
+        tools:src="@drawable/ic_categoria_alimentacion" />
+
+    <TextView
+        android:id="@+id/textoNombre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center"
+        android:importantForAccessibility="no"
+        android:letterSpacing="0"
+        android:maxLines="2"
+        android:textAppearance="?attr/textAppearanceLabelMedium"
+        android:textSize="11sp"
+        tools:text="Alimentación" />
+</LinearLayout>

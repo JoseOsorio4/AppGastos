@@ -27,13 +27,36 @@ La moneda base es el quetzal (GTQ). El conversor tiene únicamente **dólares a 
 
 1. **Core:** abre `finanzas-core/pom.xml` en IntelliJ y ejecuta `mvn clean install`.
 2. **App:** abre la carpeta `finanzas-app/` en Android Studio, sincroniza Gradle y ejecuta `app`.
-3. **Pruebas de Room:** con un emulador abierto, `.\gradlew.bat :app:connectedDebugAndroidTest` desde `finanzas-app`.
+3. **Pruebas instrumentadas (Room e interfaz):** con un emulador abierto, `.\gradlew.bat :app:connectedDebugAndroidTest` desde `finanzas-app`.
 
 El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`. Se necesita JDK 17 o superior. Las herramientas y dependencias que todavía no estén en caché requieren internet para descargarse.
 
 ## Estado real
 
-Último incremento cerrado: **2 — Room v1 y operaciones atómicas**. Siguiente: **3 — Inicio y Formulario**.
+Último incremento cerrado: **3 — Inicio y Formulario (GTQ)**. Siguiente: **4 — Operaciones**.
+
+### Incremento 3 — Inicio, Formulario y reconstrucción del saldo
+
+| Comprobación | Estado | Detalle |
+|---|---|---|
+| `ReconstructorSaldoRoom` adelantado y conectado en `Dependencias` | ✅ Creado y probado | Saldo erróneo corregido, segunda llamada sin cambios, sin bandera no toca el saldo, rollback ante fallo |
+| Core 0.3.0 (`Dinero.aTexto` para los botones +5…+50) | ✅ Ejecutado | `mvn clean install`: 55 pruebas, 0 fallos, `BUILD SUCCESS` |
+| `assembleDebug` con Material 1.14.0 y Lifecycle 2.11.0 | ✅ Ejecutado | `BUILD SUCCESSFUL` (también tras los ajustes visuales) |
+| `connectedDebugAndroidTest` en emulador API 37 | ✅ Ejecutado | 25/25 pruebas, `BUILD SUCCESSFUL` (confirmado en PowerShell). Corrió antes de dos ajustes solo de XML (estilo de chips y celda de categoría); después de ellos se ejecutaron `assembleDebug` y el recorrido en la app real, no las 25 pruebas |
+| Rotación y cambio a tema oscuro sin perder lo escrito | ✅ Probado | `RecorridoInicioFormularioTest`: horizontal y `MODE_NIGHT_YES` conservan monto, descripción, tipo y categoría |
+| Doble toque en Guardar | ✅ Probado | `doubleClick` → 1 movimiento |
+| Errores claros y categorías filtradas por tipo | ✅ Probado | "Elige una categoría", "Usa punto para los decimales"; Gasto/Ingreso muestran solo sus categorías |
+| Muerte del proceso en el formulario | ✅ Probado | `FormularioViewModelTest` recupera los campos de `SavedStateHandle` |
+| App real: ingreso Q 100 y gasto Q 30 desde la interfaz | ✅ Ejecutado en el emulador | Inicio muestra saldo Q 70.00, ingresos Q 100.00, gastos Q 30.00, resultado +Q 70.00 y anillo con Q 30.00 |
+| App real: forzar cierre (`am force-stop`) y reabrir | ✅ Ejecutado en el emulador | Saldo Q 70.00, ingresos Q 100.00 y gastos Q 30.00 se conservan |
+| Comparación con la referencia de Canva (claro y oscuro) | ✅ Revisado en capturas | [Inicio](docs/referencias/capturas/inc3-inicio-con-datos.png) · [Formulario](docs/referencias/capturas/inc3-formulario-vacio.png) · [Inicio oscuro](docs/referencias/capturas/inc3-inicio-oscuro.png) · [Formulario oscuro](docs/referencias/capturas/inc3-formulario-oscuro.png). Se corrigieron chips de período invisibles y un nombre de categoría cortado |
+| Errores de ejecución durante el recorrido | ✅ Ninguno | `logcat` sin entradas de `AndroidRuntime` |
+| Letra grande del sistema | ⏳ Pendiente | No se revisó en el emulador |
+| Selector de rango "Período" y de fecha con el dedo | ⏳ Pendiente de revisión manual | Compilados y conectados; las pruebas no abren los calendarios |
+| Rotación de la app real a mano | ⏳ Pendiente de revisión manual | Cubierta por la prueba instrumentada, no por el recorrido con `adb` |
+| Ejecución en API 24–25 | ⏳ Pendiente | Solo hay imagen API 37 |
+| Aviso visible para recalcular el saldo y selector de tema | ⏳ Inc. 5 | — |
+| Operaciones (lista, editar, eliminar) | ⏳ Inc. 4 | El botón aparece deshabilitado |
 
 ### Incremento 2 — Room v1 sobre SQLite
 

@@ -25,6 +25,10 @@ interface UsuarioDao {
     @Query("UPDATE Usuario SET saldoCentavos = :saldoCentavos WHERE idUsuario = :idUsuario")
     suspend fun actualizarSaldo(idUsuario: Long, saldoCentavos: Long): Int
 
+    /** Enciende o apaga la bandera que pide recalcular el saldo desde el historial. */
+    @Query("UPDATE Usuario SET reconstruccionPendiente = :pendiente WHERE idUsuario = :idUsuario")
+    suspend fun marcarReconstruccion(idUsuario: Long, pendiente: Boolean): Int
+
     @Query("SELECT COUNT(*) FROM Usuario")
     suspend fun contar(): Int
 }

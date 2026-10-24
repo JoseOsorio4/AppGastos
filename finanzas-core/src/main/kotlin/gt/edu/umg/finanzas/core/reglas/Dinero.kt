@@ -29,6 +29,12 @@ object Dinero {
         }
     }
 
+    /**
+     * 1250 → "12.50", sin símbolo ni comas: es el texto que desdeTexto vuelve a aceptar.
+     * Lo usa el formulario para escribir un monto en el campo (sumas rápidas, edición).
+     */
+    fun aTexto(centavos: Long): String = BigDecimal.valueOf(centavos, 2).toPlainString()
+
     /** 100000 → "Q 1,000.00"; −3000 → "-Q 30.00". Siempre con punto decimal y coma de miles. */
     fun formatear(centavos: Long, moneda: Moneda = Moneda.GTQ): String {
         val signo = if (centavos < 0) "-" else ""

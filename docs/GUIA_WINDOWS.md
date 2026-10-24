@@ -1,6 +1,6 @@
 # Construir y abrir los proyectos en Windows
 
-Resultado esperado hoy: el core pasa sus pruebas y la app muestra `finanzas-core 0.2.0 conectado: este texto lo generó el JAR del core.`
+Resultado esperado hoy: el core pasa sus pruebas y la app abre en Inicio, con `finanzas-core 0.3.0` al pie de la pantalla.
 
 ## 0. Obtener el código
 - Con Git: `git clone https://github.com/JoseOsorio4/AppGastos.git` en una ruta corta y sin espacios, por ejemplo `C:\proyectos\AppGastos`.
@@ -18,8 +18,8 @@ Dentro hay dos proyectos hermanos: `finanzas-core\` (Maven) y `finanzas-app\` (G
 1. `File > Open` y elige `finanzas-core\pom.xml` → **Open as Project**.
 2. `File > Project Structure > SDK`: JDK 17 o superior.
 3. Ventana **Maven** → `finanzas-core > Lifecycle`: ejecuta `clean` y luego `install`. `install` también corre las pruebas de `src/test/kotlin`.
-4. Debe terminar con `Tests run: 54, Failures: 0, Errors: 0` y `BUILD SUCCESS`, y crear:
-   `%USERPROFILE%\.m2\repository\gt\edu\umg\finanzas\finanzas-core\0.2.0\finanzas-core-0.2.0.jar`
+4. Debe terminar con `Tests run: 55, Failures: 0, Errors: 0` y `BUILD SUCCESS`, y crear:
+   `%USERPROFILE%\.m2\repository\gt\edu\umg\finanzas\finanzas-core\0.3.0\finanzas-core-0.3.0.jar`
 
 **Desde PowerShell sin Maven en el `PATH`:** IntelliJ trae Maven en `<carpeta de IntelliJ>\plugins\maven-plugin\lib\maven3\bin\mvn.cmd`. Basta con indicar el JDK solo para esa terminal:
 
@@ -37,9 +37,9 @@ Para correr una sola clase de pruebas: `... mvn.cmd -f finanzas-core\pom.xml tes
 4. Espera la sincronización. Android Studio crea `local.properties` con la ruta de tu SDK; ese archivo no se comparte.
 5. Comprueba qué versión del core resolvió Gradle en PowerShell, desde `finanzas-app` (con `$env:JAVA_HOME` apuntando a `<carpeta de Android Studio>\jbr` si tu `java` es anterior a 17):
    `.\gradlew.bat :app:dependencyInsight --dependency finanzas-core --configuration debugRuntimeClasspath`
-   Debe mencionar `gt.edu.umg.finanzas:finanzas-core:0.2.0`.
+   Debe mencionar `gt.edu.umg.finanzas:finanzas-core:0.3.0`.
 6. `.\gradlew.bat :app:assembleDebug`, luego ejecuta `app` en el emulador (o **Run**).
-7. Pruebas de Room (incremento 2), con el emulador abierto: `.\gradlew.bat :app:connectedDebugAndroidTest`. Deben pasar 14 pruebas; el informe queda en `app\build\reports\androidTests\connected\`. En Android Studio también se puede usar clic derecho sobre `app/src/androidTest` → **Run 'Tests in…'**.
+7. Pruebas instrumentadas (Room e interfaz), con el emulador abierto: `.\gradlew.bat :app:connectedDebugAndroidTest`. Deben pasar 25 pruebas; el informe queda en `app\build\reports\androidTests\connected\`. En Android Studio también se puede usar clic derecho sobre `app/src/androidTest` → **Run 'Tests in…'**.
 
 ## 3. Qué enviar después
 La salida final (o el primer error completo) de `mvn clean install`, `dependencyInsight` y `assembleDebug`, y una captura del emulador. Con eso se actualiza el [README](../README.md#estado-real).
@@ -49,7 +49,7 @@ La salida final (o el primer error completo) de `mvn clean install`, `dependency
 |---|---|
 | `"mvn" no se reconoce como un comando` | Maven no está en el `PATH`: usa la ventana Maven de IntelliJ o su `mvn.cmd` (sección 1). |
 | Gradle pide JDK 17 o falla al iniciar | El `java` del `PATH` es más antiguo: define `$env:JAVA_HOME` con el `jbr` de Android Studio para esa terminal. |
-| `Could not find gt.edu.umg.finanzas:finanzas-core:0.2.0` | No ejecutaste `install`, o la versión del `pom.xml` y la de `gradle/libs.versions.toml` no coinciden. |
+| `Could not find gt.edu.umg.finanzas:finanzas-core:0.3.0` | No ejecutaste `install`, o la versión del `pom.xml` y la de `gradle/libs.versions.toml` no coinciden. |
 | Una prueba falla en `install` | Maven no instala el JAR: corrige la regla o la prueba y repite. El informe está en `finanzas-core\target\surefire-reports\`. |
 | La pantalla dice `desconocida` | El recurso `finanzas-core.properties` no quedó dentro del JAR. |
 | La pantalla dice `${project.version}` | Se perdió `<filtering>true</filtering>` en el `pom.xml`. |

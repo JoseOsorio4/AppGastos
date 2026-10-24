@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Colores por uso, no por tono: values-night redefine los mismos nombres para el tema oscuro. -->
+<resources>
+    <!-- Cabecera y barra inferior de la referencia de Canva: verdes en ambos temas. -->
+    <color name="color_cabecera">#1E463E</color>
+    <color name="color_sobre_cabecera">#FFFFFF</color>
+    <color name="color_sobre_cabecera_secundario">#B9D3CC</color>
+
+    <color name="color_primario">#1E463E</color>
+    <color name="color_sobre_primario">#FFFFFF</color>
+    <color name="color_primario_contenedor">#CDE8E0</color>
+    <color name="color_sobre_primario_contenedor">#0E2B25</color>
+
+    <color name="color_acento">#FFC229</color>
+    <color name="color_sobre_acento">#1B1F1E</color>
+
+    <color name="color_fondo">#F2F5F3</color>
+    <color name="color_superficie">#FFFFFF</color>
+    <color name="color_texto">#1B1F1E</color>
+    <color name="color_texto_secundario">#56615E</color>
+    <color name="color_borde">#C4CCC9</color>
+
+    <!-- Contraste mayor de 4.5:1 sobre la superficie blanca. -->
+    <color name="color_ingreso">#17763C</color>
+    <color name="color_gasto">#B3261E</color>
+    <color name="color_error">#B3261E</color>
+
+    <!-- Segmentos del anillo e iconos de categoría. -->
+    <color name="color_categoria_alimentacion">#2F80ED</color>
+    <color name="color_categoria_transporte">#27AE60</color>
+    <color name="color_categoria_vivienda">#F2B01E</color>
+    <color name="color_categoria_servicios">#E5484D</color>
+    <color name="color_categoria_salud">#D6409F</color>
+    <color name="color_categoria_educacion">#8E4EC6</color>
+    <color name="color_categoria_entretenimiento">#F76B15</color>
+    <color name="color_categoria_otros_gastos">#6B7A76</color>
+    <color name="color_categoria_salario">#17763C</color>
+    <color name="color_categoria_negocio">#0D74CE</color>
+    <color name="color_categoria_regalo">#C2298A</color>
+    <color name="color_categoria_otros_ingresos">#5B6B67</color>
+    <color name="color_categoria_generica">#7A8784</color>
+</resources>

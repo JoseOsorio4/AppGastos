@@ -1,6 +1,6 @@
 # Diseño — App de finanzas personales (Kotlin · Android)
 
-> **Versión 3.4 · 23/10/2026.** Existen la pantalla de diagnóstico del Incremento 0, las reglas del core del Incremento 1 y la persistencia Room v1 del Incremento 2, todas con pruebas. Las pantallas financieras y las APIs todavía son diseño; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
+> **Versión 3.5 · 23/10/2026.** Existen las reglas del core (Inc. 1), la persistencia Room v1 (Inc. 2) y las pantallas Inicio y Formulario en GTQ (Inc. 3), todas con pruebas. Operaciones, el selector de tema y las APIs todavía son diseño; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
 > **Referencias revisadas:** captura de Canva y HTML compartidos en el chat; documentación Mi Pisto y guía de clase 14. La captura principal y las decisiones de adaptación están en [referencias/INTERFAZ.md](referencias/INTERFAZ.md). Los ejemplos del curso y del compañero sirven como apoyo; las reglas de este documento definen nuestro proyecto.
 > **Esqueletos y pseudocódigo** de este documento no están compilados.
 > Mapa del código y preguntas de defensa: **[MAPA_DEL_CODIGO.md](MAPA_DEL_CODIGO.md)**. Construcción en Windows: **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**.
@@ -97,7 +97,7 @@ flowchart LR
   F -- "Guardar con éxito / Cancelar / atrás → finish()" --> X((pantalla de origen))
 ```
 
-- `barra_navegacion.xml` se incluye en Inicio y Operaciones. `NavegacionPrincipal.conectar(...)` asigna sus tres botones para no repetir código.
+- `barra_navegacion.xml` se incluye en Inicio y Operaciones. `NavegacionPrincipal.conectar(...)` asignará sus tres botones cuando Operaciones exista (Inc. 4); en el Inc. 3 solo Inicio la usa y conecta sus botones directamente. Operaciones aparece deshabilitada.
 - La pila máxima es Inicio → Operaciones → Formulario. Tocar el destino actual no hace nada.
 - Ninguna pantalla "recarga" al volver: Inicio y Operaciones observan `Flow` de Room, así que un guardado ya cambió sus datos.
 
@@ -200,7 +200,7 @@ app/src/main/java/gt/edu/umg/finanzas/app/
     RepositorioUsuarioRoom.kt, RepositorioCategoriaRoom.kt, RepositorioTransaccionRoom.kt  [2]
     OperacionesMovimientoRoom.kt          [2] withTransaction: el límite atómico
     InicializadorDatos.kt                 [2] usuario 1 + categorías, idempotente
-    ReconstructorSaldoRoom.kt             [5]
+    ReconstructorSaldoRoom.kt             [3] adelantado: ServicioFinanzas lo necesita; el aviso visible sigue en 5
   datos/preferencias/
     PreferenciaTema.kt                    [5] Sistema/Claro/Oscuro
     CacheServicios.kt                     [6] última tasa, clima y reflexión con sus fechas
@@ -215,20 +215,23 @@ app/src/main/java/gt/edu/umg/finanzas/app/
     RepositorioClima.kt                   [7] caché 30 min + Open-Meteo
     RepositorioReflexion.kt               [7] caché diaria + catálogo local
   ui/comun/
-    NavegacionPrincipal.kt                [3] conecta barra_navegacion.xml
+    NavegacionPrincipal.kt                [4] conecta barra_navegacion.xml cuando la usen Inicio y Operaciones
     RecursosCategoria.kt                  [3] clave → icono y color; genérico si es desconocida
+    Fechas.kt                             [3] dd/MM/yyyy y milisegundos UTC de MaterialDatePicker
+    BarrasSistema.kt                      [3] espacio para barras del sistema y teclado (edge-to-edge)
     EstadoTarjeta.kt                      [6] Cargando / ConDatos / SinDatos
   ui/inicio/
-    InicioActivity.kt                     [0] provisional: muestra InfoCore; real en 3
+    InicioActivity.kt                     [3] reemplaza la pantalla de diagnóstico del Inc. 0
     InicioViewModel.kt, InicioUiState.kt  [3]
     GraficoAnilloView.kt                  [3] solo dibuja segmentos ya calculados
+    LeyendaGastos.kt                      [3] filas de categoría, porcentaje e importe bajo el anillo
     ConversorDialogo.kt                   [6]
-  ui/formulario/{FormularioActivity, FormularioViewModel, FormularioUiState}.kt   [3]
+  ui/formulario/{FormularioActivity, FormularioViewModel, FormularioUiState, CategoriasAdapter}.kt   [3]
   ui/operaciones/{OperacionesActivity, OperacionesViewModel, OperacionesUiState, OperacionesAdapter}.kt  [4]
 app/src/main/res/
   layout/activity_inicio.xml              [0] (rediseñado en 3)
-  layout/{activity_formulario, activity_operaciones, item_operacion, item_encabezado_dia,
-          dialogo_detalle_movimiento, barra_navegacion}.xml          [3–4]
+  layout/{activity_formulario, barra_navegacion, item_categoria, item_leyenda_gasto}.xml   [3]
+  layout/{activity_operaciones, item_operacion, item_encabezado_dia, dialogo_detalle_movimiento}.xml  [4]
   layout/{tarjeta_tasa, dialogo_conversor}.xml [6] · tarjeta_clima.xml, tarjeta_reflexion.xml [7]
   values/{strings, themes}.xml            [0] · values/colors.xml, values-night/colors.xml, drawable/ic_categoria_*.xml [3]
 ```
@@ -627,7 +630,7 @@ La combinación AGP 9.1.1, Gradle 9.3.1, JDK 17 y compileSdk 37 coincide con la 
 | 0 | `androidx.appcompat:appcompat:1.7.1` | Activity y tema provisional |
 | 1 | `kotlinx-coroutines-core:1.10.2` (core); `junit-bom:5.14.4` + `junit-jupiter`, `kotlin-test-junit5:2.2.10` y `kotlinx-coroutines-test:1.10.2` (solo pruebas) | `Flow` en los contratos; pruebas. Se eligió 1.10.2 porque 1.11.0 exige `kotlin-stdlib` 2.2.20, más nuevo que el Kotlin 2.2.10 del core |
 | 2 | Room 2.8.5 (`room-runtime`, `room-compiler` con KSP 2.3.12, plugin `androidx.room` para esquemas), `desugar_jdk_libs:2.1.5`, `androidx.test:runner:1.7.0`, `androidx.test.ext:junit:1.3.0` | Persistencia, `java.time` en API 24, pruebas instrumentadas. No se añade `room-ktx`: desde Room 2.7 está vacío y `withTransaction` vive en `room-runtime`. `room-testing` (`MigrationTestHelper`) se añade en el Inc. 6, cuando exista una migración que probar |
-| 3 | Material Components, RecyclerView, `lifecycle-viewmodel-ktx`, `lifecycle-runtime-ktx`, `lifecycle-viewmodel-savedstate` | Interfaz, ViewModel, `repeatOnLifecycle`, `SavedStateHandle` |
+| 3 | `material:1.14.0`, `core-ktx:1.19.1`, `recyclerview:1.4.0`, `lifecycle-viewmodel`, `lifecycle-viewmodel-savedstate` y `lifecycle-runtime` 2.11.0; `espresso-core:3.7.0` (pruebas) | Interfaz, ViewModel, `repeatOnLifecycle`, `SavedStateHandle`, prueba del recorrido. Desde Lifecycle 2.8 `viewModelScope` y `lifecycleScope` están en los artefactos sin `-ktx` |
 | 6 | Ninguna biblioteca; permiso `INTERNET` | HTTP y XML incluidos en Android |
 | 7 | `org.json:json` solo en pruebas locales | Las clases `org.json` de Android no funcionan en pruebas JVM |
 
@@ -654,7 +657,7 @@ Numeración trazable con la versión anterior. Tus 7 puntos corresponden así: 1
 
 Ejecutados en el Inc. 1 con `mvn clean install`: a, b, f, g, h, la parte pura de e (US$ 10.00 × 7.66000 = 7660 y la tasa guardada como `"7.66000"`), i en el core y la parte pura de j. Las pruebas viven en `finanzas-core/src/test/kotlin/` y el mapa indica cuál cubre cada caso. 
 
-Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b sobre Room, c (falla al guardar el saldo en crear, editar y eliminar), d (cerrar y reabrir el archivo) y el rollback de j. Siguen pendientes: d desde la interfaz (cerrar la app a la fuerza, Inc. 3), la parte de Room de e (Inc. 6) y la interfaz de i (Inc. 6).
+Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b sobre Room, c (falla al guardar el saldo en crear, editar y eliminar), d (cerrar y reabrir el archivo) y el rollback de j. En el Inc. 3, d también se comprobó desde la interfaz: tras registrar Q 100 y Q 30 en la app real, `am force-stop` y volver a abrir conserva el saldo Q 70.00. Siguen pendientes la parte de Room de e (Inc. 6) y la interfaz de i (Inc. 6).
 
 - **a.** Saldo inicial Q 0. Ingreso Q 100 → **Q 70** tras un gasto de Q 30. Editar el gasto a Q 20 → **Q 80**. Eliminar el gasto → **Q 100**.
 - **b.** Q 1,000 ingreso → Q 750 (gasto Q 250) → Q 700 (gasto editado a Q 300) → Q 1,300 (ese movimiento pasa a ingreso Q 300) → Q 300 (se borra el ingreso de Q 1,000) → **Q 0** (se borra el ingreso restante de Q 300).
@@ -671,7 +674,7 @@ Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b
 
 ## 15. Estado real
 
-El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. Los incrementos 0, 1 y 2 están cerrados; el siguiente es el Inc. 3 (Inicio y Formulario).
+El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. Los incrementos 0 a 3 están cerrados; el siguiente es el Inc. 4 (Operaciones).
 
 ---
 
@@ -699,3 +702,4 @@ No habrá `ARQUITECTURA.md`, `GUIA_DEFENSA.md` ni `PLAN_INCREMENTOS.md` separado
 - **v3.2:** se revisan la captura y el HTML de Canva; se guarda la referencia visual y la guía para Kiro IDE. Se limitan las conversiones a dos direcciones GTQ/USD, se nombran los modelos de totales, se comprueba el saldo final antes de escribir y se precisan la reconstrucción y los comentarios.
 - **v3.3:** Inc. 1 implementado. `CalculoSaldo.aplicar` y `saldoDesde` devuelven `Resultado<Long>`, así el desborde es un `ErrorNegocio` antes de escribir. `Resultado` agrupa sus fallos en `Fallo` y `ErrorNegocio` lleva el campo con error. `ValidadorMovimiento.validar` recibe `idCategoriaAnterior` para conservar categorías archivadas al editar. Se añaden `CampoMovimiento`, `FiltroPeriodo` y `CategoriaInicial`, y se fijan las versiones de las dependencias del core.
 - **v3.4:** Inc. 2 implementado: entidades, DAO (con `MovimientoFila` para el JOIN de Operaciones), implementaciones Room de los contratos, `OperacionesMovimientoRoom`, `InicializadorDatos`, `Dependencias` y `FinanzasApp`. Se añade el índice `Transaccion(idUsuario)` porque Room pide indexar cada FK. La base v1 rechaza movimientos USD con `ErrorNegocio` hasta la v2. **Decisión pendiente para el Inc. 3:** `ServicioFinanzas` necesita un `ReconstructorSaldo`, pero `ReconstructorSaldoRoom` está planificado para el Inc. 5; hay que adelantarlo o definir cómo se construye el servicio mientras tanto.
+- **v3.5:** Inc. 3 implementado. Se resuelve la decisión pendiente de la v3.4 adelantando `ReconstructorSaldoRoom` (§9.6); el aviso visible sigue en el Inc. 5. `Dependencias` arma `ServicioFinanzas` con las cinco implementaciones Room. El core sube a 0.3.0 con `Dinero.aTexto`, que usan los botones +5/+10/+20/+50 para escribir el monto sin convertir texto en la app. `NavegacionPrincipal` se aplaza al Inc. 4, cuando dos pantallas compartan la barra inferior. "Más" en la cuadrícula no se crea: con 8 categorías de gasto y 4 de ingreso, todas caben en la cuadrícula de 4 columnas. targetSdk 36 dibuja bajo las barras del sistema y `BarrasSistema` reserva su espacio.

@@ -1,24 +1,330 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Inicio: cabecera verde con saldo y períodos, tarjetas con datos del período y barra inferior. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/raiz"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/textoTituloConexion"
+    <LinearLayout
+        android:id="@+id/cabecera"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/titulo_conexion"
-        android:textSize="22sp"
-        android:textStyle="bold" />
+        android:background="@color/color_cabecera"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="12dp">
 
-    <TextView
-        android:id="@+id/textoConexionCore"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/saldo_disponible"
+            android:textAllCaps="true"
+            android:letterSpacing="0.1"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="@color/color_sobre_cabecera_secundario" />
+
+        <!-- Saldo histórico de la tabla Usuario: no depende del período elegido. -->
+        <TextView
+            android:id="@+id/textoSaldoDisponible"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:accessibilityLiveRegion="polite"
+            android:textColor="@color/color_sobre_cabecera"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            tools:text="Q 2,845.00" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/grupoPeriodo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipDia"
+                    style="@style/Widget.Finanzas.ChipPeriodo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/periodo_dia" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipSemana"
+                    style="@style/Widget.Finanzas.ChipPeriodo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/periodo_semana" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipMes"
+                    style="@style/Widget.Finanzas.ChipPeriodo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/periodo_mes" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipAnio"
+                    style="@style/Widget.Finanzas.ChipPeriodo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/periodo_anio" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPersonalizado"
+                    style="@style/Widget.Finanzas.ChipPeriodo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/periodo_personalizado" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+        <TextView
+            android:id="@+id/textoRangoPeriodo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="@color/color_sobre_cabecera_secundario"
+            tools:text="01/10/2026 – 31/10/2026" />
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:textSize="18sp" />
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/textoErrorInicial"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="@string/error_inicializacion"
+                android:textColor="?attr/colorError"
+                android:visibility="gone" />
+
+            <!-- Ingresos y gastos juntos, como en la maqueta. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/tarjetaIngresos"
+                    style="@style/Widget.Finanzas.Tarjeta"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:drawablePadding="6dp"
+                            android:gravity="center_vertical"
+                            android:text="@string/ingresos"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"
+                            app:drawableStartCompat="@drawable/ic_ingreso"
+                            app:drawableTint="@color/color_ingreso" />
+
+                        <TextView
+                            android:id="@+id/textoIngresos"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textColor="@color/color_ingreso"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            tools:text="Q 3,500.00" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/tarjetaGastos"
+                    style="@style/Widget.Finanzas.Tarjeta"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:drawablePadding="6dp"
+                            android:gravity="center_vertical"
+                            android:text="@string/gastos"
+                            android:textAppearance="?attr/textAppearanceLabelLarge"
+                            app:drawableStartCompat="@drawable/ic_gasto"
+                            app:drawableTint="@color/color_gasto" />
+
+                        <TextView
+                            android:id="@+id/textoGastos"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textColor="@color/color_gasto"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            tools:text="Q 655.00" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Ingresos − gastos del intervalo; no se confunde con el saldo. -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/tarjetaResultado"
+                style="@style/Widget.Finanzas.Tarjeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/resultado_periodo"
+                        android:textAppearance="?attr/textAppearanceLabelLarge" />
+
+                    <TextView
+                        android:id="@+id/textoResultado"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textStyle="bold"
+                        tools:text="+Q 2,845.00" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/tarjetaAnillo"
+                style="@style/Widget.Finanzas.Tarjeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/gastos_por_categoria"
+                        android:textAppearance="@style/TextAppearance.Finanzas.Etiqueta" />
+
+                    <FrameLayout
+                        android:id="@+id/contenedorAnillo"
+                        android:layout_width="220dp"
+                        android:layout_height="220dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="12dp">
+
+                        <gt.edu.umg.finanzas.app.ui.inicio.GraficoAnilloView
+                            android:id="@+id/graficoGastos"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                        <!-- El centro del anillo muestra el gasto del período, no el balance. -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center_horizontal"
+                            android:importantForAccessibility="no"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/gastos_del_periodo"
+                                android:textAppearance="?attr/textAppearanceBodySmall"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+
+                            <TextView
+                                android:id="@+id/textoTotalGastosAnillo"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="?attr/textAppearanceTitleLarge"
+                                android:textStyle="bold"
+                                tools:text="Q 655.00" />
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/textoSinGastos"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:paddingVertical="32dp"
+                        android:text="@string/sin_gastos_periodo"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:visibility="gone" />
+
+                    <!-- LeyendaGastos llena estas filas: categoría, porcentaje e importe. -->
+                    <LinearLayout
+                        android:id="@+id/contenedorLeyenda"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="vertical" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Diagnóstico del Inc. 0: confirma qué versión del JAR del core usa la app. -->
+            <TextView
+                android:id="@+id/textoConexionCore"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="finanzas-core 0.3.0" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <include
+        android:id="@+id/barraNavegacion"
+        layout="@layout/barra_navegacion" />
 </LinearLayout>

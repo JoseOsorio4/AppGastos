@@ -16,6 +16,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- adjustResize: con el teclado abierto, el formulario se puede desplazar hasta Guardar. -->
+        <activity
+            android:name=".ui.formulario.FormularioActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.inicio.InicioActivity"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

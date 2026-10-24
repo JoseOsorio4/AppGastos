@@ -1,3 +1,42 @@
 <resources>
-    <style name="Theme.Finanzas" parent="Theme.AppCompat.DayNight.DarkActionBar" />
+    <!-- DayNight: el sistema decide claro u oscuro; el selector propio llega en el Inc. 5. -->
+    <style name="Theme.Finanzas" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/color_primario</item>
+        <item name="colorOnPrimary">@color/color_sobre_primario</item>
+        <item name="colorPrimaryContainer">@color/color_primario_contenedor</item>
+        <item name="colorOnPrimaryContainer">@color/color_sobre_primario_contenedor</item>
+        <item name="colorSecondary">@color/color_acento</item>
+        <item name="colorOnSecondary">@color/color_sobre_acento</item>
+        <item name="colorSecondaryContainer">@color/color_primario_contenedor</item>
+        <item name="colorOnSecondaryContainer">@color/color_sobre_primario_contenedor</item>
+        <item name="android:colorBackground">@color/color_fondo</item>
+        <item name="colorSurface">@color/color_superficie</item>
+        <item name="colorOnSurface">@color/color_texto</item>
+        <item name="colorOnSurfaceVariant">@color/color_texto_secundario</item>
+        <item name="colorOutline">@color/color_borde</item>
+        <item name="colorError">@color/color_error</item>
+        <item name="android:windowBackground">@color/color_fondo</item>
+    </style>
+
+    <!-- Chips de período sobre la cabecera verde. -->
+    <!-- Material 3 pinta una superficie blanca debajo del chip; se quita para que se vea el fondo verde. -->
+    <style name="Widget.Finanzas.ChipPeriodo" parent="Widget.Material3.Chip.Filter">
+        <item name="chipSurfaceColor">@android:color/transparent</item>
+        <item name="chipBackgroundColor">@color/fondo_chip_periodo</item>
+        <item name="android:textColor">@color/texto_chip_periodo</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="checkedIconVisible">false</item>
+    </style>
+
+    <style name="Widget.Finanzas.Tarjeta" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">@color/color_superficie</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">1dp</item>
+    </style>
+
+    <style name="TextAppearance.Finanzas.Etiqueta" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textColor">@color/color_texto_secundario</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+    </style>
 </resources>

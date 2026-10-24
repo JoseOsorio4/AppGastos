@@ -32,6 +32,10 @@ interface TransaccionDao {
     @Query("SELECT COUNT(*) FROM Transaccion")
     suspend fun contar(): Int
 
+    /** Historial completo: solo para la reconstrucción excepcional del saldo, nunca para Inicio. */
+    @Query("SELECT * FROM Transaccion")
+    suspend fun obtenerTodas(): List<TransaccionEntity>
+
     // Una sola fila siempre; COALESCE da 0 cuando el intervalo no tiene movimientos.
     @Query(
         """

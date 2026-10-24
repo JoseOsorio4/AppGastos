@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mismos nombres que values/colors.xml: en oscuro cambian fondo, superficies, texto y tonos de estado. -->
+<resources>
+    <color name="color_cabecera">#16332D</color>
+    <color name="color_sobre_cabecera">#FFFFFF</color>
+    <color name="color_sobre_cabecera_secundario">#A9C7BF</color>
+
+    <color name="color_primario">#8FD3C1</color>
+    <color name="color_sobre_primario">#00201A</color>
+    <color name="color_primario_contenedor">#2A4D45</color>
+    <color name="color_sobre_primario_contenedor">#CDE8E0</color>
+
+    <color name="color_acento">#FFC229</color>
+    <color name="color_sobre_acento">#1B1F1E</color>
+
+    <color name="color_fondo">#111614</color>
+    <color name="color_superficie">#1D2422</color>
+    <color name="color_texto">#E6ECEA</color>
+    <color name="color_texto_secundario">#A8B4B0</color>
+    <color name="color_borde">#3E4A47</color>
+
+    <color name="color_ingreso">#7DD8A1</color>
+    <color name="color_gasto">#FF9C93</color>
+    <color name="color_error">#FFB4AB</color>
+</resources>

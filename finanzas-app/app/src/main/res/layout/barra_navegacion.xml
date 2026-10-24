@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Barra inferior: Inicio, Añadir (botón amarillo central) y Operaciones.
+    Operaciones se muestra deshabilitada hasta que exista su pantalla (Inc. 4).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/color_cabecera"
+    android:baselineAligned="false"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <LinearLayout
+        android:id="@+id/botonIrInicio"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:minHeight="56dp"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_inicio"
+            app:tint="@color/color_acento" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nav_inicio"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="@color/color_sobre_cabecera" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/botonAgregarMovimiento"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/agregar_movimiento"
+            app:backgroundTint="@color/color_acento"
+            app:fabSize="mini"
+            app:srcCompat="@drawable/ic_agregar"
+            app:tint="@color/color_sobre_acento" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="no"
+            android:text="@string/nav_agregar"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="@color/color_sobre_cabecera" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/botonIrOperaciones"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:alpha="0.5"
+        android:contentDescription="@string/nav_operaciones_pendiente"
+        android:enabled="false"
+        android:gravity="center"
+        android:minHeight="56dp"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_operaciones"
+            app:tint="@color/color_sobre_cabecera" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:importantForAccessibility="no"
+            android:text="@string/nav_operaciones"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="@color/color_sobre_cabecera" />
+    </LinearLayout>
+</LinearLayout>

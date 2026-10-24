@@ -1,4 +1,53 @@
 <resources>
     <string name="app_name">Finanzas</string>
-    <string name="titulo_conexion">Prueba de conexión con el core</string>
+
+    <!-- Inicio -->
+    <string name="saldo_disponible">Saldo disponible</string>
+    <string name="periodo_dia">Día</string>
+    <string name="periodo_semana">Semana</string>
+    <string name="periodo_mes">Mes</string>
+    <string name="periodo_anio">Año</string>
+    <string name="periodo_personalizado">Período</string>
+    <string name="rango_periodo">%1$s – %2$s</string>
+    <string name="elegir_periodo">Elige el período</string>
+    <string name="ingresos">Ingresos</string>
+    <string name="gastos">Gastos</string>
+    <string name="resultado_periodo">Resultado del período</string>
+    <string name="gastos_por_categoria">Gastos por categoría</string>
+    <string name="gastos_del_periodo">Gastos del período</string>
+    <string name="sin_gastos_periodo">Sin gastos en este período</string>
+    <string name="descripcion_anillo">Gastos por categoría: %1$s</string>
+    <string name="porcentaje">%1$s %%</string>
+    <string name="version_core">finanzas-core %1$s</string>
+    <string name="error_inicializacion">No se pudieron preparar los datos. Cierra y vuelve a abrir la app.</string>
+
+    <!-- Barra inferior -->
+    <string name="nav_inicio">Inicio</string>
+    <string name="nav_agregar">Añadir</string>
+    <string name="nav_operaciones">Operaciones</string>
+    <string name="nav_operaciones_pendiente">Operaciones, disponible en una próxima versión</string>
+    <string name="agregar_movimiento">Añadir movimiento</string>
+
+    <!-- Formulario -->
+    <string name="nuevo_movimiento">Nuevo movimiento</string>
+    <string name="volver">Volver</string>
+    <string name="tipo_gasto">Gasto</string>
+    <string name="tipo_ingreso">Ingreso</string>
+    <string name="monto">Monto</string>
+    <string name="prefijo_quetzal">Q\u0020</string>
+    <string name="sumar_5">+5</string>
+    <string name="sumar_10">+10</string>
+    <string name="sumar_20">+20</string>
+    <string name="sumar_50">+50</string>
+    <string name="categoria">Categoría</string>
+    <string name="categoria_seleccionada">%1$s, seleccionada</string>
+    <string name="cargando_categorias">Cargando categorías…</string>
+    <string name="fecha">Fecha</string>
+    <string name="elegir_fecha">Elige la fecha</string>
+    <string name="descripcion">Descripción</string>
+    <string name="guardar">Guardar</string>
+    <string name="guardando">Guardando…</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="error_sin_categoria">Elige una categoría</string>
+    <string name="error_guardar">No se pudo guardar. Intenta de nuevo.</string>
 </resources>

@@ -8,20 +8,22 @@ Rutas relativas a `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/` (app
 
 ## 1. Funciones visibles
 
-Columna Core: existe y tiene pruebas desde el Inc. 1. Columna Persistencia: las entradas sin "(Inc. n)" existen desde el Inc. 2 y tienen pruebas instrumentadas. XML, Activity y ViewModel siguen pendientes salvo en la primera fila.
+Las filas marcadas **Existe** tienen todas sus columnas implementadas. En las demás, la columna Core ya existe (Inc. 1) y la Persistencia sin "(Inc. n)" existe desde el Inc. 2. El detalle de cada acción de pantalla está en la [§4](#4-app-pantallas-incremento-3).
 
 | Función visible | Estado | XML / ID | Activity | ViewModel | Core | Persistencia o red |
 |---|---|---|---|---|---|---|
-| Texto de conexión con el core | **Existe, ejecutado** (Inc. 0) | `res/layout/activity_inicio.xml` · `textoConexionCore` | `ui/inicio/InicioActivity.onCreate` | — | `InfoCore.mensajeConexion()` | — (versión leída de `finanzas-core.properties` dentro del JAR) |
-| Ver saldo disponible | Core y Room existen; pantalla Inc. 3 | `activity_inicio.xml` · `textoSaldoDisponible` | `InicioActivity` | `InicioViewModel.estado` | `servicio/ServicioFinanzas.observarResumen` | `RepositorioUsuarioRoom.observarUsuario` → `UsuarioDao.observarPorId` |
-| Filtrar período en Inicio | Core y Room existen; pantalla Inc. 3 | `chipDia` … `chipPersonalizado` | `InicioActivity` | `InicioViewModel.seleccionarFiltro` | `dominio/Periodo.de`, `Periodo.personalizado` | `RepositorioTransaccionRoom.observarTotales` → `TransaccionDao.observarTotales` |
-| Dibujar anillo de gastos | Core y Room existen; pantalla Inc. 3 | `graficoGastos` (`GraficoAnilloView`) | `InicioActivity` | `InicioViewModel.estado` | `reglas/DistribucionGastos.calcular` | `TransaccionDao.observarGastosPorCategoria` |
-| Elegir categoría | Core y Room existen; pantalla Inc. 3 | cuadrícula de categorías | `FormularioActivity` | `FormularioViewModel` | `ServicioFinanzas.observarCategorias` | `CategoriaDao.observarActivasPorTipo` |
-| Registrar movimiento | Core y Room existen; pantalla Inc. 3 | `botonAgregarMovimiento` → `activity_formulario.xml` · `botonGuardar` | `FormularioActivity` | `FormularioViewModel.guardar` | `reglas/ValidadorMovimiento.validar`, `reglas/CalculoSaldo.deltaCrear` y `aplicar` | `datos/local/OperacionesMovimientoRoom.crear` |
+| Versión del core en Inicio | **Existe** (Inc. 0, movida al pie de Inicio en el 3) | `res/layout/activity_inicio.xml` · `textoConexionCore` | `ui/inicio/InicioActivity.onCreate` | — | `InfoCore.version` | — (leída de `finanzas-core.properties` dentro del JAR) |
+| Ver saldo disponible | **Existe** (Inc. 3) | `activity_inicio.xml` · `textoSaldoDisponible` | `InicioActivity.pintar` | `InicioViewModel.estado` | `servicio/ServicioFinanzas.observarResumen` | `RepositorioUsuarioRoom.observarUsuario` → `UsuarioDao.observarPorId` |
+| Ver ingresos, gastos y resultado | **Existe** (Inc. 3) | `textoIngresos`, `textoGastos`, `textoResultado` | `InicioActivity.pintar` | `InicioViewModel.estado` | `ServicioFinanzas.observarResumen`, `ResumenPeriodo.resultadoCentavos` | `RepositorioTransaccionRoom.observarTotales` → `TransaccionDao.observarTotales` |
+| Filtrar período en Inicio | **Existe** (Inc. 3) | `grupoPeriodo` · `chipDia` … `chipPersonalizado`; `textoRangoPeriodo` | `InicioActivity.conectarAcciones`, `abrirSelectorRango` | `InicioViewModel.seleccionarFiltro`, `seleccionarRango` | `dominio/Periodo.de`, `Periodo.personalizado` | mismas consultas con el nuevo intervalo |
+| Dibujar anillo de gastos | **Existe** (Inc. 3) | `graficoGastos` (`GraficoAnilloView`), `textoTotalGastosAnillo`, `contenedorLeyenda`, `textoSinGastos` | `InicioActivity.pintar` → `GraficoAnilloView.mostrar`, `LeyendaGastos.mostrar` | `InicioViewModel.estado` | `reglas/DistribucionGastos.calcular` | `TransaccionDao.observarGastosPorCategoria` |
+| Abrir el formulario | **Existe** (Inc. 3) | `barra_navegacion.xml` · `botonAgregarMovimiento` | `InicioActivity.conectarAcciones` → `FormularioActivity` | — | — | — |
+| Elegir tipo y categoría | **Existe** (Inc. 3) | `activity_formulario.xml` · `grupoTipo`, `listaCategorias` (`item_categoria.xml`) | `FormularioActivity`, `CategoriasAdapter` | `FormularioViewModel.elegirTipo`, `elegirCategoria` | `ServicioFinanzas.observarCategorias` | `CategoriaDao.observarActivasPorTipo` |
+| Registrar movimiento | **Existe** (Inc. 3) | `entradaMonto`, `chipSumar5…50`, `entradaFecha`, `entradaDescripcion` · `botonGuardar` | `FormularioActivity` | `FormularioViewModel.guardar` | `reglas/ValidadorMovimiento.validar`, `reglas/CalculoSaldo.deltaCrear` y `aplicar` | `datos/local/OperacionesMovimientoRoom.crear` |
 | Editar movimiento | Core y Room existen; pantalla Inc. 4 | `dialogo_detalle_movimiento.xml` · `botonEditar` → `botonGuardar` | `OperacionesActivity` → `FormularioActivity` | `FormularioViewModel.guardar` | `CalculoSaldo.deltaEditar` | `OperacionesMovimientoRoom.editar` |
 | Eliminar movimiento | Core y Room existen; pantalla Inc. 4 | `botonEliminar` + diálogo de confirmación | `OperacionesActivity` | `OperacionesViewModel.eliminar` | `CalculoSaldo.deltaEliminar` | `OperacionesMovimientoRoom.eliminar` |
 | Filtrar operaciones | Core y Room existen; pantalla Inc. 4 | `chipTodos/chipIngresos/chipGastos`, rango | `OperacionesActivity` | `OperacionesViewModel.seleccionarFiltro` | `Periodo.de` | `TransaccionDao.observarMovimientos` |
-| Recalcular saldo | Core existe; Room y pantalla Inc. 5 | aviso `botonRecalcularSaldo` | `InicioActivity` | `InicioViewModel.recalcularSaldo` | `CalculoSaldo.saldoDesde` | `ReconstructorSaldoRoom` (Inc. 5) |
+| Recalcular saldo | Core y Room existen (Room adelantado al Inc. 3); aviso visible Inc. 5 | aviso `botonRecalcularSaldo` | `InicioActivity` | `InicioViewModel.recalcularSaldo` | `CalculoSaldo.saldoDesde` | `datos/local/ReconstructorSaldoRoom.reconstruirSiPendiente` |
 | Cambiar tema | Pendiente (Inc. 5) | menú `opcionTema` | `InicioActivity` | — | — | `PreferenciaTema` |
 | Consultar tasa | Core existe; pantalla Inc. 6 | `tarjeta_tasa.xml` · `botonReintentarTasa` | `InicioActivity` | `InicioViewModel.estadoTasa` | `dominio/TasaCambio` | `RepositorioTipoCambio` → `ClienteBanguat` (Inc. 6) |
 | Convertir USD → GTQ o GTQ → USD | Core existe; pantalla Inc. 6 | `dialogo_conversor.xml` · selector de sentido; `textoConversionPrevia` en el formulario | `ConversorDialogo`, `FormularioActivity` | `FormularioViewModel.onMontoCambiado` | `reglas/ConversorMoneda.usdAGtq` / `gtqAUsd` | — (usa la tasa ya cargada; solo dos direcciones). Guardar en USD requiere la base v2 (Inc. 6) |
@@ -135,7 +137,8 @@ flowchart LR
 | `RepositorioUsuarioRoom`, `RepositorioCategoriaRoom`, `RepositorioTransaccionRoom` | Cumplen los contratos de lectura; traducen `Periodo` a días epoch |
 | `OperacionesMovimientoRoom.kt` | **Único** `withTransaction` de movimientos. Lee la categoría → `ValidadorMovimiento.validar` → `CalculoSaldo.aplicar` → escribe el movimiento y el saldo. Antes de escribir devuelve un `Fallo`; después, cualquier anomalía lanza y Room revierte. Rechaza USD en la v1 |
 | `InicializadorDatos.kt` | Usuario 1 y 12 categorías en un `withTransaction`; idempotente |
-| `Dependencias.kt` | Decide qué clase Room cumple cada contrato. `ServicioFinanzas` se arma en el Inc. 3 |
+| `ReconstructorSaldoRoom.kt` | Adelantado en el Inc. 3 porque `ServicioFinanzas` lo necesita. Solo con `reconstruccionPendiente`: lee el historial una vez (`TransaccionDao.obtenerTodas`), calcula con `CalculoSaldo.saldoDesde`, **asigna** el saldo y apaga la bandera (`UsuarioDao.marcarReconstruccion`) en el mismo `withTransaction` |
+| `Dependencias.kt` | Decide qué clase Room cumple cada contrato y arma `servicio` (`ServicioFinanzas`), lo único que reciben las pantallas |
 | `FinanzasApp.kt` | `Application` (declarada en el manifiesto): crea `Dependencias` y lanza la siembra al arrancar; deja el resultado en `inicializacion` |
 
 ### 3.4 Pruebas instrumentadas (`app/src/androidTest/.../datos/local/`)
@@ -146,18 +149,76 @@ flowchart LR
 | `OperacionesMovimientoRoomTest` | `UsuarioDaoQueFalla` lanza al guardar el saldo; FK y `RESTRICT`; datos inválidos sin escribir; `NoEncontrado` | c, j |
 | `PersistenciaTest` | Archivo SQLite propio, cerrar y reabrir | d |
 | `InicializadorDatosTest` | 1 usuario y 12 categorías tras sembrar dos veces; el saldo no se reinicia | — |
+| `ReconstructorSaldoRoomTest` | Saldo erróneo corregido y bandera apagada; segunda llamada sin cambios; sin bandera no toca un saldo en cero; `UsuarioDaoQueFallaAlApagar` revierte saldo y bandera | §9.6 |
 
-`BaseDePrueba.servicioSobre` arma `ServicioFinanzas` con las clases Room y un `ReconstructorSaldo` que falla si se usa, porque `ReconstructorSaldoRoom` es del Inc. 5.
+`BaseDePrueba.servicioSobre` arma `ServicioFinanzas` con las mismas clases Room que `Dependencias`.
 
-## 4. Recorridos reales
+## 4. App: pantallas (incremento 3)
 
-### 4.1 Incremento 0: conexión core → JAR → Android (ejecutado)
+Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **Activity** conecta toques y texto con el ViewModel y dibuja su estado; el **ViewModel** guarda el estado (y lo copia a `SavedStateHandle`) y llama al servicio; **ServicioFinanzas** y el core validan y calculan; **Room** guarda y avisa con `Flow`.
+
+### 4.1 Qué archivo responde a cada acción
+
+| Acción visible | XML / ID | Activity (método) | ViewModel (método) | Servicio → Room |
+|---|---|---|---|---|
+| Ver saldo, ingresos, gastos y resultado | `activity_inicio.xml` · `textoSaldoDisponible`, `textoIngresos`, `textoGastos`, `textoResultado` | `InicioActivity.pintar` | `InicioViewModel.estado` | `observarResumen` → `UsuarioDao.observarPorId` + `TransaccionDao.observarTotales` |
+| Tocar Día/Semana/Mes/Año | `chipDia`, `chipSemana`, `chipMes`, `chipAnio` | `conectarAcciones` | `seleccionarFiltro` | las mismas consultas con el nuevo `Periodo` |
+| Tocar Período (rango) | `chipPersonalizado` → `MaterialDatePicker` | `abrirSelectorRango`, `conectarSelector` | `seleccionarRango` | `Periodo.personalizado` |
+| Ver anillo y leyenda | `graficoGastos`, `textoTotalGastosAnillo`, `contenedorLeyenda` (`item_leyenda_gasto.xml`), `textoSinGastos` | `pintar` → `GraficoAnilloView.mostrar`, `LeyendaGastos.mostrar` | `estado.segmentos` | `observarDistribucionGastos` → `TransaccionDao.observarGastosPorCategoria` |
+| Añadir | `barra_navegacion.xml` · `botonAgregarMovimiento` | `conectarAcciones` → abre `FormularioActivity` | — | — |
+| Gasto / Ingreso | `activity_formulario.xml` · `grupoTipo` | `FormularioActivity.conectarAcciones` | `elegirTipo` (borra la categoría elegida) | `observarCategorias` → `CategoriaDao.observarActivasPorTipo` |
+| Escribir monto | `entradaMonto` en `campoMonto` | `doAfterTextChanged` | `onMontoCambiado` | — (se valida al guardar) |
+| +5/+10/+20/+50 | `chipSumar5`, `chipSumar10`, `chipSumar20`, `chipSumar50` | `conectarAcciones` | `sumar` → `Dinero.desdeTexto` y `Dinero.aTexto` | — |
+| Elegir categoría | `listaCategorias` · `item_categoria.xml` | `CategoriasAdapter.onBindViewHolder` | `elegirCategoria` | — |
+| Elegir fecha | `entradaFecha` / icono de `campoFecha` → `MaterialDatePicker` | `abrirSelectorFecha` | `elegirFecha` | — |
+| Escribir descripción | `entradaDescripcion` en `campoDescripcion` (contador = `Transaccion.DESCRIPCION_MAXIMA`) | `doAfterTextChanged` | `onDescripcionCambiada` | — |
+| Guardar | `botonGuardar` | `conectarAcciones`; `pintar` lo deshabilita mientras `guardando` | `guardar` | `registrar` → `OperacionesMovimientoRoom.crear` |
+| Ver errores | `campoMonto.error`, `campoFecha.error`, `campoDescripcion.error`, `textoErrorCategoria`, `textoErrorGeneral` | `pintar` | `estado.errores` (mensajes del core por `CampoMovimiento`) | `ValidadorMovimiento.validar` |
+| Cancelar / Volver | `botonCancelar`, `botonVolver` | `finish()` | — | — |
+
+### 4.2 Archivos de pantalla
+
+| Archivo | Responsabilidad |
+|---|---|
+| `ui/inicio/InicioActivity.kt` | Conecta chips y botón Añadir; `pintar` formatea montos con `Dinero.formatear` y muestra u oculta el anillo |
+| `ui/inicio/InicioViewModel.kt`, `InicioUiState.kt` | Período elegido (en `SavedStateHandle`) → `flatMapLatest` sobre `observarResumen` y `observarDistribucionGastos`. Avisa si la siembra inicial falló |
+| `ui/inicio/GraficoAnilloView.kt` | Solo dibuja arcos con los puntos básicos recibidos y los colores de `RecursosCategoria` |
+| `ui/inicio/LeyendaGastos.kt` | Filas con icono, nombre, porcentaje e importe; el anillo no depende solo del color |
+| `ui/formulario/FormularioActivity.kt` | Envía cada cambio al ViewModel; reescribe un campo solo si su texto difiere, para no mover el cursor; se cierra con `guardadoExitoso` |
+| `ui/formulario/FormularioViewModel.kt`, `FormularioUiState.kt` | Campos crudos y errores por campo; copia los campos a `SavedStateHandle`; `guardar` ignora el segundo toque (`guardando` / `guardadoExitoso`) |
+| `ui/formulario/CategoriasAdapter.kt` | Cuadrícula de 4 columnas; marca la elegida con color y descripción accesible "…, seleccionada" |
+| `ui/comun/RecursosCategoria.kt` | Clave → icono y color; genérico para una clave desconocida |
+| `ui/comun/Fechas.kt`, `BarrasSistema.kt` | Formato dd/MM/yyyy y milisegundos UTC del selector; espacio para barras del sistema y teclado (targetSdk 36 dibuja bajo ellas) |
+| `res/values/colors.xml`, `res/values-night/colors.xml`, `themes.xml` | Colores por uso (`color_cabecera`, `color_ingreso`, `color_gasto`…) redefinidos para el tema oscuro; tema `Material3.DayNight` |
+
+### 4.3 Rotación, tema y doble toque
+
+- **Rotación o cambio de tema:** la Activity se recrea y el ViewModel sobrevive. La Activity vuelve a pintar desde `estado`, y los selectores abiertos recuperan sus acciones por etiqueta.
+- **Muerte del proceso:** tipo, monto, categoría, fecha y descripción se leen de `SavedStateHandle`; las categorías se vuelven a consultar a Room.
+- **Doble toque:** `FormularioViewModel.guardar` retorna si `guardando` o `guardadoExitoso` ya están activos, y el botón se deshabilita.
+- **Tema:** sigue al sistema (`DayNight`). El selector Sistema/Claro/Oscuro llega en el Inc. 5.
+
+### 4.4 Pruebas de interfaz (`app/src/androidTest/.../ui/`)
+
+| Prueba | Qué comprueba |
+|---|---|
+| `RecorridoInicioFormularioTest.registrar_ingreso_y_gasto_actualiza_inicio_y_se_conserva_al_reabrir` | Q 0 → ingreso Q 100 → gasto Q 30: saldo Q 70, totales, resultado y centro del anillo; cerrar y abrir Inicio conserva Q 70 |
+| `…doble_toque_en_guardar_registra_un_solo_movimiento` | `doubleClick` en Guardar → 1 movimiento en Room |
+| `…rotar_y_cambiar_a_tema_oscuro_conservan_lo_escrito` | Horizontal y luego `MODE_NIGHT_YES`: monto, descripción, tipo y categoría siguen iguales |
+| `…errores_claros_sin_categoria_y_con_coma_decimal` | "Elige una categoría" y "Usa punto para los decimales"; no se escribe nada |
+| `…las_categorias_se_filtran_por_tipo` | Gasto muestra Alimentación y no Salario; Ingreso, al revés |
+| `…los_botones_rapidos_suman_al_monto` | 2.50 + 10 + 5 = 17.50 |
+| `FormularioViewModelTest` | Un ViewModel nuevo recupera los campos desde `SavedStateHandle` |
+
+## 5. Recorridos reales
+
+### 5.1 Incremento 0: conexión core → JAR → Android (ejecutado)
 1. `finanzas-core/pom.xml` copia `<version>` en `finanzas-core.properties` y compila con destino JVM 11.
 2. `mvn clean install` deja el JAR en `~/.m2/repository/gt/edu/umg/finanzas/finanzas-core/<versión>/`.
-3. `settings.gradle.kts` solo busca el grupo `gt.edu.umg.finanzas` en `mavenLocal()`. `libs.versions.toml` fija `finanzasCore = "0.2.0"`.
-4. `InicioActivity` escribe `InfoCore.mensajeConexion()` en `textoConexionCore`.
+3. `settings.gradle.kts` solo busca el grupo `gt.edu.umg.finanzas` en `mavenLocal()`. `libs.versions.toml` fija `finanzasCore = "0.3.0"`.
+4. `InicioActivity` escribe `InfoCore.version` en `textoConexionCore`, al pie de Inicio.
 
-### 4.2 Incremento 2: registrar un gasto en Room (ejecutado en pruebas instrumentadas)
+### 5.2 Incremento 2: registrar un gasto en Room (ejecutado en pruebas instrumentadas)
 1. `ServicioFinanzas.registrar(datos, hoy)` delega en el contrato `OperacionesMovimiento.crear`; `Dependencias` lo cumple con `OperacionesMovimientoRoom`.
 2. `withTransaction` empieza. `CategoriaDao.obtenerPorId` lee la categoría.
 3. `ValidadorMovimiento.validar` convierte `"30"` en 3000 centavos y construye un `Gasto`. Un error devuelve `ErrorNegocio` sin escribir.
@@ -165,9 +226,16 @@ flowchart LR
 5. `TransaccionDao.insertar` y luego `UsuarioDao.actualizarSaldo`. Si el segundo falla, la excepción revierte también el INSERT (caso c).
 6. COMMIT. Room invalida las tablas y `observarResumen` vuelve a emitir con el saldo nuevo.
 
-En el Inc. 3 el paso 1 lo iniciará `FormularioViewModel.guardar`.
+### 5.3 Incremento 3: registrar desde la pantalla (ejecutado en el emulador)
+1. Inicio → toque en `botonAgregarMovimiento`: `InicioActivity` abre `FormularioActivity`.
+2. Cada toque o texto llega a `FormularioViewModel` (`elegirTipo`, `onMontoCambiado`, `elegirCategoria`, `onDescripcionCambiada`), que lo copia a `SavedStateHandle`.
+3. `botonGuardar` → `FormularioViewModel.guardar`: arma `DatosMovimiento` con el texto crudo y llama a `ServicioFinanzas.registrar`; desde ahí sigue el recorrido 5.2.
+4. Con `Resultado.Ok`, el estado pasa a `guardadoExitoso` y la Activity hace `finish()`. Con `ErrorNegocio`, el mensaje del core aparece en el campo indicado por `CampoMovimiento`.
+5. Room invalida las tablas; `InicioViewModel.estado` vuelve a emitir y `InicioActivity.pintar` muestra el saldo, los totales y el anillo nuevos sin recargar.
 
-## 5. Dónde están los pilares de POO
+Capturas del emulador: [Inicio](referencias/capturas/inc3-inicio-con-datos.png), [Formulario](referencias/capturas/inc3-formulario-vacio.png), [Inicio oscuro](referencias/capturas/inc3-inicio-oscuro.png), [Formulario oscuro](referencias/capturas/inc3-formulario-oscuro.png).
+
+## 6. Dónde están los pilares de POO
 
 | Pilar | Dónde | Por qué tiene función real |
 |---|---|---|
@@ -176,7 +244,7 @@ En el Inc. 3 el paso 1 lo iniciará `FormularioViewModel.guardar`.
 | Polimorfismo | `impactoEnSaldo()` en `CalculoSaldo` | El cálculo no pregunta "¿es gasto?" |
 | Abstracción | `contratos/*` | El core no conoce Room; la misma prueba de recorrido corre con fakes (JVM) y con Room (emulador) |
 
-## 6. Preguntas de defensa
+## 7. Preguntas de defensa
 
 | Pregunta | Respuesta breve | Dónde mirar | Estado |
 |---|---|---|---|
@@ -189,11 +257,15 @@ En el Inc. 3 el paso 1 lo iniciará `FormularioViewModel.guardar`.
 | ¿Qué pasa si el saldo desborda? | `ErrorNegocio` antes de la primera escritura | `OperacionesMovimientoRoomTest` (caso j) | Existe, probado |
 | ¿Por qué no se duplican las categorías? | Índice único en `clave` + `INSERT OR IGNORE` | `CategoriaEntity`, `InicializadorDatos` | Existe, probado |
 | ¿Qué impide un movimiento con una categoría inexistente? | La validación lee la categoría y, además, la FK de SQLite lo rechaza | `TransaccionEntity`, `OperacionesMovimientoRoomTest` | Existe, probado |
-| ¿Cómo se actualiza Inicio sin "refrescar"? | Los DAO devuelven `Flow`; Room vuelve a emitir tras cada COMMIT | `TransaccionDao`, `ServicioSobreRoomTest` | Existe, probado (pantalla Inc. 3) |
+| ¿Cómo se actualiza Inicio sin "refrescar"? | Los DAO devuelven `Flow`; Room vuelve a emitir tras cada COMMIT y `InicioViewModel` lo observa con `flatMapLatest` | `TransaccionDao`, `InicioViewModel.estado` | Existe, probado y comprobado en el emulador |
 | ¿Por qué funciona `LocalDate` en Android 7? | `coreLibraryDesugaring` reescribe `java.time` como `j$.time` dentro del APK | `app/build.gradle.kts` | Comprobado en el dex; ejecución en API 24 pendiente |
 | ¿Qué pasa al cambiar el esquema? | Se sube la versión y se escribe una `Migration`; sin ella la app falla en vez de borrar datos | `AppDatabase`, `app/schemas/` | v1 existe; migración en Inc. 6 |
-| ¿Dónde se dibuja el botón Guardar? | En el XML del formulario, con ID `botonGuardar` | `activity_formulario.xml` | Inc. 3 |
-| ¿Qué pasa al presionarlo? | La Activity llama a `guardar()`; el ViewModel ignora toques repetidos y llama al servicio | `FormularioActivity`, `FormularioViewModel.guardar` | Inc. 3 |
+| ¿Dónde se dibuja el botón Guardar? | En el XML del formulario, con ID `botonGuardar` | `activity_formulario.xml` | Existe |
+| ¿Qué pasa al presionarlo? | La Activity llama a `guardar()`; el ViewModel ignora toques repetidos y llama al servicio | `FormularioActivity.conectarAcciones`, `FormularioViewModel.guardar` | Existe, probado (doble toque = 1 movimiento) |
+| ¿Por qué no se pierde lo escrito al rotar o cambiar de tema? | El ViewModel sobrevive a la recreación y además copia los campos a `SavedStateHandle` para la muerte del proceso | `FormularioViewModel.cambiarCampos` | Existe, probado |
+| ¿Quién decide los colores del tema oscuro? | Los mismos nombres de color en `values/` y `values-night/`; los layouts no cambian | `res/values-night/colors.xml` | Existe, revisado en capturas |
+| ¿Por qué la pantalla no calcula el anillo? | `DistribucionGastos` (core) calcula los puntos básicos y `GraficoAnilloView` solo dibuja | `GraficoAnilloView.mostrar` | Existe |
+| ¿Quién recalcula un saldo dañado? | `ReconstructorSaldoRoom`, solo si la bandera está activa; asigna y apaga la bandera en una transacción | `datos/local/ReconstructorSaldoRoom.kt` | Existe, probado (aviso visible Inc. 5) |
 | ¿Qué pasa sin internet? | Las finanzas funcionan; USD usa la última tasa guardada o queda deshabilitado | `RepositorioTipoCambio` | Inc. 6 |
 
-Al terminar cada incremento: cambia "Pendiente" por la ruta y la función reales, y añade el recorrido del incremento en la §4.
+Al terminar cada incremento: cambia "Pendiente" por la ruta y la función reales, y añade el recorrido del incremento en la §5.

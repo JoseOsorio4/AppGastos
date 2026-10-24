@@ -12,7 +12,19 @@ Referencia principal: la maqueta de Canva compartida por el usuario. Se revisaro
 - Iconos acompañados de texto; ingresos y gastos con signo y etiqueta.
 - Colores definidos en recursos de tema. En oscuro cambian fondo, superficies y texto; se conservan el orden y los mismos layouts.
 
-La imagen contiene montos y símbolos de demostración. En Android, el saldo se muestra en Q. La interfaz financiera nativa todavía no está construida.
+La imagen contiene montos y símbolos de demostración. En Android, el saldo se muestra en Q.
+
+## Comparación del incremento 3 (emulador API 37)
+
+| Inicio | Formulario | Inicio oscuro | Formulario oscuro |
+|---|---|---|---|
+| ![Inicio](capturas/inc3-inicio-con-datos.png) | ![Formulario](capturas/inc3-formulario-vacio.png) | ![Inicio oscuro](capturas/inc3-inicio-oscuro.png) | ![Formulario oscuro](capturas/inc3-formulario-oscuro.png) |
+
+- **Igual que la maqueta:** cabecera verde con saldo grande y fila de períodos, pestaña activa en amarillo, tarjetas Ingresos y Gastos juntas con flechas, anillo con leyenda por categoría, barra inferior verde con el botón Añadir amarillo al centro.
+- **Adaptado:** el saldo es histórico y los chips solo cambian ingresos, gastos y anillo; se añadió la tarjeta Resultado del período; el centro del anillo dice Gastos del período; Operaciones aparece deshabilitada hasta el Inc. 4.
+- **Formulario:** tipo Gasto/Ingreso, monto con prefijo Q, accesos +5/+10/+20/+50, cuadrícula de categorías de 4 columnas filtrada por tipo, fecha y descripción obligatoria con contador.
+- **Corregido al comparar:** los chips de período se veían como rectángulos blancos sin texto (superficie de Material 3) y "Entretenimiento" se partía en dos líneas.
+- **Pendiente:** revisión con letra grande del sistema.
 
 ## Vistas y conexiones
 
