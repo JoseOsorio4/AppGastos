@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Encabezado de un día en Operaciones: la lista solo se ordena por fecha, así que nunca se repite. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/textoFechaDia"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:accessibilityHeading="true"
+    android:paddingTop="16dp"
+    android:paddingBottom="6dp"
+    android:textAppearance="@style/TextAppearance.Finanzas.Etiqueta"
+    tools:text="Viernes 23/10/2026" />

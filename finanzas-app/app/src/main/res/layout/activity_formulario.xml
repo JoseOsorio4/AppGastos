@@ -149,7 +149,7 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
 
-            <!-- Cuadrícula de cuatro columnas con las categorías del tipo elegido. -->
+            <!-- Cuadrícula de categorías del tipo elegido: cuatro columnas, menos con letra grande (FormularioActivity). -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/listaCategorias"
                 android:layout_width="match_parent"

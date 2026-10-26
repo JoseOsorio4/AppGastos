@@ -28,8 +28,9 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 /**
- * Estado del formulario. Recibe cada cambio de campo, los copia a SavedStateHandle y, al guardar,
- * envía los datos crudos al servicio: la validación y el cálculo del saldo los hace el core.
+ * Estado del formulario para registrar y para editar. Recibe cada cambio de campo, los copia a
+ * SavedStateHandle y, al guardar, envía los datos crudos al servicio: la validación y el cálculo
+ * del saldo los hace el core. Si el Intent trae un ID, carga ese movimiento y guarda con editar().
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class FormularioViewModel(
@@ -38,10 +39,16 @@ class FormularioViewModel(
     private val hoy: () -> LocalDate = { Periodo.hoy() },
 ) : ViewModel() {
 
+    // Llega como extra del Intent (FormularioActivity.paraEditar); SavedStateHandle lo recibe solo.
+    private val idEnEdicion: Long? = estadoGuardado.get<Long>(CLAVE_ID_EN_EDICION)
+
     private val _estado = MutableStateFlow(leerCampos())
     val estado: StateFlow<FormularioUiState> = _estado.asStateFlow()
 
     init {
+        // Tras rotar o recrear el proceso, los campos ya vienen de SavedStateHandle: no se vuelve a
+        // cargar el movimiento para no borrar lo que el usuario cambió.
+        if (idEnEdicion != null && estadoGuardado.get<Boolean>(CLAVE_CARGADO) != true) cargarMovimiento(idEnEdicion)
         // Las categorías se leen de Room según el tipo elegido; no hace falta guardarlas en SavedStateHandle.
         viewModelScope.launch {
             _estado.map { it.tipo }
@@ -104,10 +111,39 @@ class FormularioViewModel(
         cambiarCampos { it.copy(descripcion = texto, errores = it.errores.copy(descripcion = null)) }
     }
 
+    private fun cargarMovimiento(id: Long) {
+        _estado.update { it.copy(cargandoMovimiento = true) }
+        viewModelScope.launch {
+            when (val leido = servicio.obtenerParaEditar(id)) {
+                is Resultado.Ok -> {
+                    val movimiento = leido.valor
+                    // El monto se muestra en GTQ: la base v1 no guarda conversiones USD.
+                    cambiarCampos {
+                        it.copy(
+                            tipo = movimiento.tipo,
+                            montoTexto = Dinero.aTexto(movimiento.montoCentavos),
+                            idCategoria = movimiento.idCategoria,
+                            fecha = movimiento.fecha,
+                            descripcion = movimiento.descripcion,
+                            cargandoMovimiento = false,
+                        )
+                    }
+                    estadoGuardado[CLAVE_CARGADO] = true
+                }
+                Resultado.NoEncontrado -> _estado.update {
+                    it.copy(cargandoMovimiento = false, errores = ErroresFormulario(movimientoNoEncontrado = true))
+                }
+                is Resultado.Fallo -> _estado.update {
+                    it.copy(cargandoMovimiento = false, errores = ErroresFormulario(falloAlCargar = true))
+                }
+            }
+        }
+    }
+
     fun guardar() {
         val actual = _estado.value
         // Doble toque: la segunda llamada llega con `guardando` o `guardadoExitoso` ya en true y se ignora.
-        if (actual.guardando || actual.guardadoExitoso) return
+        if (actual.guardando || actual.guardadoExitoso || actual.cargandoMovimiento) return
         // Sin categoría no hay un ID que enviar; es el único aviso que no viene del core.
         val idCategoria = actual.idCategoria ?: run {
             _estado.update { it.copy(errores = ErroresFormulario(faltaCategoria = true)) }
@@ -125,11 +161,15 @@ class FormularioViewModel(
             fecha = actual.fecha,
         )
         viewModelScope.launch {
-            val resultado = servicio.registrar(datos, hoy())
+            // Mismo formulario, dos operaciones: crear o editar; ambas recalculan el saldo en Room.
+            val resultado: Resultado<*> =
+                if (idEnEdicion == null) servicio.registrar(datos, hoy()) else servicio.editar(idEnEdicion, datos, hoy())
             _estado.update {
                 when (resultado) {
                     is Resultado.Ok -> it.copy(guardando = false, guardadoExitoso = true)
                     is Resultado.ErrorNegocio -> it.copy(guardando = false, errores = erroresDe(resultado))
+                    Resultado.NoEncontrado ->
+                        it.copy(guardando = false, errores = ErroresFormulario(movimientoNoEncontrado = true))
                     is Resultado.Fallo -> it.copy(guardando = false, errores = ErroresFormulario(falloAlGuardar = true))
                 }
             }
@@ -162,9 +202,13 @@ class FormularioViewModel(
         idCategoria = estadoGuardado.get<Long>(CLAVE_CATEGORIA),
         fecha = estadoGuardado.get<Long>(CLAVE_FECHA)?.let { LocalDate.ofEpochDay(it) } ?: hoy(),
         descripcion = estadoGuardado.get<String>(CLAVE_DESCRIPCION).orEmpty(),
+        enEdicion = idEnEdicion != null,
     )
 
     companion object {
+        /** Extra del Intent con el ID a editar; sin él, el formulario registra un movimiento nuevo. */
+        const val CLAVE_ID_EN_EDICION = "idEnEdicion"
+        private const val CLAVE_CARGADO = "movimientoCargado"
         internal const val CLAVE_TIPO = "tipo"
         internal const val CLAVE_MONTO = "montoTexto"
         internal const val CLAVE_CATEGORIA = "idCategoria"

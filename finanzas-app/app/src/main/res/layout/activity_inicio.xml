@@ -40,65 +40,12 @@
             android:textStyle="bold"
             tools:text="Q 2,845.00" />
 
-        <HorizontalScrollView
+        <include
+            android:id="@+id/chipsPeriodo"
+            layout="@layout/chips_periodo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:scrollbars="none">
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/grupoPeriodo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:selectionRequired="true"
-                app:singleLine="true"
-                app:singleSelection="true">
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipDia"
-                    style="@style/Widget.Finanzas.ChipPeriodo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/periodo_dia" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipSemana"
-                    style="@style/Widget.Finanzas.ChipPeriodo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/periodo_semana" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipMes"
-                    style="@style/Widget.Finanzas.ChipPeriodo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/periodo_mes" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipAnio"
-                    style="@style/Widget.Finanzas.ChipPeriodo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/periodo_anio" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipPersonalizado"
-                    style="@style/Widget.Finanzas.ChipPeriodo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/periodo_personalizado" />
-            </com.google.android.material.chip.ChipGroup>
-        </HorizontalScrollView>
-
-        <TextView
-            android:id="@+id/textoRangoPeriodo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="@color/color_sobre_cabecera_secundario"
-            tools:text="01/10/2026 – 31/10/2026" />
+            android:layout_marginTop="12dp" />
     </LinearLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -265,8 +212,13 @@
                             android:layout_height="match_parent" />
 
                         <!-- El centro del anillo muestra el gasto del período, no el balance. -->
+                        <!--
+                            Medidas fijas para quedar dentro del hueco del anillo: con letra grande el texto se
+                            reduce en lugar de salirse. El mínimo va en dp para que la escala no lo duplique.
+                            El mismo total se lee completo en la tarjeta Gastos.
+                        -->
                         <LinearLayout
-                            android:layout_width="wrap_content"
+                            android:layout_width="130dp"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:gravity="center_horizontal"
@@ -274,18 +226,29 @@
                             android:orientation="vertical">
 
                             <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
+                                android:layout_width="match_parent"
+                                android:layout_height="28dp"
+                                android:gravity="center"
+                                android:maxLines="1"
                                 android:text="@string/gastos_del_periodo"
                                 android:textAppearance="?attr/textAppearanceBodySmall"
-                                android:textColor="?attr/colorOnSurfaceVariant" />
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                app:autoSizeMaxTextSize="12sp"
+                                app:autoSizeMinTextSize="8dp"
+                                app:autoSizeTextType="uniform"
+                                tools:ignore="SpUsage" />
 
                             <TextView
                                 android:id="@+id/textoTotalGastosAnillo"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:gravity="center"
+                                android:maxLines="1"
                                 android:textAppearance="?attr/textAppearanceTitleLarge"
                                 android:textStyle="bold"
+                                app:autoSizeMaxTextSize="22sp"
+                                app:autoSizeMinTextSize="10dp"
+                                app:autoSizeTextType="uniform"
                                 tools:text="Q 655.00" />
                         </LinearLayout>
                     </FrameLayout>

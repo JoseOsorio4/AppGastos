@@ -25,8 +25,21 @@
     <string name="nav_inicio">Inicio</string>
     <string name="nav_agregar">Añadir</string>
     <string name="nav_operaciones">Operaciones</string>
-    <string name="nav_operaciones_pendiente">Operaciones, disponible en una próxima versión</string>
     <string name="agregar_movimiento">Añadir movimiento</string>
+
+    <!-- Operaciones -->
+    <string name="filtro_todos">Todos</string>
+    <string name="sin_operaciones">No hay movimientos con estos filtros</string>
+    <string name="categoria_y_tipo">%1$s · %2$s</string>
+    <string name="tipo_y_fecha">%1$s · %2$s</string>
+    <string name="descripcion_fila_operacion">%1$s: %2$s, %3$s, %4$s, %5$s</string>
+    <string name="editar">Editar</string>
+    <string name="eliminar">Eliminar</string>
+    <string name="confirmar_eliminar_titulo">¿Eliminar este movimiento?</string>
+    <string name="confirmar_eliminar_mensaje">Se eliminará «%1$s» (%2$s) y el saldo se ajustará. No se puede deshacer.</string>
+    <string name="confirmar_eliminar_generico">El movimiento se eliminará y el saldo se ajustará. No se puede deshacer.</string>
+    <string name="movimiento_eliminado">Movimiento eliminado</string>
+    <string name="error_eliminar">No se pudo eliminar. Intenta de nuevo.</string>
 
     <!-- Formulario -->
     <string name="nuevo_movimiento">Nuevo movimiento</string>
@@ -50,4 +63,7 @@
     <string name="cancelar">Cancelar</string>
     <string name="error_sin_categoria">Elige una categoría</string>
     <string name="error_guardar">No se pudo guardar. Intenta de nuevo.</string>
+    <string name="editar_movimiento">Editar movimiento</string>
+    <string name="error_movimiento_no_encontrado">Este movimiento ya no existe.</string>
+    <string name="error_cargar_movimiento">No se pudo cargar el movimiento.</string>
 </resources>

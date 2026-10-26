@@ -1,6 +1,6 @@
 # Diseño — App de finanzas personales (Kotlin · Android)
 
-> **Versión 3.5 · 23/10/2026.** Existen las reglas del core (Inc. 1), la persistencia Room v1 (Inc. 2) y las pantallas Inicio y Formulario en GTQ (Inc. 3), todas con pruebas. Operaciones, el selector de tema y las APIs todavía son diseño; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
+> **Versión 3.6 · 24/10/2026.** Existen las reglas del core (Inc. 1), la persistencia Room v1 (Inc. 2), las pantallas Inicio y Formulario en GTQ (Inc. 3) y Operaciones con detalle, edición y eliminación (Inc. 4), todas con pruebas. El selector de tema, el aviso de recálculo y las APIs todavía son diseño; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
 > **Referencias revisadas:** captura de Canva y HTML compartidos en el chat; documentación Mi Pisto y guía de clase 14. La captura principal y las decisiones de adaptación están en [referencias/INTERFAZ.md](referencias/INTERFAZ.md). Los ejemplos del curso y del compañero sirven como apoyo; las reglas de este documento definen nuestro proyecto.
 > **Esqueletos y pseudocódigo** de este documento no están compilados.
 > Mapa del código y preguntas de defensa: **[MAPA_DEL_CODIGO.md](MAPA_DEL_CODIGO.md)**. Construcción en Windows: **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**.
@@ -78,12 +78,12 @@ La captura de Inicio está guardada en [referencias/canva-inicio.png](referencia
 |---|---|
 | Cabecera verde, acentos amarillos, tarjetas claras y botón central Añadir | Se conservan con recursos de tema nativos |
 | Inicio, Añadir y Operaciones | Tres vistas; Formulario vuelve a su origen al guardar o cancelar |
-| Cuadrícula de categorías con icono y nombre | Se conserva; “Más” abre la lista completa |
+| Cuadrícula de categorías con icono y nombre | Se conserva y muestra todas las categorías del tipo elegido (8 de gasto, 4 de ingreso); no hace falta el acceso “Más” |
 | Balance y anillo con valores de ejemplo | Saldo disponible histórico arriba; gasto del período en el centro del anillo |
 | Selector de varias monedas del HTML | Solo dos sentidos: USD → GTQ y GTQ → USD |
 | Datos en memoria y tasas fijas | SQLite/Room para movimientos y una tasa Banguat con fecha desde el Inc. 6 |
 
-La lista, las tarjetas y el anillo se alimentan de los mismos datos persistidos. En el Inc. 3 se comparará la pantalla Android con la referencia en el emulador; esa comprobación visual todavía está pendiente.
+La lista, las tarjetas y el anillo se alimentan de los mismos datos persistidos. Las comparaciones de la app en el emulador con la referencia (Inc. 3 y 4) están en [INTERFAZ.md](referencias/INTERFAZ.md).
 
 ### 3.1 Barra inferior y regreso
 
@@ -93,11 +93,11 @@ flowchart LR
   O -- "botonIrInicio / atrás → finish()" --> I
   I -- "botonAgregarMovimiento (amarillo)" --> F[FormularioActivity]
   O -- "botonAgregarMovimiento" --> F
-  O -- "Editar en el detalle (extra idMovimiento)" --> F
+  O -- "Editar en el detalle (extra idEnEdicion)" --> F
   F -- "Guardar con éxito / Cancelar / atrás → finish()" --> X((pantalla de origen))
 ```
 
-- `barra_navegacion.xml` se incluye en Inicio y Operaciones. `NavegacionPrincipal.conectar(...)` asignará sus tres botones cuando Operaciones exista (Inc. 4); en el Inc. 3 solo Inicio la usa y conecta sus botones directamente. Operaciones aparece deshabilitada.
+- `barra_navegacion.xml` se incluye en Inicio y Operaciones. Desde el Inc. 4, `NavegacionPrincipal.conectar(actividad, barra, destinoActual)` asigna sus tres botones en ambas pantallas y marca el destino actual con el icono amarillo y `isSelected`. El extra de edición se llama `idEnEdicion` (`FormularioViewModel.CLAVE_ID_EN_EDICION`).
 - La pila máxima es Inicio → Operaciones → Formulario. Tocar el destino actual no hace nada.
 - Ninguna pantalla "recarga" al volver: Inicio y Operaciones observan `Flow` de Room, así que un guardado ya cambió sus datos.
 
@@ -120,11 +120,12 @@ flowchart LR
 | Personalizado | elegido | elegido (`desde ≤ hasta`, ambos inclusive) |
 
 ### 3.3 Formulario (`ui/formulario`) — crear y editar
-- `grupoTipo` (Ingreso/Gasto), `campoMonto`, `grupoMoneda` (GTQ/USD: **solo aparece desde el Inc. 6**), categorías en una cuadrícula de iconos y nombres + `botonMasCategorias` (abre la lista completa; "Más" nunca se guarda), `campoFecha`, `campoDescripcion` (obligatoria, 1–60 caracteres).
+- `grupoTipo` (Ingreso/Gasto), `campoMonto`, `grupoMoneda` (GTQ/USD: **solo aparece desde el Inc. 6**), categorías en una cuadrícula de 4 columnas con icono y nombre (`listaCategorias`), que muestra todas las del tipo elegido, `campoFecha`, `campoDescripcion` (obligatoria, 1–60 caracteres).
 - Accesos rápidos `chipSumar5/10/20/50`, como en la maqueta: suman en la moneda elegida y no evitan la validación.
 - Con USD: `textoConversionPrevia` = "Equivale a Q 94.56 · tasa 7.66285 · Banguat 21/10/2026" (valores de ejemplo).
 - `botonGuardar` queda deshabilitado mientras `guardando = true`; `botonCancelar` cierra sin guardar.
 - En edición, el título cambia a "Editar movimiento" y los campos vienen del movimiento guardado.
+- Con letra grande del sistema (Inc. 4) la cuadrícula baja a 3 o 2 columnas para no partir nombres como "Entretenimiento" a mitad de palabra.
 
 ### 3.4 Operaciones (`ui/operaciones`)
 - `listaOperaciones` (RecyclerView) ordenada por fecha descendente, con encabezados por día. Esta versión **solo ordena por fecha**, así que los encabezados nunca engañan.
@@ -132,6 +133,7 @@ flowchart LR
 - Cada fila muestra icono y nombre de la categoría, descripción, fecha, monto y tipo, con signo (+/−) y color.
 - Al tocar una fila se abre el detalle, que en movimientos USD muestra el original, la tasa, su fecha y la fuente. Desde el detalle: `botonEditar` y `botonEliminar` (este último pide confirmación).
 - La consulta se carga **por intervalo**; Inicio nunca necesita el historial completo. Si un intervalo creciera demasiado, se evaluaría Paging, pero no se añade ahora.
+- **Implementado en el Inc. 4.** Los chips de período son el mismo `chips_periodo.xml` de Inicio (`ui/comun/ChipsPeriodo` + `PeriodoGuardado`), pero cada pantalla guarda su propia selección. La fecha aparece en el encabezado del día ("SÁBADO 24/10/2026", en mayúsculas por el estilo de etiqueta) y no se repite en cada fila; la descripción accesible de la fila sí la incluye. El detalle (`DetalleMovimientoDialogo`) y la confirmación (`ConfirmarEliminacionDialogo`) son `DialogFragment` para sobrevivir a la rotación. Tras eliminar aparece un `Snackbar` ("Movimiento eliminado"). El detalle USD llega con el Inc. 6.
 
 ---
 
@@ -215,9 +217,11 @@ app/src/main/java/gt/edu/umg/finanzas/app/
     RepositorioClima.kt                   [7] caché 30 min + Open-Meteo
     RepositorioReflexion.kt               [7] caché diaria + catálogo local
   ui/comun/
-    NavegacionPrincipal.kt                [4] conecta barra_navegacion.xml cuando la usen Inicio y Operaciones
+    NavegacionPrincipal.kt                [4] conecta barra_navegacion.xml en Inicio y Operaciones
+    ChipsPeriodo.kt, PeriodoGuardado.kt   [4] chips de período y selector de rango compartidos; selección en SavedStateHandle
+    MontoConSigno.kt                      [4] "+Q"/"-Q", color y nombre del tipo
     RecursosCategoria.kt                  [3] clave → icono y color; genérico si es desconocida
-    Fechas.kt                             [3] dd/MM/yyyy y milisegundos UTC de MaterialDatePicker
+    Fechas.kt                             [3] dd/MM/yyyy, encabezado de día [4] y milisegundos UTC de MaterialDatePicker
     BarrasSistema.kt                      [3] espacio para barras del sistema y teclado (edge-to-edge)
     EstadoTarjeta.kt                      [6] Cargando / ConDatos / SinDatos
   ui/inicio/
@@ -227,11 +231,12 @@ app/src/main/java/gt/edu/umg/finanzas/app/
     LeyendaGastos.kt                      [3] filas de categoría, porcentaje e importe bajo el anillo
     ConversorDialogo.kt                   [6]
   ui/formulario/{FormularioActivity, FormularioViewModel, FormularioUiState, CategoriasAdapter}.kt   [3]
-  ui/operaciones/{OperacionesActivity, OperacionesViewModel, OperacionesUiState, OperacionesAdapter}.kt  [4]
+  ui/operaciones/{OperacionesActivity, OperacionesViewModel, OperacionesUiState, OperacionesAdapter, FilaOperacion}.kt  [4]
+  ui/operaciones/{DetalleMovimientoDialogo, ConfirmarEliminacionDialogo}.kt  [4] DialogFragment
 app/src/main/res/
   layout/activity_inicio.xml              [0] (rediseñado en 3)
   layout/{activity_formulario, barra_navegacion, item_categoria, item_leyenda_gasto}.xml   [3]
-  layout/{activity_operaciones, item_operacion, item_encabezado_dia, dialogo_detalle_movimiento}.xml  [4]
+  layout/{activity_operaciones, item_operacion, item_encabezado_dia, dialogo_detalle_movimiento, chips_periodo}.xml  [4]
   layout/{tarjeta_tasa, dialogo_conversor}.xml [6] · tarjeta_clima.xml, tarjeta_reflexion.xml [7]
   values/{strings, themes}.xml            [0] · values/colors.xml, values-night/colors.xml, drawable/ic_categoria_*.xml [3]
 ```
@@ -486,7 +491,7 @@ GROUP BY c.idCategoria ORDER BY total DESC;
 ### 9.5 Estado del formulario
 - Cada campo llama al ViewModel (`doAfterTextChanged`, cambios de chip). El estado guarda el texto del monto **como lo escribió el usuario**. La Activity solo reescribe un `EditText` si su texto difiere del estado, para no mover el cursor.
 - **Rotación o cambio de tema:** el ViewModel sobrevive y la Activity vuelve a pintar desde el estado.
-- **Muerte del proceso:** `SavedStateHandle` guarda tipo, texto del monto, moneda, categoría, fecha, descripción, `idEnEdicion` y `usarTasaActual`. Las listas de categorías y la tasa se vuelven a leer. El ViewModel solo no sobrevive a la muerte del proceso; por eso se usa `SavedStateHandle`.
+- **Muerte del proceso:** `SavedStateHandle` guarda tipo, texto del monto, moneda, categoría, fecha, descripción, `idEnEdicion` y `usarTasaActual`. Las listas de categorías y la tasa se vuelven a leer. El ViewModel solo no sobrevive a la muerte del proceso; por eso se usa `SavedStateHandle`. `FormularioViewModelTest` comprueba la recuperación desde un estado guardado precargado; una muerte real del proceso con el formulario abierto todavía no se ha probado.
 - Un error conserva todos los campos y marca el campo con problema (`campoMonto.error`).
 - **Doble toque:** el estado `guardando` hace que `guardar()` ignore la segunda llamada, además de deshabilitar el botón.
 - **Éxito:** `guardadoExitoso = true` en el estado. La Activity hace `finish()` al verlo; si se recrea, lo ve de nuevo y vuelve a cerrar, lo cual es correcto. El ViewModel no guarda ninguna referencia a la Activity.
@@ -657,7 +662,7 @@ Numeración trazable con la versión anterior. Tus 7 puntos corresponden así: 1
 
 Ejecutados en el Inc. 1 con `mvn clean install`: a, b, f, g, h, la parte pura de e (US$ 10.00 × 7.66000 = 7660 y la tasa guardada como `"7.66000"`), i en el core y la parte pura de j. Las pruebas viven en `finanzas-core/src/test/kotlin/` y el mapa indica cuál cubre cada caso. 
 
-Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b sobre Room, c (falla al guardar el saldo en crear, editar y eliminar), d (cerrar y reabrir el archivo) y el rollback de j. En el Inc. 3, d también se comprobó desde la interfaz: tras registrar Q 100 y Q 30 en la app real, `am force-stop` y volver a abrir conserva el saldo Q 70.00. Siguen pendientes la parte de Room de e (Inc. 6) y la interfaz de i (Inc. 6).
+Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b sobre Room, c (falla al guardar el saldo en crear, editar y eliminar), d (cerrar y reabrir el archivo) y el rollback de j. En el Inc. 3, d también se comprobó desde la interfaz: tras registrar Q 100 y Q 30 en la app real, `am force-stop` y volver a abrir conserva el saldo Q 70.00. En el Inc. 4, a se ejecuta completo desde la interfaz (`RecorridoOperacionesTest.caso_a_editar_y_eliminar_el_gasto_desde_operaciones`: Q 70 → Q 80 → Q 100). Siguen pendientes la parte de Room de e (Inc. 6) y la interfaz de i (Inc. 6).
 
 - **a.** Saldo inicial Q 0. Ingreso Q 100 → **Q 70** tras un gasto de Q 30. Editar el gasto a Q 20 → **Q 80**. Eliminar el gasto → **Q 100**.
 - **b.** Q 1,000 ingreso → Q 750 (gasto Q 250) → Q 700 (gasto editado a Q 300) → Q 1,300 (ese movimiento pasa a ingreso Q 300) → Q 300 (se borra el ingreso de Q 1,000) → **Q 0** (se borra el ingreso restante de Q 300).
@@ -674,7 +679,7 @@ Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b
 
 ## 15. Estado real
 
-El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. Los incrementos 0 a 3 están cerrados; el siguiente es el Inc. 4 (Operaciones).
+El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. Los incrementos 0 a 4 están cerrados; el siguiente es el Inc. 5 (aviso de recálculo y selector de tema).
 
 ---
 
@@ -703,3 +708,4 @@ No habrá `ARQUITECTURA.md`, `GUIA_DEFENSA.md` ni `PLAN_INCREMENTOS.md` separado
 - **v3.3:** Inc. 1 implementado. `CalculoSaldo.aplicar` y `saldoDesde` devuelven `Resultado<Long>`, así el desborde es un `ErrorNegocio` antes de escribir. `Resultado` agrupa sus fallos en `Fallo` y `ErrorNegocio` lleva el campo con error. `ValidadorMovimiento.validar` recibe `idCategoriaAnterior` para conservar categorías archivadas al editar. Se añaden `CampoMovimiento`, `FiltroPeriodo` y `CategoriaInicial`, y se fijan las versiones de las dependencias del core.
 - **v3.4:** Inc. 2 implementado: entidades, DAO (con `MovimientoFila` para el JOIN de Operaciones), implementaciones Room de los contratos, `OperacionesMovimientoRoom`, `InicializadorDatos`, `Dependencias` y `FinanzasApp`. Se añade el índice `Transaccion(idUsuario)` porque Room pide indexar cada FK. La base v1 rechaza movimientos USD con `ErrorNegocio` hasta la v2. **Decisión pendiente para el Inc. 3:** `ServicioFinanzas` necesita un `ReconstructorSaldo`, pero `ReconstructorSaldoRoom` está planificado para el Inc. 5; hay que adelantarlo o definir cómo se construye el servicio mientras tanto.
 - **v3.5:** Inc. 3 implementado. Se resuelve la decisión pendiente de la v3.4 adelantando `ReconstructorSaldoRoom` (§9.6); el aviso visible sigue en el Inc. 5. `Dependencias` arma `ServicioFinanzas` con las cinco implementaciones Room. El core sube a 0.3.0 con `Dinero.aTexto`, que usan los botones +5/+10/+20/+50 para escribir el monto sin convertir texto en la app. `NavegacionPrincipal` se aplaza al Inc. 4, cuando dos pantallas compartan la barra inferior. "Más" en la cuadrícula no se crea: con 8 categorías de gasto y 4 de ingreso, todas caben en la cuadrícula de 4 columnas. targetSdk 36 dibuja bajo las barras del sistema y `BarrasSistema` reserva su espacio.
+- **v3.6:** Inc. 4 implementado. `NavegacionPrincipal` conecta la barra en Inicio y Operaciones; desde Operaciones, "Inicio" hace `finish()`. Los chips de período pasan a `chips_periodo.xml` con `ChipsPeriodo` y `PeriodoGuardado` en `ui/comun`, compartidos por las dos pantallas. Operaciones agrupa por día con `FilaOperacion`; el detalle y la confirmación son `DialogFragment`. El Formulario edita con el extra `idEnEdicion` y carga el movimiento una sola vez. Ninguna tabla cambia.

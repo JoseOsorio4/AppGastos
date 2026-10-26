@@ -17,6 +17,12 @@
             </intent-filter>
         </activity>
 
+        <!-- Siempre se abre desde Inicio: volver o tocar "Inicio" en su barra la cierra. -->
+        <activity
+            android:name=".ui.operaciones.OperacionesActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.inicio.InicioActivity" />
+
         <!-- adjustResize: con el teclado abierto, el formulario se puede desplazar hasta Guardar. -->
         <activity
             android:name=".ui.formulario.FormularioActivity"

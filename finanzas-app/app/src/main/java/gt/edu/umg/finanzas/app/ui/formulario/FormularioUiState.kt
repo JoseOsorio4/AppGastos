@@ -16,6 +16,10 @@ data class FormularioUiState(
     val descripcion: String = "",
     val categorias: List<Categoria> = emptyList(),
     val errores: ErroresFormulario = ErroresFormulario(),
+    /** true cuando se abrió desde el detalle de Operaciones para corregir un movimiento guardado. */
+    val enEdicion: Boolean = false,
+    /** Mientras se leen de Room los datos del movimiento a editar, Guardar queda deshabilitado. */
+    val cargandoMovimiento: Boolean = false,
     val guardando: Boolean = false,
     val guardadoExitoso: Boolean = false,
 )
@@ -32,4 +36,7 @@ data class ErroresFormulario(
     val general: String? = null,
     val faltaCategoria: Boolean = false,
     val falloAlGuardar: Boolean = false,
+    /** Se pidió editar un ID que otra acción ya eliminó. */
+    val movimientoNoEncontrado: Boolean = false,
+    val falloAlCargar: Boolean = false,
 )

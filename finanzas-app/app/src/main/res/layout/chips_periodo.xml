@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Chips Día/Semana/Mes/Año/Período y el rango elegido. Lo incluyen las cabeceras de Inicio y
+    Operaciones; ui/comun/ChipsPeriodo.kt los conecta y ui/comun/PeriodoGuardado.kt guarda la elección.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/grupoPeriodo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:selectionRequired="true"
+            app:singleLine="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipDia"
+                style="@style/Widget.Finanzas.ChipPeriodo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/periodo_dia" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipSemana"
+                style="@style/Widget.Finanzas.ChipPeriodo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/periodo_semana" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipMes"
+                style="@style/Widget.Finanzas.ChipPeriodo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/periodo_mes" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipAnio"
+                style="@style/Widget.Finanzas.ChipPeriodo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/periodo_anio" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPersonalizado"
+                style="@style/Widget.Finanzas.ChipPeriodo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/periodo_personalizado" />
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+    <TextView
+        android:id="@+id/textoRangoPeriodo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="@color/color_sobre_cabecera_secundario"
+        tools:text="01/10/2026 – 31/10/2026" />
+</LinearLayout>

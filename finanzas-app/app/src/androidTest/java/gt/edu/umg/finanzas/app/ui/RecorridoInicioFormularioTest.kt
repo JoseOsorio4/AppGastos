@@ -5,7 +5,6 @@ import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -25,11 +24,9 @@ import gt.edu.umg.finanzas.app.FinanzasApp
 import gt.edu.umg.finanzas.app.R
 import gt.edu.umg.finanzas.app.ui.formulario.FormularioActivity
 import gt.edu.umg.finanzas.app.ui.inicio.InicioActivity
-import gt.edu.umg.finanzas.core.resultado.Resultado
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,14 +38,10 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class RecorridoInicioFormularioTest {
 
-    private val app: FinanzasApp get() = ApplicationProvider.getApplicationContext()
+    private val app: FinanzasApp get() = AyudaInterfaz.app
 
     @Before
-    fun baseLimpia() = runBlocking {
-        app.inicializacion.await()
-        app.dependencias.baseDatos.clearAllTables()
-        assertTrue(app.dependencias.inicializador.inicializar() is Resultado.Ok)
-    }
+    fun baseLimpia() = AyudaInterfaz.baseLimpia()
 
     @After
     fun temaDelSistema() {
@@ -180,20 +173,7 @@ class RecorridoInicioFormularioTest {
         reintentar { onView(withContentDescription("$categoria, seleccionada")).perform(scrollTo()) }
     }
 
-    private fun esperarTexto(id: Int, texto: String) =
-        reintentar { onView(withId(id)).check(matches(withText(texto))) }
+    private fun esperarTexto(id: Int, texto: String) = AyudaInterfaz.esperarTexto(id, texto)
 
-    /** Room responde en otro hilo y Espresso no lo espera: se repite la comprobación hasta 5 s. */
-    private fun reintentar(accion: () -> Unit) {
-        val limite = System.currentTimeMillis() + 5_000
-        while (true) {
-            try {
-                accion()
-                return
-            } catch (error: Throwable) {
-                if (System.currentTimeMillis() > limite) throw error
-                Thread.sleep(100)
-            }
-        }
-    }
+    private fun reintentar(accion: () -> Unit) = AyudaInterfaz.reintentar(accion)
 }

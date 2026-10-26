@@ -34,6 +34,24 @@
         <item name="cardElevation">1dp</item>
     </style>
 
+    <!--
+        Texto bajo los iconos de la barra inferior. Con letra grande, "Operaciones" se partía en dos líneas:
+        se queda en una y se reduce solo lo necesario. El tamaño máximo en sp sigue la escala del sistema.
+    -->
+    <style name="Widget.Finanzas.EtiquetaBarra" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:textColor">@color/color_sobre_cabecera</item>
+        <item name="autoSizeTextType">uniform</item>
+        <item name="autoSizeMinTextSize">9sp</item>
+        <item name="autoSizeMaxTextSize">12sp</item>
+    </style>
+
     <style name="TextAppearance.Finanzas.Etiqueta" parent="TextAppearance.Material3.LabelMedium">
         <item name="android:textColor">@color/color_texto_secundario</item>
         <item name="android:textAllCaps">true</item>

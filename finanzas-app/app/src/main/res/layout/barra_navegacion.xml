@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Barra inferior: Inicio, Añadir (botón amarillo central) y Operaciones.
-    Operaciones se muestra deshabilitada hasta que exista su pantalla (Inc. 4).
+    Barra inferior de Inicio y Operaciones: Inicio, Añadir (botón amarillo central) y Operaciones.
+    ui/comun/NavegacionPrincipal.kt conecta los tres botones y marca el destino actual.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -27,18 +27,17 @@
         android:orientation="vertical">
 
         <ImageView
+            android:id="@+id/iconoIrInicio"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:importantForAccessibility="no"
             android:src="@drawable/ic_inicio"
-            app:tint="@color/color_acento" />
+            app:tint="@color/color_sobre_cabecera" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/nav_inicio"
-            android:textAppearance="?attr/textAppearanceLabelMedium"
-            android:textColor="@color/color_sobre_cabecera" />
+            android:id="@+id/textoIrInicio"
+            style="@style/Widget.Finanzas.EtiquetaBarra"
+            android:text="@string/nav_inicio" />
     </LinearLayout>
 
     <LinearLayout
@@ -59,12 +58,9 @@
             app:tint="@color/color_sobre_acento" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/Widget.Finanzas.EtiquetaBarra"
             android:importantForAccessibility="no"
-            android:text="@string/nav_agregar"
-            android:textAppearance="?attr/textAppearanceLabelMedium"
-            android:textColor="@color/color_sobre_cabecera" />
+            android:text="@string/nav_agregar" />
     </LinearLayout>
 
     <LinearLayout
@@ -72,14 +68,15 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:alpha="0.5"
-        android:contentDescription="@string/nav_operaciones_pendiente"
-        android:enabled="false"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:focusable="true"
         android:gravity="center"
         android:minHeight="56dp"
         android:orientation="vertical">
 
         <ImageView
+            android:id="@+id/iconoIrOperaciones"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:importantForAccessibility="no"
@@ -87,11 +84,8 @@
             app:tint="@color/color_sobre_cabecera" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:importantForAccessibility="no"
-            android:text="@string/nav_operaciones"
-            android:textAppearance="?attr/textAppearanceLabelMedium"
-            android:textColor="@color/color_sobre_cabecera" />
+            android:id="@+id/textoIrOperaciones"
+            style="@style/Widget.Finanzas.EtiquetaBarra"
+            android:text="@string/nav_operaciones" />
     </LinearLayout>
 </LinearLayout>

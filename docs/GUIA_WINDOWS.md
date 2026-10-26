@@ -39,7 +39,7 @@ Para correr una sola clase de pruebas: `... mvn.cmd -f finanzas-core\pom.xml tes
    `.\gradlew.bat :app:dependencyInsight --dependency finanzas-core --configuration debugRuntimeClasspath`
    Debe mencionar `gt.edu.umg.finanzas:finanzas-core:0.3.0`.
 6. `.\gradlew.bat :app:assembleDebug`, luego ejecuta `app` en el emulador (o **Run**).
-7. Pruebas instrumentadas (Room e interfaz), con el emulador abierto: `.\gradlew.bat :app:connectedDebugAndroidTest`. Deben pasar 25 pruebas; el informe queda en `app\build\reports\androidTests\connected\`. En Android Studio también se puede usar clic derecho sobre `app/src/androidTest` → **Run 'Tests in…'**.
+7. Pruebas instrumentadas (Room e interfaz), con el emulador abierto: `.\gradlew.bat :app:connectedDebugAndroidTest`. Deben pasar 33 pruebas; el informe queda en `app\build\reports\androidTests\connected\`. En Android Studio también se puede usar clic derecho sobre `app/src/androidTest` → **Run 'Tests in…'**.
 
 ## 3. Qué enviar después
 La salida final (o el primer error completo) de `mvn clean install`, `dependencyInsight` y `assembleDebug`, y una captura del emulador. Con eso se actualiza el [README](../README.md#estado-real).
@@ -54,6 +54,7 @@ La salida final (o el primer error completo) de `mvn clean install`, `dependency
 | La pantalla dice `desconocida` | El recurso `finanzas-core.properties` no quedó dentro del JAR. |
 | La pantalla dice `${project.version}` | Se perdió `<filtering>true</filtering>` en el `pom.xml`. |
 | Error `Unresolved reference: kotlinOptions` | Configuración antigua: con AGP 9 se usa `kotlin { compilerOptions { … } }`. |
+| Las pruebas de pantalla fallan con `RootViewWithoutFocusException` y la captura de error sale negra | El emulador dejó de dibujar. Ciérralo y ábrelo en frío (**Cold Boot Now** en el Device Manager) y repite las pruebas. |
 | Maven y Android Studio parecen usar otra `.m2` | Revisa si `%USERPROFILE%\.m2\settings.xml` define un `localRepository` distinto. |
 
 ## Al cambiar el core

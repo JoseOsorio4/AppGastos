@@ -8,21 +8,24 @@ Rutas relativas a `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/` (app
 
 ## 1. Funciones visibles
 
-Las filas marcadas **Existe** tienen todas sus columnas implementadas. En las demás, la columna Core ya existe (Inc. 1) y la Persistencia sin "(Inc. n)" existe desde el Inc. 2. El detalle de cada acción de pantalla está en la [§4](#4-app-pantallas-incremento-3).
+Las filas marcadas **Existe** tienen todas sus columnas implementadas. En las demás, la columna Core ya existe (Inc. 1) y la Persistencia sin "(Inc. n)" existe desde el Inc. 2. El detalle de cada acción de pantalla está en la [§4](#4-app-pantallas-incrementos-3-y-4).
 
 | Función visible | Estado | XML / ID | Activity | ViewModel | Core | Persistencia o red |
 |---|---|---|---|---|---|---|
 | Versión del core en Inicio | **Existe** (Inc. 0, movida al pie de Inicio en el 3) | `res/layout/activity_inicio.xml` · `textoConexionCore` | `ui/inicio/InicioActivity.onCreate` | — | `InfoCore.version` | — (leída de `finanzas-core.properties` dentro del JAR) |
 | Ver saldo disponible | **Existe** (Inc. 3) | `activity_inicio.xml` · `textoSaldoDisponible` | `InicioActivity.pintar` | `InicioViewModel.estado` | `servicio/ServicioFinanzas.observarResumen` | `RepositorioUsuarioRoom.observarUsuario` → `UsuarioDao.observarPorId` |
 | Ver ingresos, gastos y resultado | **Existe** (Inc. 3) | `textoIngresos`, `textoGastos`, `textoResultado` | `InicioActivity.pintar` | `InicioViewModel.estado` | `ServicioFinanzas.observarResumen`, `ResumenPeriodo.resultadoCentavos` | `RepositorioTransaccionRoom.observarTotales` → `TransaccionDao.observarTotales` |
-| Filtrar período en Inicio | **Existe** (Inc. 3) | `grupoPeriodo` · `chipDia` … `chipPersonalizado`; `textoRangoPeriodo` | `InicioActivity.conectarAcciones`, `abrirSelectorRango` | `InicioViewModel.seleccionarFiltro`, `seleccionarRango` | `dominio/Periodo.de`, `Periodo.personalizado` | mismas consultas con el nuevo intervalo |
+| Filtrar período en Inicio | **Existe** (Inc. 3; compartido desde el 4) | `chips_periodo.xml` · `grupoPeriodo`, `chipDia` … `chipPersonalizado`, `textoRangoPeriodo` | `ui/comun/ChipsPeriodo` (lo crea `InicioActivity.onCreate`) | `InicioViewModel.seleccionarFiltro`, `seleccionarRango` → `ui/comun/PeriodoGuardado` | `dominio/Periodo.de`, `Periodo.personalizado` | mismas consultas con el nuevo intervalo |
 | Dibujar anillo de gastos | **Existe** (Inc. 3) | `graficoGastos` (`GraficoAnilloView`), `textoTotalGastosAnillo`, `contenedorLeyenda`, `textoSinGastos` | `InicioActivity.pintar` → `GraficoAnilloView.mostrar`, `LeyendaGastos.mostrar` | `InicioViewModel.estado` | `reglas/DistribucionGastos.calcular` | `TransaccionDao.observarGastosPorCategoria` |
-| Abrir el formulario | **Existe** (Inc. 3) | `barra_navegacion.xml` · `botonAgregarMovimiento` | `InicioActivity.conectarAcciones` → `FormularioActivity` | — | — | — |
+| Abrir el formulario | **Existe** (Inc. 3) | `barra_navegacion.xml` · `botonAgregarMovimiento` | `NavegacionPrincipal.conectar` → `FormularioActivity.paraRegistrar` | — | — | — |
 | Elegir tipo y categoría | **Existe** (Inc. 3) | `activity_formulario.xml` · `grupoTipo`, `listaCategorias` (`item_categoria.xml`) | `FormularioActivity`, `CategoriasAdapter` | `FormularioViewModel.elegirTipo`, `elegirCategoria` | `ServicioFinanzas.observarCategorias` | `CategoriaDao.observarActivasPorTipo` |
 | Registrar movimiento | **Existe** (Inc. 3) | `entradaMonto`, `chipSumar5…50`, `entradaFecha`, `entradaDescripcion` · `botonGuardar` | `FormularioActivity` | `FormularioViewModel.guardar` | `reglas/ValidadorMovimiento.validar`, `reglas/CalculoSaldo.deltaCrear` y `aplicar` | `datos/local/OperacionesMovimientoRoom.crear` |
-| Editar movimiento | Core y Room existen; pantalla Inc. 4 | `dialogo_detalle_movimiento.xml` · `botonEditar` → `botonGuardar` | `OperacionesActivity` → `FormularioActivity` | `FormularioViewModel.guardar` | `CalculoSaldo.deltaEditar` | `OperacionesMovimientoRoom.editar` |
-| Eliminar movimiento | Core y Room existen; pantalla Inc. 4 | `botonEliminar` + diálogo de confirmación | `OperacionesActivity` | `OperacionesViewModel.eliminar` | `CalculoSaldo.deltaEliminar` | `OperacionesMovimientoRoom.eliminar` |
-| Filtrar operaciones | Core y Room existen; pantalla Inc. 4 | `chipTodos/chipIngresos/chipGastos`, rango | `OperacionesActivity` | `OperacionesViewModel.seleccionarFiltro` | `Periodo.de` | `TransaccionDao.observarMovimientos` |
+| Ver operaciones | **Existe** (Inc. 4) | `activity_operaciones.xml` · `listaOperaciones` (`item_encabezado_dia.xml`, `item_operacion.xml`), `textoSinOperaciones` | `ui/operaciones/OperacionesActivity.pintar` → `OperacionesAdapter` | `OperacionesViewModel.estado` (`FilaOperacion.agrupar`) | `ServicioFinanzas.observarMovimientos` | `RepositorioTransaccionRoom.observarMovimientos` → `TransaccionDao.observarMovimientos` |
+| Filtrar operaciones | **Existe** (Inc. 4) | `grupoTipoFiltro` · `chipTodos`, `chipIngresos`, `chipGastos`; `chips_periodo.xml` | `OperacionesActivity` + `ui/comun/ChipsPeriodo` | `OperacionesViewModel.filtrarTipo`, `seleccionarFiltro`, `seleccionarRango` | `Periodo.de`, `Periodo.personalizado` | misma consulta con tipo e intervalo |
+| Ver detalle | **Existe** (Inc. 4) | `dialogo_detalle_movimiento.xml` | `OperacionesActivity.abrirDetalle` → `DetalleMovimientoDialogo` | `OperacionesUiState.movimiento(id)` | — | ya leído en la lista |
+| Editar movimiento | **Existe** (Inc. 4) | `dialogo_detalle_movimiento.xml` · `botonEditar` → `activity_formulario.xml` · `botonGuardar` | `DetalleMovimientoDialogo` → `FormularioActivity.paraEditar` | `FormularioViewModel.cargarMovimiento`, `guardar` | `ValidadorMovimiento.validar`, `CalculoSaldo.deltaEditar` | `ServicioFinanzas.obtenerParaEditar` / `editar` → `OperacionesMovimientoRoom.editar` |
+| Eliminar movimiento | **Existe** (Inc. 4) | `botonEliminar` → diálogo `ConfirmarEliminacionDialogo` (Cancelar / Eliminar) | `DetalleMovimientoDialogo` → `ConfirmarEliminacionDialogo` | `OperacionesViewModel.eliminar` | `CalculoSaldo.deltaEliminar` | `ServicioFinanzas.eliminar` → `OperacionesMovimientoRoom.eliminar` |
+| Navegar con la barra inferior | **Existe** (Inc. 4) | `barra_navegacion.xml` · `botonIrInicio`, `botonAgregarMovimiento`, `botonIrOperaciones` | `ui/comun/NavegacionPrincipal.conectar` (en Inicio y Operaciones) | — | — | — |
 | Recalcular saldo | Core y Room existen (Room adelantado al Inc. 3); aviso visible Inc. 5 | aviso `botonRecalcularSaldo` | `InicioActivity` | `InicioViewModel.recalcularSaldo` | `CalculoSaldo.saldoDesde` | `datos/local/ReconstructorSaldoRoom.reconstruirSiPendiente` |
 | Cambiar tema | Pendiente (Inc. 5) | menú `opcionTema` | `InicioActivity` | — | — | `PreferenciaTema` |
 | Consultar tasa | Core existe; pantalla Inc. 6 | `tarjeta_tasa.xml` · `botonReintentarTasa` | `InicioActivity` | `InicioViewModel.estadoTasa` | `dominio/TasaCambio` | `RepositorioTipoCambio` → `ClienteBanguat` (Inc. 6) |
@@ -98,7 +101,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  P[Pantalla<br/>Inc. 3] --> S[ServicioFinanzas<br/>core]
+  P[Pantallas<br/>Inc. 3 y 4] --> S[ServicioFinanzas<br/>core]
   S --> C[contratos<br/>core]
   C --> R[Repositorio*Room<br/>OperacionesMovimientoRoom]
   R --> D[UsuarioDao · CategoriaDao<br/>TransaccionDao]
@@ -153,52 +156,77 @@ flowchart LR
 
 `BaseDePrueba.servicioSobre` arma `ServicioFinanzas` con las mismas clases Room que `Dependencias`.
 
-## 4. App: pantallas (incremento 3)
+## 4. App: pantallas (incrementos 3 y 4)
 
 Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **Activity** conecta toques y texto con el ViewModel y dibuja su estado; el **ViewModel** guarda el estado (y lo copia a `SavedStateHandle`) y llama al servicio; **ServicioFinanzas** y el core validan y calculan; **Room** guarda y avisa con `Flow`.
 
-### 4.1 Qué archivo responde a cada acción
+### 4.1 Inicio y Formulario: qué archivo responde a cada acción
 
 | Acción visible | XML / ID | Activity (método) | ViewModel (método) | Servicio → Room |
 |---|---|---|---|---|
 | Ver saldo, ingresos, gastos y resultado | `activity_inicio.xml` · `textoSaldoDisponible`, `textoIngresos`, `textoGastos`, `textoResultado` | `InicioActivity.pintar` | `InicioViewModel.estado` | `observarResumen` → `UsuarioDao.observarPorId` + `TransaccionDao.observarTotales` |
-| Tocar Día/Semana/Mes/Año | `chipDia`, `chipSemana`, `chipMes`, `chipAnio` | `conectarAcciones` | `seleccionarFiltro` | las mismas consultas con el nuevo `Periodo` |
-| Tocar Período (rango) | `chipPersonalizado` → `MaterialDatePicker` | `abrirSelectorRango`, `conectarSelector` | `seleccionarRango` | `Periodo.personalizado` |
+| Tocar Día/Semana/Mes/Año | `chips_periodo.xml` · `chipDia`, `chipSemana`, `chipMes`, `chipAnio` | `ChipsPeriodo` (creado en `InicioActivity.onCreate`) | `seleccionarFiltro` → `PeriodoGuardado.elegirFiltro` | las mismas consultas con el nuevo `Periodo` |
+| Tocar Período (rango) | `chipPersonalizado` → `MaterialDatePicker` | `ChipsPeriodo.abrirSelectorRango`, `conectar` | `seleccionarRango` → `PeriodoGuardado.elegirRango` | `Periodo.personalizado` |
 | Ver anillo y leyenda | `graficoGastos`, `textoTotalGastosAnillo`, `contenedorLeyenda` (`item_leyenda_gasto.xml`), `textoSinGastos` | `pintar` → `GraficoAnilloView.mostrar`, `LeyendaGastos.mostrar` | `estado.segmentos` | `observarDistribucionGastos` → `TransaccionDao.observarGastosPorCategoria` |
-| Añadir | `barra_navegacion.xml` · `botonAgregarMovimiento` | `conectarAcciones` → abre `FormularioActivity` | — | — |
+| Añadir | `barra_navegacion.xml` · `botonAgregarMovimiento` | `NavegacionPrincipal.conectar` → `FormularioActivity.paraRegistrar` | — | — |
 | Gasto / Ingreso | `activity_formulario.xml` · `grupoTipo` | `FormularioActivity.conectarAcciones` | `elegirTipo` (borra la categoría elegida) | `observarCategorias` → `CategoriaDao.observarActivasPorTipo` |
 | Escribir monto | `entradaMonto` en `campoMonto` | `doAfterTextChanged` | `onMontoCambiado` | — (se valida al guardar) |
 | +5/+10/+20/+50 | `chipSumar5`, `chipSumar10`, `chipSumar20`, `chipSumar50` | `conectarAcciones` | `sumar` → `Dinero.desdeTexto` y `Dinero.aTexto` | — |
 | Elegir categoría | `listaCategorias` · `item_categoria.xml` | `CategoriasAdapter.onBindViewHolder` | `elegirCategoria` | — |
 | Elegir fecha | `entradaFecha` / icono de `campoFecha` → `MaterialDatePicker` | `abrirSelectorFecha` | `elegirFecha` | — |
 | Escribir descripción | `entradaDescripcion` en `campoDescripcion` (contador = `Transaccion.DESCRIPCION_MAXIMA`) | `doAfterTextChanged` | `onDescripcionCambiada` | — |
-| Guardar | `botonGuardar` | `conectarAcciones`; `pintar` lo deshabilita mientras `guardando` | `guardar` | `registrar` → `OperacionesMovimientoRoom.crear` |
+| Guardar | `botonGuardar` | `conectarAcciones`; `pintar` lo deshabilita mientras `guardando` o `cargandoMovimiento` | `guardar` (sin `idEnEdicion` registra; con él edita) | `registrar` → `OperacionesMovimientoRoom.crear`, o `editar` → `OperacionesMovimientoRoom.editar` |
 | Ver errores | `campoMonto.error`, `campoFecha.error`, `campoDescripcion.error`, `textoErrorCategoria`, `textoErrorGeneral` | `pintar` | `estado.errores` (mensajes del core por `CampoMovimiento`) | `ValidadorMovimiento.validar` |
 | Cancelar / Volver | `botonCancelar`, `botonVolver` | `finish()` | — | — |
 
-### 4.2 Archivos de pantalla
+### 4.2 Operaciones (incremento 4): qué archivo responde a cada acción
+
+| Acción visible | XML / ID | Activity o diálogo (método) | ViewModel (método) | Servicio → Room |
+|---|---|---|---|---|
+| Ir a Operaciones | `barra_navegacion.xml` · `botonIrOperaciones` | `NavegacionPrincipal.conectar` (desde Inicio abre `OperacionesActivity`; en Operaciones no hace nada) | — | — |
+| Ver la lista agrupada por día | `activity_operaciones.xml` · `listaOperaciones` con `item_encabezado_dia.xml` y `item_operacion.xml` | `OperacionesActivity.pintar` → `OperacionesAdapter.submitList` | `estado.filas` (`FilaOperacion.agrupar`) | `observarMovimientos(periodo, tipo)` → `TransaccionDao.observarMovimientos` |
+| Ver estado vacío | `textoSinOperaciones` | `pintar` (visible si no carga y no hay filas) | `estado.cargando`, `estado.filas` | — |
+| Filtrar por tipo | `grupoTipoFiltro` · `chipTodos`, `chipIngresos`, `chipGastos` | `onCreate` (clics) y `pintar` (marca el chip) | `filtrarTipo` (null = Todos, guardado en `SavedStateHandle`) | la misma consulta con `tipo` |
+| Filtrar por período | `chips_periodo.xml` (el mismo de Inicio) | `ChipsPeriodo` | `seleccionarFiltro`, `seleccionarRango` → `PeriodoGuardado` | la misma consulta con el nuevo intervalo |
+| Ver detalle | toque en una fila → `dialogo_detalle_movimiento.xml` | `OperacionesActivity.abrirDetalle` → `DetalleMovimientoDialogo.pintar` | `estado.movimiento(id)` | ya leído en la lista |
+| Editar | `botonEditar` del detalle | `DetalleMovimientoDialogo` → `FormularioActivity.paraEditar(id)` | `FormularioViewModel.cargarMovimiento`, `guardar` | `obtenerParaEditar`, `editar` → `OperacionesMovimientoRoom.editar` |
+| Eliminar | `botonEliminar` del detalle → `ConfirmarEliminacionDialogo` | Cancelar (`setNegativeButton`, sin acción) / Eliminar (`setPositiveButton`) | `eliminar` (solo desde Eliminar) | `eliminar` → `OperacionesMovimientoRoom.eliminar` |
+| Aviso tras eliminar | `Snackbar` sobre la barra inferior | `pintar` → `avisoMostrado` | `estado.aviso` (`ELIMINADO`, `NO_SE_PUDO_ELIMINAR`) | — |
+| Volver a Inicio | `botonIrInicio` o atrás | `NavegacionPrincipal.conectar` → `finish()` | — | Inicio ya está observando y repinta solo |
+
+### 4.3 Archivos de pantalla
 
 | Archivo | Responsabilidad |
 |---|---|
-| `ui/inicio/InicioActivity.kt` | Conecta chips y botón Añadir; `pintar` formatea montos con `Dinero.formatear` y muestra u oculta el anillo |
-| `ui/inicio/InicioViewModel.kt`, `InicioUiState.kt` | Período elegido (en `SavedStateHandle`) → `flatMapLatest` sobre `observarResumen` y `observarDistribucionGastos`. Avisa si la siembra inicial falló |
+| `ui/inicio/InicioActivity.kt` | Crea `ChipsPeriodo` y conecta la barra con `NavegacionPrincipal`; `pintar` formatea montos con `Dinero.formatear` y muestra u oculta el anillo |
+| `ui/inicio/InicioViewModel.kt`, `InicioUiState.kt` | Período elegido (`PeriodoGuardado`) → `flatMapLatest` sobre `observarResumen` y `observarDistribucionGastos`. Avisa si la siembra inicial falló |
+| `ui/operaciones/OperacionesActivity.kt` | Recibe los filtros y el toque en una fila; `pintar` entrega las filas al adaptador, marca los chips y muestra el aviso de una sola vez |
+| `ui/operaciones/OperacionesViewModel.kt`, `OperacionesUiState.kt` | `combine(período, tipo)` → `flatMapLatest` sobre `observarMovimientos`; `eliminar` traduce el `Resultado` a `AvisoOperaciones`. `FiltrosOperaciones` y `movimiento(id)` viven en el estado |
+| `ui/operaciones/FilaOperacion.kt` | `EncabezadoDia` o `Movimiento`; `agrupar` inserta un encabezado cada vez que cambia la fecha (la consulta ya llega ordenada) |
+| `ui/operaciones/OperacionesAdapter.kt` | Dos tipos de fila con `DiffUtil`; icono y color de la categoría, monto con signo y descripción accesible con la fecha |
+| `ui/operaciones/DetalleMovimientoDialogo.kt`, `ConfirmarEliminacionDialogo.kt` | `DialogFragment` (sobreviven a la rotación) que leen el `OperacionesViewModel` de la Activity; el detalle se cierra solo si el movimiento desaparece |
+| `ui/comun/ChipsPeriodo.kt`, `PeriodoGuardado.kt` | Chips de período y selector de rango compartidos por Inicio y Operaciones; la selección (`SeleccionPeriodo`) se guarda en `SavedStateHandle` |
+| `ui/comun/NavegacionPrincipal.kt` | Único lugar que conecta `barra_navegacion.xml`: pila Inicio → Operaciones → Formulario, destino actual en amarillo y `isSelected` |
+| `ui/comun/MontoConSigno.kt` | "+Q"/"-Q", color y nombre del tipo; lo usan la lista, el detalle y la confirmación |
 | `ui/inicio/GraficoAnilloView.kt` | Solo dibuja arcos con los puntos básicos recibidos y los colores de `RecursosCategoria` |
 | `ui/inicio/LeyendaGastos.kt` | Filas con icono, nombre, porcentaje e importe; el anillo no depende solo del color |
-| `ui/formulario/FormularioActivity.kt` | Envía cada cambio al ViewModel; reescribe un campo solo si su texto difiere, para no mover el cursor; se cierra con `guardadoExitoso` |
-| `ui/formulario/FormularioViewModel.kt`, `FormularioUiState.kt` | Campos crudos y errores por campo; copia los campos a `SavedStateHandle`; `guardar` ignora el segundo toque (`guardando` / `guardadoExitoso`) |
+| `ui/formulario/FormularioActivity.kt` | `paraRegistrar` / `paraEditar` arman el `Intent`. Envía cada cambio al ViewModel; reescribe un campo solo si su texto difiere, para no mover el cursor; se cierra con `guardadoExitoso` |
+| `ui/formulario/FormularioViewModel.kt`, `FormularioUiState.kt` | Campos crudos y errores por campo; copia los campos a `SavedStateHandle`; en edición carga el movimiento una sola vez (`movimientoCargado`); `guardar` ignora el segundo toque (`guardando` / `guardadoExitoso`) |
 | `ui/formulario/CategoriasAdapter.kt` | Cuadrícula de 4 columnas; marca la elegida con color y descripción accesible "…, seleccionada" |
 | `ui/comun/RecursosCategoria.kt` | Clave → icono y color; genérico para una clave desconocida |
-| `ui/comun/Fechas.kt`, `BarrasSistema.kt` | Formato dd/MM/yyyy y milisegundos UTC del selector; espacio para barras del sistema y teclado (targetSdk 36 dibuja bajo ellas) |
+| `ui/comun/Fechas.kt`, `BarrasSistema.kt` | Formato dd/MM/yyyy, encabezado "Viernes 23/10/2026" (`textoDia`, en español) y milisegundos UTC del selector; espacio para barras del sistema y teclado (targetSdk 36 dibuja bajo ellas) |
 | `res/values/colors.xml`, `res/values-night/colors.xml`, `themes.xml` | Colores por uso (`color_cabecera`, `color_ingreso`, `color_gasto`…) redefinidos para el tema oscuro; tema `Material3.DayNight` |
 
-### 4.3 Rotación, tema y doble toque
+### 4.4 Rotación, tema y doble toque
 
-- **Rotación o cambio de tema:** la Activity se recrea y el ViewModel sobrevive. La Activity vuelve a pintar desde `estado`, y los selectores abiertos recuperan sus acciones por etiqueta.
-- **Muerte del proceso:** tipo, monto, categoría, fecha y descripción se leen de `SavedStateHandle`; las categorías se vuelven a consultar a Room.
+- **Rotación o cambio de tema:** la Activity se recrea y el ViewModel sobrevive. La Activity vuelve a pintar desde `estado`, y los selectores abiertos recuperan sus acciones por etiqueta. En Operaciones, el detalle y la confirmación son `DialogFragment`: Android los vuelve a crear y leen el mismo ViewModel. Los filtros de tipo y período se guardan en `SavedStateHandle`.
+- **Letra grande:** `FormularioActivity.columnasCategorias` usa 4 columnas con letra normal y 3 o 2 cuando la escala no deja unos 80 dp por nombre. Las etiquetas de la barra (`Widget.Finanzas.EtiquetaBarra`) y el centro del anillo se reducen solo lo necesario para no partirse ni salirse.
+- **Edición:** el movimiento se carga de Room una sola vez; la bandera `movimientoCargado` evita que una rotación borre lo que ya se cambió.
+- **Estado guardado (muerte del proceso):** tipo, monto, categoría, fecha y descripción se copian a `SavedStateHandle` y un ViewModel nuevo los lee de ahí; las categorías se vuelven a consultar a Room. `FormularioViewModelTest` prueba esa recuperación con un `SavedStateHandle` precargado; matar el proceso con el formulario abierto no se ha probado.
 - **Doble toque:** `FormularioViewModel.guardar` retorna si `guardando` o `guardadoExitoso` ya están activos, y el botón se deshabilita.
 - **Tema:** sigue al sistema (`DayNight`). El selector Sistema/Claro/Oscuro llega en el Inc. 5.
 
-### 4.4 Pruebas de interfaz (`app/src/androidTest/.../ui/`)
+### 4.5 Pruebas de interfaz (`app/src/androidTest/.../ui/`)
 
 | Prueba | Qué comprueba |
 |---|---|
@@ -208,7 +236,15 @@ Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **A
 | `…errores_claros_sin_categoria_y_con_coma_decimal` | "Elige una categoría" y "Usa punto para los decimales"; no se escribe nada |
 | `…las_categorias_se_filtran_por_tipo` | Gasto muestra Alimentación y no Salario; Ingreso, al revés |
 | `…los_botones_rapidos_suman_al_monto` | 2.50 + 10 + 5 = 17.50 |
-| `FormularioViewModelTest` | Un ViewModel nuevo recupera los campos desde `SavedStateHandle` |
+| `FormularioViewModelTest.recupera_los_campos_desde_un_estado_guardado` | Un ViewModel creado con un `SavedStateHandle` precargado muestra esos campos (no mata un proceso real) |
+| `FormularioViewModelTest.en_edicion_carga_el_movimiento_y_guarda_con_editar` | Con un ID en edición, el formulario se llena desde Room y Guardar cambia ese movimiento sin crear otro |
+| `FormularioViewModelTest.editar_un_id_que_ya_no_existe_avisa_y_no_inserta` | Un ID borrado muestra el aviso y no inserta nada |
+| `RecorridoOperacionesTest.lista_vacia_muestra_el_aviso` | Sin movimientos aparece `textoSinOperaciones` |
+| `…filtros_por_tipo_y_periodo` | Ingresos, Gastos, Día y Todos se combinan con el período |
+| `…editar_importe_y_tipo_actualiza_operaciones_e_inicio` | Gasto Q 30 → ingreso Q 45 desde el detalle; la fila cambia y Inicio muestra Q 145.00 |
+| `…caso_a_editar_y_eliminar_el_gasto_desde_operaciones` | Caso a de §14.1 desde la pantalla: Q 70 → Q 80 (gasto editado a Q 20) → Q 100 (gasto eliminado) |
+| `…cancelar_la_eliminacion_no_borra_y_confirmar_si` | Cancelar deja 3 movimientos; Eliminar deja 2 e Inicio vuelve a Q 70.00 |
+| `…la_barra_inferior_va_y_vuelve_sin_apilar_pantallas` | Tocar Operaciones dentro de Operaciones no hace nada; Inicio la cierra |
 
 ## 5. Recorridos reales
 
@@ -234,6 +270,13 @@ Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **A
 5. Room invalida las tablas; `InicioViewModel.estado` vuelve a emitir y `InicioActivity.pintar` muestra el saldo, los totales y el anillo nuevos sin recargar.
 
 Capturas del emulador: [Inicio](referencias/capturas/inc3-inicio-con-datos.png), [Formulario](referencias/capturas/inc3-formulario-vacio.png), [Inicio oscuro](referencias/capturas/inc3-inicio-oscuro.png), [Formulario oscuro](referencias/capturas/inc3-formulario-oscuro.png).
+
+### 5.4 Incremento 4: editar y eliminar desde Operaciones
+1. Inicio → `botonIrOperaciones`: `NavegacionPrincipal` abre `OperacionesActivity`. `OperacionesViewModel` combina período y tipo y observa `ServicioFinanzas.observarMovimientos`; `FilaOperacion.agrupar` intercala un encabezado por día.
+2. Toque en una fila → `DetalleMovimientoDialogo` con categoría, monto con signo, tipo, fecha y descripción.
+3. **Editar** → `FormularioActivity.paraEditar(id)`. `FormularioViewModel.cargarMovimiento` llama a `ServicioFinanzas.obtenerParaEditar` y llena los campos. Guardar llama a `ServicioFinanzas.editar`; `OperacionesMovimientoRoom.editar` lee el anterior, valida el nuevo, calcula `CalculoSaldo.deltaEditar` y escribe movimiento y saldo en un solo `withTransaction`.
+4. **Eliminar** → `ConfirmarEliminacionDialogo`. Cancelar solo cierra el diálogo. Eliminar llama a `OperacionesViewModel.eliminar` → `ServicioFinanzas.eliminar` → `OperacionesMovimientoRoom.eliminar` (borra y aplica `deltaEliminar` en la misma transacción).
+5. Tras cada COMMIT, Room vuelve a emitir: la lista de Operaciones y el Inicio que quedó debajo se repintan sin recargar. Atrás o `botonIrInicio` cierran Operaciones.
 
 ## 6. Dónde están los pilares de POO
 
@@ -262,10 +305,15 @@ Capturas del emulador: [Inicio](referencias/capturas/inc3-inicio-con-datos.png),
 | ¿Qué pasa al cambiar el esquema? | Se sube la versión y se escribe una `Migration`; sin ella la app falla en vez de borrar datos | `AppDatabase`, `app/schemas/` | v1 existe; migración en Inc. 6 |
 | ¿Dónde se dibuja el botón Guardar? | En el XML del formulario, con ID `botonGuardar` | `activity_formulario.xml` | Existe |
 | ¿Qué pasa al presionarlo? | La Activity llama a `guardar()`; el ViewModel ignora toques repetidos y llama al servicio | `FormularioActivity.conectarAcciones`, `FormularioViewModel.guardar` | Existe, probado (doble toque = 1 movimiento) |
-| ¿Por qué no se pierde lo escrito al rotar o cambiar de tema? | El ViewModel sobrevive a la recreación y además copia los campos a `SavedStateHandle` para la muerte del proceso | `FormularioViewModel.cambiarCampos` | Existe, probado |
+| ¿Por qué no se pierde lo escrito al rotar o cambiar de tema? | El ViewModel sobrevive a la recreación y además copia los campos a `SavedStateHandle` por si Android cierra el proceso | `FormularioViewModel.cambiarCampos` | Rotación y tema probados; recuperación desde estado guardado probada con un `SavedStateHandle` precargado |
 | ¿Quién decide los colores del tema oscuro? | Los mismos nombres de color en `values/` y `values-night/`; los layouts no cambian | `res/values-night/colors.xml` | Existe, revisado en capturas |
 | ¿Por qué la pantalla no calcula el anillo? | `DistribucionGastos` (core) calcula los puntos básicos y `GraficoAnilloView` solo dibuja | `GraficoAnilloView.mostrar` | Existe |
 | ¿Quién recalcula un saldo dañado? | `ReconstructorSaldoRoom`, solo si la bandera está activa; asigna y apaga la bandera en una transacción | `datos/local/ReconstructorSaldoRoom.kt` | Existe, probado (aviso visible Inc. 5) |
+| ¿Cómo se edita sin otra pantalla? | El mismo `FormularioActivity` recibe el ID en el `Intent`; el ViewModel carga el movimiento y `guardar` llama a `editar` en vez de `registrar` | `FormularioActivity.paraEditar`, `FormularioViewModel.guardar` | Existe, probado |
+| ¿Cómo cambia el saldo al editar o eliminar? | `CalculoSaldo.deltaEditar` (nuevo impacto − anterior) y `deltaEliminar`; se escriben con el movimiento en un solo `withTransaction` | `OperacionesMovimientoRoom.editar`, `eliminar` | Existe, probado |
+| ¿Qué evita borrar por accidente? | Solo el botón Eliminar del diálogo llama a `eliminar`; Cancelar, atrás o tocar fuera no tocan la base | `ConfirmarEliminacionDialogo` | Existe, probado |
+| ¿Por qué el detalle no se pierde al rotar? | Es un `DialogFragment`: Android lo vuelve a crear y lee el mismo ViewModel | `DetalleMovimientoDialogo` | Existe |
+| ¿Por qué "Inicio" no abre otra pantalla de Inicio? | Inicio siempre está debajo de Operaciones; `NavegacionPrincipal` hace `finish()` | `ui/comun/NavegacionPrincipal.kt` | Existe, probado |
 | ¿Qué pasa sin internet? | Las finanzas funcionan; USD usa la última tasa guardada o queda deshabilitado | `RepositorioTipoCambio` | Inc. 6 |
 
 Al terminar cada incremento: cambia "Pendiente" por la ruta y la función reales, y añade el recorrido del incremento en la §5.

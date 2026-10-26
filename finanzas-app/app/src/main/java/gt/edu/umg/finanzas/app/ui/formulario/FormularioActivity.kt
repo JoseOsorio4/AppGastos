@@ -1,5 +1,7 @@
 package gt.edu.umg.finanzas.app.ui.formulario
 
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.widget.EditText
@@ -31,6 +33,21 @@ import kotlinx.coroutines.launch
  */
 class FormularioActivity : AppCompatActivity() {
 
+    companion object {
+        private const val COLUMNAS_CATEGORIAS = 4
+        // Ancho que necesita "Entretenimiento" con letra normal; con letra grande crece en proporción.
+        private const val ANCHO_CELDA_DP = 80f
+        private const val ETIQUETA_SELECTOR = "selectorFecha"
+
+        /** Desde el botón Añadir de la barra inferior. */
+        fun paraRegistrar(contexto: Context) = Intent(contexto, FormularioActivity::class.java)
+
+        /** Desde Editar en el detalle de Operaciones: el mismo formulario, con los datos guardados. */
+        fun paraEditar(contexto: Context, idTransaccion: Long) =
+            Intent(contexto, FormularioActivity::class.java)
+                .putExtra(FormularioViewModel.CLAVE_ID_EN_EDICION, idTransaccion)
+    }
+
     private lateinit var binding: ActivityFormularioBinding
     private val viewModel: FormularioViewModel by lazy {
         ViewModelProvider(this, FormularioViewModel.Fabrica)[FormularioViewModel::class.java]
@@ -53,7 +70,7 @@ class FormularioActivity : AppCompatActivity() {
             incluirTeclado = true,
         )
 
-        binding.listaCategorias.layoutManager = GridLayoutManager(this, COLUMNAS_CATEGORIAS)
+        binding.listaCategorias.layoutManager = GridLayoutManager(this, columnasCategorias())
         binding.listaCategorias.adapter = categorias
         // El límite sale de la regla del core, no se repite el número en el XML.
         binding.campoDescripcion.counterMaxLength = Transaccion.DESCRIPCION_MAXIMA
@@ -93,6 +110,7 @@ class FormularioActivity : AppCompatActivity() {
             finish()
             return
         }
+        binding.textoTituloFormulario.setText(if (estado.enEdicion) R.string.editar_movimiento else R.string.nuevo_movimiento)
         val idTipo = if (estado.tipo == TipoMovimiento.INGRESO) R.id.botonTipoIngreso else R.id.botonTipoGasto
         if (binding.grupoTipo.checkedButtonId != idTipo) binding.grupoTipo.check(idTipo)
         escribirSiCambio(binding.entradaMonto, estado.montoTexto)
@@ -109,12 +127,24 @@ class FormularioActivity : AppCompatActivity() {
         val errorCategoria = errores.categoria ?: if (errores.faltaCategoria) getString(R.string.error_sin_categoria) else null
         binding.textoErrorCategoria.text = errorCategoria
         binding.textoErrorCategoria.isVisible = errorCategoria != null
-        val errorGeneral = errores.general ?: if (errores.falloAlGuardar) getString(R.string.error_guardar) else null
+        val errorGeneral = errores.general ?: when {
+            errores.falloAlGuardar -> getString(R.string.error_guardar)
+            errores.movimientoNoEncontrado -> getString(R.string.error_movimiento_no_encontrado)
+            errores.falloAlCargar -> getString(R.string.error_cargar_movimiento)
+            else -> null
+        }
         binding.textoErrorGeneral.text = errorGeneral
         binding.textoErrorGeneral.isVisible = errorGeneral != null
 
-        binding.botonGuardar.isEnabled = !estado.guardando
+        binding.botonGuardar.isEnabled = !estado.guardando && !estado.cargandoMovimiento && !errores.movimientoNoEncontrado
         binding.botonGuardar.setText(if (estado.guardando) R.string.guardando else R.string.guardar)
+    }
+
+    // Cuatro columnas con letra normal; con letra grande, tres o dos, para no partir un nombre a mitad de palabra.
+    private fun columnasCategorias(): Int {
+        val configuracion = resources.configuration
+        val anchoCelda = ANCHO_CELDA_DP * configuracion.fontScale
+        return (configuracion.screenWidthDp / anchoCelda).toInt().coerceIn(2, COLUMNAS_CATEGORIAS)
     }
 
     // Reescribir un EditText con el mismo texto movería el cursor al inicio mientras el usuario escribe.
@@ -143,10 +173,6 @@ class FormularioActivity : AppCompatActivity() {
         selector.addOnPositiveButtonClickListener { milis -> viewModel.elegirFecha(Fechas.desdeMilisUtc(milis)) }
     }
 
-    private companion object {
-        const val COLUMNAS_CATEGORIAS = 4
-        const val ETIQUETA_SELECTOR = "selectorFecha"
-    }
 }
 
 private typealias SelectorFecha = MaterialDatePicker<Long>

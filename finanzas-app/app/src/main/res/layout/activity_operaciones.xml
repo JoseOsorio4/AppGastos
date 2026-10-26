@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Operaciones: cabecera con filtros de tipo y período, lista agrupada por día y barra inferior. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/raiz"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/cabecera"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/color_cabecera"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="12dp">
+
+        <TextView
+            android:id="@+id/textoTituloOperaciones"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:accessibilityHeading="true"
+            android:text="@string/nav_operaciones"
+            android:textColor="@color/color_sobre_cabecera"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:scrollbars="none">
+
+            <!-- Filtro por tipo; null en el ViewModel significa "Todos". -->
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/grupoTipoFiltro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipTodos"
+                    style="@style/Widget.Finanzas.ChipPeriodo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filtro_todos" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipIngresos"
+                    style="@style/Widget.Finanzas.ChipPeriodo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ingresos" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipGastos"
+                    style="@style/Widget.Finanzas.ChipPeriodo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/gastos" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+        <include
+            android:id="@+id/chipsPeriodo"
+            layout="@layout/chips_periodo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- Filas de item_encabezado_dia.xml e item_operacion.xml, de la fecha más reciente a la más antigua. -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/listaOperaciones"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="16dp" />
+
+        <TextView
+            android:id="@+id/textoSinOperaciones"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="32dp"
+            android:text="@string/sin_operaciones"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <include
+        android:id="@+id/barraNavegacion"
+        layout="@layout/barra_navegacion" />
+</LinearLayout>

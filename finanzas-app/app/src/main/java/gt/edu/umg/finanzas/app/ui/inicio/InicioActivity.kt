@@ -1,6 +1,5 @@
 package gt.edu.umg.finanzas.app.ui.inicio
 
-import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
@@ -12,14 +11,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.android.material.datepicker.MaterialDatePicker
 import gt.edu.umg.finanzas.app.R
 import gt.edu.umg.finanzas.app.databinding.ActivityInicioBinding
 import gt.edu.umg.finanzas.app.ui.comun.BarrasSistema
-import gt.edu.umg.finanzas.app.ui.comun.Fechas
-import gt.edu.umg.finanzas.app.ui.formulario.FormularioActivity
+import gt.edu.umg.finanzas.app.ui.comun.ChipsPeriodo
+import gt.edu.umg.finanzas.app.ui.comun.DestinoPrincipal
+import gt.edu.umg.finanzas.app.ui.comun.NavegacionPrincipal
 import gt.edu.umg.finanzas.core.InfoCore
-import gt.edu.umg.finanzas.core.dominio.FiltroPeriodo
 import gt.edu.umg.finanzas.core.reglas.Dinero
 import kotlinx.coroutines.launch
 
@@ -27,6 +25,7 @@ import kotlinx.coroutines.launch
 class InicioActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityInicioBinding
+    private lateinit var chipsPeriodo: ChipsPeriodo
     private val viewModel: InicioViewModel by lazy {
         ViewModelProvider(this, InicioViewModel.Fabrica)[InicioViewModel::class.java]
     }
@@ -43,11 +42,14 @@ class InicioActivity : AppCompatActivity() {
         BarrasSistema.reservarEspacio(binding.root, arriba = binding.cabecera, abajo = binding.barraNavegacion.root)
 
         binding.textoConexionCore.text = getString(R.string.version_core, InfoCore.version)
-        conectarAcciones()
-        // Tras una rotación, el selector de rango sigue abierto: se le vuelven a conectar las acciones.
-        // Con esa etiqueta solo se muestra el selector que crea abrirSelectorRango, por eso el cast es seguro.
-        @Suppress("UNCHECKED_CAST")
-        (supportFragmentManager.findFragmentByTag(ETIQUETA_SELECTOR) as? SelectorRango)?.let(::conectarSelector)
+        NavegacionPrincipal.conectar(this, binding.barraNavegacion, DestinoPrincipal.INICIO)
+        chipsPeriodo = ChipsPeriodo(
+            actividad = this,
+            vista = binding.chipsPeriodo,
+            alElegirFiltro = viewModel::seleccionarFiltro,
+            alElegirRango = viewModel::seleccionarRango,
+            seleccionActual = { viewModel.estado.value.seleccion },
+        )
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -56,24 +58,8 @@ class InicioActivity : AppCompatActivity() {
         }
     }
 
-    private fun conectarAcciones() {
-        binding.chipDia.setOnClickListener { viewModel.seleccionarFiltro(FiltroPeriodo.DIA) }
-        binding.chipSemana.setOnClickListener { viewModel.seleccionarFiltro(FiltroPeriodo.SEMANA) }
-        binding.chipMes.setOnClickListener { viewModel.seleccionarFiltro(FiltroPeriodo.MES) }
-        binding.chipAnio.setOnClickListener { viewModel.seleccionarFiltro(FiltroPeriodo.ANIO) }
-        binding.chipPersonalizado.setOnClickListener { abrirSelectorRango() }
-        binding.barraNavegacion.botonAgregarMovimiento.setOnClickListener {
-            startActivity(Intent(this, FormularioActivity::class.java))
-        }
-        // Ya estamos en Inicio: tocar su botón no hace nada.
-        binding.barraNavegacion.botonIrInicio.setOnClickListener { }
-    }
-
     private fun pintar(estado: InicioUiState) {
-        marcarChip(estado.seleccion.filtro)
-        val periodo = estado.seleccion.periodo
-        binding.textoRangoPeriodo.text =
-            getString(R.string.rango_periodo, Fechas.texto(periodo.desde), Fechas.texto(periodo.hasta))
+        chipsPeriodo.pintar(estado.seleccion)
         binding.textoErrorInicial.isVisible = estado.errorInicial
 
         val resumen = estado.resumen ?: return
@@ -100,39 +86,4 @@ class InicioActivity : AppCompatActivity() {
 
     private fun conSigno(centavos: Long): String =
         if (centavos > 0) "+${Dinero.formatear(centavos)}" else Dinero.formatear(centavos)
-
-    private fun marcarChip(filtro: FiltroPeriodo?) {
-        val id = when (filtro) {
-            FiltroPeriodo.DIA -> R.id.chipDia
-            FiltroPeriodo.SEMANA -> R.id.chipSemana
-            FiltroPeriodo.MES -> R.id.chipMes
-            FiltroPeriodo.ANIO -> R.id.chipAnio
-            null -> R.id.chipPersonalizado
-        }
-        if (binding.grupoPeriodo.checkedChipId != id) binding.grupoPeriodo.check(id)
-    }
-
-    private fun abrirSelectorRango() {
-        val actual = viewModel.estado.value.seleccion.periodo
-        val selector = MaterialDatePicker.Builder.dateRangePicker()
-            .setTitleText(R.string.elegir_periodo)
-            .setSelection(androidx.core.util.Pair(Fechas.aMilisUtc(actual.desde), Fechas.aMilisUtc(actual.hasta)))
-            .build()
-        conectarSelector(selector)
-        selector.show(supportFragmentManager, ETIQUETA_SELECTOR)
-    }
-
-    private fun conectarSelector(selector: SelectorRango) {
-        selector.addOnPositiveButtonClickListener { rango ->
-            viewModel.seleccionarRango(Fechas.desdeMilisUtc(rango.first), Fechas.desdeMilisUtc(rango.second))
-        }
-        // Al cancelar, el chip tocado vuelve a marcar el período que sigue vigente.
-        selector.addOnDismissListener { marcarChip(viewModel.estado.value.seleccion.filtro) }
-    }
-
-    private companion object {
-        const val ETIQUETA_SELECTOR = "selectorPeriodo"
-    }
 }
-
-private typealias SelectorRango = MaterialDatePicker<androidx.core.util.Pair<Long, Long>>
