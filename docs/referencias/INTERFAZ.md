@@ -75,11 +75,25 @@ La imagen contiene montos y símbolos de demostración. En Android, el saldo se 
 - Datos reales del servicio en una instalación separada de prueba: referencia 7.64187 del 30/10/2026; US$ 10 → Q 76.42. [Sin red](capturas/inc6-tasa-sin-red.png), el saldo y la tasa real guardada se conservaron al reiniciar; Reintentar mostró que no se pudo actualizar sin borrar el dato. La conectividad y el tema del sistema se restauraron al terminar.
 - Comparación por capturas y acciones de ADB. Las pruebas instrumentadas adicionales usan tasas explícitamente ficticias y la instalación `.pruebas`; no se reemplazan datos de la instalación normal.
 
+## Incremento 7: clima y reflexión local (emulador API 37)
+
+| Tarjetas claras | Tarjetas oscuras |
+|---|---|
+| ![Tarjetas claras](capturas/inc7-tarjetas-claro.png) | ![Tarjetas oscuras](capturas/inc7-tarjetas-oscuro.png) |
+
+- Se compararon con Canva y las capturas anteriores: misma cabecera verde, saldo en Q, filtros, resumen financiero y navegación con Añadir amarillo. [Inicio claro](capturas/inc7-inicio-claro.png) e [Inicio oscuro](capturas/inc7-inicio-oscuro.png) conservan esa jerarquía. Las nuevas tarjetas están en el contenido desplazable, en orden **tasa → clima → reflexión**, con el estilo de tarjeta y los colores del tema existentes.
+- `tarjeta_clima.xml` muestra temperatura, condición WMO en español, fecha de medición, fecha de consulta en Guatemala y origen guardado/actualizado. Incluye atribución enlazada Open-Meteo.com, CC BY 4.0 y **Reintentar clima**. El icono del título identifica el clima; la condición actual siempre se expresa en texto. No se añade GPS ni otra pantalla.
+- Dato real observado: **18.1 °C · Despejado**, medición 30/10/2026 01:00, consulta 01:12. Al cambiar de tema se mostró «Dato guardado» conservando valores y fechas. Las dos tarjetas y sus botones quedaron legibles, sin solaparse con la navegación, en la escala normal del emulador.
+- `tarjeta_reflexion.xml` muestra la cita, referencia, RV1909, **Catálogo local · eBible · Dominio público** y fecha. **Ocultar reflexión** contrae el contenido y deja **Mostrar reflexión** disponible; la preferencia y la cita sobreviven a recrear la Activity (prueba instrumentada). No presenta el contenido como descargado de Bolls.
+- Con wifi/datos desactivados, [el reintento conservó el clima guardado](capturas/inc7-clima-guardado-sin-red.png) y añadió el error, mientras reflexión y navegación seguían disponibles. `am force-stop` y abrir otra vez conservó los datos y la misma cita. Tras restaurar internet, [Reintentar actualizó la consulta a 01:14](capturas/inc7-clima-recuperado.png) y quitó el error; durante la petición se observó «Consultando el clima…».
+- En una instalación `.pruebas` vaciada expresamente para este recorrido, [sin red y sin caché](capturas/inc7-clima-sin-datos.png) se mostró «Sin datos del clima», error y reintento; la reflexión local siguió disponible desde el primer arranque. La base de la app normal nunca se vació ni se reinstaló. Se restauró wifi/datos al terminar.
+- Revisión por capturas, jerarquía Android y acciones de ADB. No se repite aquí la revisión de toda la app con letra 2.0 ni API 24–25. La integración remota de reflexión queda pendiente por el bloqueo documentado en [la verificación de proveedores](SERVICIOS_INCREMENTO_7.md); las capturas muestran el catálogo local permitido.
+
 ## Vistas y conexiones
 
 | Vista | Orden y controles | De dónde sale lo que muestra |
 |---|---|---|
-| Inicio | Saldo disponible; Día/Semana/Mes/Año/Período; ingresos y gastos; anillo; categorías | InicioViewModel observa el servicio del core, alimentado por consultas Room |
+| Inicio | Saldo disponible; Día/Semana/Mes/Año/Período; ingresos y gastos; anillo; categorías; tasa/conversor; clima; reflexión local ocultable | InicioViewModel observa el servicio del core/Room y expone tres estados auxiliares separados de sus repositorios |
 | Formulario | Tipo Ingreso/Gasto; monto; moneda desde Inc. 6; botones +5/+10/+20/+50; cuadrícula de categorías; fecha; descripción; Guardar | FormularioViewModel conserva los campos; el core valida; OperacionesMovimientoRoom guarda |
 | Operaciones | Filtros por tipo y fechas; filas con encabezados por día; detalle; Editar; Eliminar con confirmación | OperacionesViewModel observa consultas del intervalo; el mismo Formulario sirve para editar |
 
@@ -102,7 +116,7 @@ Inicio y Operaciones incluyen barra_navegacion.xml con Inicio, Añadir y Operaci
 | Centro del anillo dice Balance | Dice Gastos del período y muestra su total |
 | Nota opcional | Descripción breve obligatoria, conforme a la regla del core |
 | Varias divisas | Dos sentidos: USD → GTQ y GTQ → USD |
-| Valores, tasas y fechas escritos en JavaScript | Datos reales de SQLite y fecha actual; tasa Banguat cuando se implemente |
+| Valores, tasas y fechas escritos en JavaScript | Datos reales de SQLite y fecha actual; tasa Banguat real desde Inc. 6 |
 | Historial con diferentes ordenamientos | Orden por fecha en esta versión, con encabezados coherentes |
 | Datos del editor de Canva y sus SDK | Componentes XML nativos, recursos locales e iconos de la app |
 

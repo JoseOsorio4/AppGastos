@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.Finanzas.Tarjeta"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawablePadding="8dp"
+            android:gravity="center_vertical"
+            android:text="@string/clima_jutiapa"
+            android:textAppearance="@style/TextAppearance.Finanzas.Etiqueta"
+            app:drawableStartCompat="@drawable/ic_clima"
+            app:drawableTint="?attr/colorPrimary" />
+        <TextView
+            android:id="@+id/textoClima"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:accessibilityLiveRegion="polite"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+        <TextView
+            android:id="@+id/textoEstadoClima"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
+        <TextView
+            android:id="@+id/enlaceOpenMeteo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp"
+            android:gravity="center_vertical"
+            android:text="@string/atribucion_clima"
+            android:textAppearance="?attr/textAppearanceBodySmall" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/botonReintentarClima"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/reintentar_clima" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

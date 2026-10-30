@@ -27,13 +27,34 @@ La moneda base es el quetzal (GTQ). El conversor tiene únicamente **dólares a 
 
 1. **Core:** abre `finanzas-core/pom.xml` en IntelliJ y ejecuta `mvn clean install`.
 2. **App:** abre la carpeta `finanzas-app/` en Android Studio, sincroniza Gradle y ejecuta `app`.
-3. **Pruebas instrumentadas (Room e interfaz):** con un emulador abierto, `.\gradlew.bat -PdatosPrueba :app:connectedDebugAndroidTest` desde `finanzas-app`. La instalación `.pruebas` protege los datos de la app normal. La prueba sin red desactiva y restaura wifi/datos del emulador; la prueba Banguat real requiere conexión.
+3. **Pruebas instrumentadas (Room e interfaz):** con un emulador abierto, `.\gradlew.bat -PdatosPrueba :app:connectedDebugAndroidTest` desde `finanzas-app`. La instalación `.pruebas` protege los datos de la app normal. La suite habitual excluye las peticiones reales y usa respuestas guardadas; funciona con wifi/datos desactivados si las dependencias de construcción ya están disponibles.
+4. **Servicios en vivo, por separado:** `.\gradlew.bat -PdatosPrueba -PpruebasEnVivo :app:connectedDebugAndroidTest` ejecuta solo Banguat y Open-Meteo con internet. [Comandos, contratos, respuestas y derechos de uso](docs/referencias/SERVICIOS_INCREMENTO_7.md).
 
 El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`. Se necesita JDK 17 o superior. Las herramientas y dependencias que todavía no estén en caché requieren internet para descargarse.
 
 ## Estado real
 
-Último incremento cerrado: **6 — tasa Banguat, GTQ/USD y migración Room v1 → v2**. Siguiente: **7 — clima y reflexión**, todavía sin implementar.
+Último incremento cerrado: **6 — tasa Banguat, GTQ/USD y migración Room v1 → v2**. El **7** añade clima y reflexión local; la integración remota de reflexión sigue expresamente pendiente porque Bolls no ofrece una RV1909 verificada. No se declara completada esa integración.
+
+### Incremento 7 — clima, reflexión local y pruebas de red separadas
+
+| Comprobación | Estado | Detalle |
+|---|---|---|
+| Estado inicial y compilaciones antes de editar | ✅ Ejecutados | `main`, HEAD `6eb2275`; solo `app/img.png` sin seguimiento. Core 0.3.0: `mvn clean install`, 55 pruebas sin fallos. App: `:app:assembleDebug`, correcto |
+| Banguat determinista y en vivo | ✅ Separados y ejecutados | Antes de implementar tarjetas: suite habitual **47/47 sin red**; `BanguatEnVivoTest` **1/1 con red**. `BanguatTest` usa el XML real guardado; `PruebaEnVivo` y el filtro Gradle separan peticiones reales de la suite habitual |
+| Ubicación, contrato y respuesta del clima | ✅ Verificados | Geocodificador: Jutiapa, GT, cabecera, 14.28491/−89.88798. GET Open-Meteo HTTP 200, 18.3 °C, WMO 0, medición 30/10/2026 00:45. JSON originales en `app/src/androidTest/assets/openmeteo/`. Sin GPS ni permiso de ubicación |
+| Clima y caché | ✅ Creados y compilados | `ClienteHttp.get`, `ClienteOpenMeteo`, lector estricto y `RepositorioClima`. Caché de 30 min, fechas de medición/consulta, condición en español, atribución enlazada CC BY 4.0, carga/error/reintento independientes |
+| Reflexión y licencia | ✅ Catálogo local verificado | Tres citas RV1909, texto y dominio público comprobados en eBible. `CatalogoReflexiones` y `RepositorioReflexion` guardan una por día de Guatemala, referencia, traducción, fuente y fecha; Ocultar/Mostrar persiste. No necesita internet |
+| Proveedor remoto de reflexión | ⏳ Bloqueado / pendiente | Catálogo real Bolls HTTP 200 sin RV1909; ruta candidata `get-verse/RV1909/19/23/1/` devuelve HTTP 404. No hay cliente/lector remoto ni respuesta exitosa inventada. No se ha validado Dabar. [Evidencia y fuentes](docs/referencias/SERVICIOS_INCREMENTO_7.md) |
+| Core, Room y datos reales | ✅ Conservados | Core 0.3.0 y esquema Room v2 sin cambios; mismas tres tablas. Caché auxiliar en SharedPreferences `servicios`. Base/WAL de la app normal e `img.png` conservan los hashes iniciales; solo se instala/usa `.pruebas` |
+| Compilación y pruebas finales del core | ✅ Ejecutadas | `mvn clean install`: **55/55**, sin fallos ni omitidas. No se cambian versión ni fuentes del core |
+| Suite habitual final API 37 | ✅ Ejecutada sin red | **56/56**, 0 fallos, 0 errores, 0 omitidas; wifi y datos desactivados durante toda la ejecución. Incluye lectores con fixtures, Room, UI, caché 30 min, reintento, cancelación, cita diaria y visibilidad. La última repetición incluye fuente/traducción persistidas |
+| Suite en vivo final API 37 | ✅ Ejecutada por separado | **2/2** sin fallos ni omitidas. Banguat: referencia 7.64187 del 30/10/2026. Open-Meteo: 18.0 °C, WMO 0, medición 30/10/2026 01:15. Los dos recorridos se seleccionan con `pruebasEnVivo`; la suite habitual los excluye |
+| Independencia sin red desde UI | ✅ Ejecutada | `RecorridoTarjetasTest`: clima sin dato o con caché conserva error/reintento; reflexión local disponible; conversor US$ 10 → Q 76.60 con tasa ficticia guardada y registro GTQ deja Q 10.00. Ocultar/Mostrar sobrevive a recrear Inicio |
+| App final e instalación de prueba | ✅ Compiladas y ejecutadas | `:app:assembleDebug` normal final correcto; `-PdatosPrueba :app:installDebug` en API 37. Sin cambios de herramientas, dependencias, migración ni permisos |
+| Revisión visual y recuperación real | ✅ Ejecutadas | [Capturas claras/oscuras y sin red](docs/referencias/INTERFAZ.md#incremento-7-clima-y-reflexión-local-emulador-api-37). Sin red: error con dato guardado y arranque sin caché; reflexión disponible. Reabrir conserva dato/cita; al restaurar red y reintentar, consulta actualizada a 01:14 y error oculto. Se restauraron wifi/datos. Recorridos manuales por ADB solo en `.pruebas` |
+
+Se corrigió durante la verificación una declaración de prueba en vivo que devolvía `Int` de `Log.i`: JUnit requiere `Unit`. Las ejecuciones finales anteriores pasaron después de corregirla. No se ha forzado un fallo de escritura de SharedPreferences de reflexión. Los pendientes anteriores de API 24–25, muerte real del proceso con Formulario, rotación manual con detalle/confirmación y comprobación humana del segundo detalle conservan su estado; no se declaran resueltos por este incremento.
 
 ### Incremento 6 — referencia Banguat, USD histórico y migración
 

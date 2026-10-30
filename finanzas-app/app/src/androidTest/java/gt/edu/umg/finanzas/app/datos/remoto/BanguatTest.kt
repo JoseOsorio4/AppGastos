@@ -2,11 +2,9 @@ package gt.edu.umg.finanzas.app.datos.remoto
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import gt.edu.umg.finanzas.app.datos.remoto.tipocambio.ClienteBanguat
 import gt.edu.umg.finanzas.app.datos.remoto.tipocambio.LectorRespuestaBanguat
 import java.math.BigDecimal
 import java.time.LocalDate
-import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,12 +34,5 @@ class BanguatTest {
         )) {
             assertThrows(Exception::class.java) { LectorRespuestaBanguat.leer(invalida) }
         }
-    }
-
-    @Test
-    fun consulta_el_servicio_oficial_desde_android(): Unit = runBlocking {
-        val tasa = ClienteBanguat().consultar()
-        assertTrue(tasa.gtqPorUsd > BigDecimal.ZERO)
-        android.util.Log.i("BanguatRealTest", "Referencia ${tasa.fechaReferencia}: ${tasa.gtqPorUsd.toPlainString()}")
     }
 }

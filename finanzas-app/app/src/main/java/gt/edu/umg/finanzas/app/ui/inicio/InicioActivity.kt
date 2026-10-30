@@ -2,6 +2,7 @@ package gt.edu.umg.finanzas.app.ui.inicio
 
 import android.graphics.Color
 import android.os.Bundle
+import android.text.method.LinkMovementMethod
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -12,6 +13,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import gt.edu.umg.finanzas.app.R
+import gt.edu.umg.finanzas.app.datos.repositorios.EstadoClima
+import gt.edu.umg.finanzas.app.datos.repositorios.EstadoReflexion
 import gt.edu.umg.finanzas.app.databinding.ActivityInicioBinding
 import gt.edu.umg.finanzas.app.ui.comun.BarrasSistema
 import gt.edu.umg.finanzas.app.ui.comun.ChipsPeriodo
@@ -20,6 +23,7 @@ import gt.edu.umg.finanzas.app.ui.comun.NavegacionPrincipal
 import gt.edu.umg.finanzas.app.ui.comun.TextoTasa
 import gt.edu.umg.finanzas.core.InfoCore
 import gt.edu.umg.finanzas.core.reglas.Dinero
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
 
 /** Dibuja el estado de InicioViewModel y le envía las acciones del usuario. No calcula montos. */
@@ -44,6 +48,10 @@ class InicioActivity : AppCompatActivity() {
 
         binding.textoConexionCore.text = getString(R.string.version_core, InfoCore.version)
         binding.tarjetaTasa.botonReintentarTasa.setOnClickListener { viewModel.actualizarTasa(forzar = true) }
+        binding.tarjetaClima.botonReintentarClima.setOnClickListener { viewModel.actualizarClima(forzar = true) }
+        binding.tarjetaClima.enlaceOpenMeteo.movementMethod = LinkMovementMethod.getInstance()
+        binding.tarjetaReflexion.botonVisibilidadReflexion.setOnClickListener { viewModel.cambiarVisibilidadReflexion() }
+        binding.tarjetaReflexion.botonReintentarReflexion.setOnClickListener { viewModel.actualizarReflexion() }
         binding.tarjetaTasa.botonConversor.setOnClickListener {
             if (supportFragmentManager.findFragmentByTag(ConversorDialogo.ETIQUETA) == null) {
                 ConversorDialogo().show(supportFragmentManager, ConversorDialogo.ETIQUETA)
@@ -66,7 +74,11 @@ class InicioActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.actualizarClima()
+                viewModel.actualizarReflexion()
                 launch { viewModel.estado.collect(::pintar) }
+                launch { viewModel.estadoClima.collect(::pintarClima) }
+                launch { viewModel.estadoReflexion.collect(::pintarReflexion) }
                 launch {
                     viewModel.estadoTasa.collect { tasa ->
                         binding.tarjetaTasa.textoTasa.text = TextoTasa.estado(this@InicioActivity, tasa)
@@ -76,6 +88,32 @@ class InicioActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun pintarClima(estado: EstadoClima) = with(binding.tarjetaClima) {
+        textoClima.text = TextoClima.valor(this@InicioActivity, estado)
+        textoEstadoClima.text = TextoClima.detalle(this@InicioActivity, estado)
+        botonReintentarClima.isEnabled = !estado.cargando
+    }
+
+    private fun pintarReflexion(estado: EstadoReflexion) = with(binding.tarjetaReflexion) {
+        contenidoReflexion.isVisible = estado.visible
+        botonVisibilidadReflexion.setText(if (estado.visible) R.string.ocultar_reflexion else R.string.mostrar_reflexion)
+        textoReflexion.text = estado.dato?.reflexion?.texto ?: getString(R.string.reflexion_cargando)
+        textoFuenteReflexion.text = listOfNotNull(
+            estado.dato?.let {
+                getString(
+                    R.string.fuente_reflexion,
+                    it.reflexion.referencia,
+                    it.reflexion.traduccion,
+                    it.reflexion.fuente,
+                    DateTimeFormatter.ofPattern("dd/MM/yyyy").format(it.fecha),
+                )
+            },
+            if (estado.error) getString(R.string.reflexion_error_guardar) else null,
+        ).joinToString("\n")
+        botonReintentarReflexion.isVisible = estado.error
+        botonReintentarReflexion.isEnabled = !estado.cargando
     }
 
     private fun pintar(estado: InicioUiState) {

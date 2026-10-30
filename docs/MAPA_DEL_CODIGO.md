@@ -32,7 +32,9 @@ Las filas marcadas **Existe** tienen todas sus columnas implementadas. En las de
 | Convertir USD → GTQ o GTQ → USD | **Existe** (Inc. 6) | `dialogo_conversor.xml` · `grupoSentido`, `botonUsdAGtq`, `botonGtqAUsd`, `entradaMontoConversor`, `textoResultadoConversion`, `textoTasaConversor` | `ui/inicio/ConversorDialogo` | `ConversorViewModel.cambiarMonto`, `elegirSentido`, `ConversorUiState.resultado` | `Dinero.desdeTexto` y `ConversorMoneda` mediante `ui/comun/ConversionMonto`; exactamente 2 sentidos | Usa el estado de `RepositorioTipoCambio`; no escribe movimientos |
 | Registrar USD y ver el equivalente | **Existe** (Inc. 6) | `activity_formulario.xml` · `grupoMoneda`, `botonMonedaGtq`, `botonMonedaUsd`, `textoTasaFormulario`, `textoConversionPrevia` | `FormularioActivity.conectarAcciones`, `pintar` | `FormularioViewModel.elegirMoneda`, `guardar`; `FormularioUiState.tasa`, `conversionPrevia` | `ValidadorMovimiento` calcula el equivalente y crea `ConversionAplicada` | `OperacionesMovimientoRoom` → `Mapeos.aEntity` → `TransaccionDao`; monto original, tasa decimal, fecha y fuente en Room v2 |
 | Ver y editar USD histórico | **Existe** (Inc. 6) | `item_operacion.xml` · `textoOriginalUsd`; `dialogo_detalle_movimiento.xml` · `textoConversionDetalle`; Formulario compartido | `OperacionesAdapter`, `DetalleMovimientoDialogo`, `FormularioActivity` | `FormularioViewModel.cargarMovimiento` conserva moneda y tasa histórica en `SavedStateHandle` | `ConversionAplicada`, `ConversorMoneda`, `ValidadorMovimiento` | `MovimientoFila` trae la fotografía; `Mapeos.aVista` la reconstruye. `OperacionesMovimientoRoom.editar` usa la tasa anterior si sigue en USD |
-| Clima / Reflexión | Pendiente (Inc. 7) | `tarjeta_clima.xml`, `tarjeta_reflexion.xml` | `InicioActivity` | `estadoClima`, `estadoReflexion` | — | `RepositorioClima`, `RepositorioReflexion` |
+| Clima de Jutiapa y reintento | **Existe** (Inc. 7) | `tarjeta_clima.xml` · `textoClima`, `textoEstadoClima`, `enlaceOpenMeteo`, `botonReintentarClima`; include `tarjetaClima` bajo tasa | `InicioActivity.pintarClima`; `TextoClima` traduce códigos WMO y formatea fechas/temperatura | `InicioViewModel.estadoClima`, `actualizarClima` | — (temperatura, no dinero) | `RepositorioClima` → `ClienteOpenMeteo` → `ClienteHttp.get` + `LectorRespuestaClima`; `CacheServicios.leerClima/guardarClima` |
+| Reflexión local del día | **Existe** (Inc. 7; remoto pendiente) | `tarjeta_reflexion.xml` · `textoReflexion`, `textoFuenteReflexion`, `botonReintentarReflexion`; include `tarjetaReflexion` bajo clima | `InicioActivity.pintarReflexion` | `InicioViewModel.estadoReflexion`, `actualizarReflexion` | — | `RepositorioReflexion` → `datos/local/CatalogoReflexiones`; `CacheServicios.leerReflexion/guardarReflexion` |
+| Ocultar / mostrar reflexión | **Existe** (Inc. 7) | `contenidoReflexion`, `botonVisibilidadReflexion` | `InicioActivity` conecta y pinta visibilidad | `InicioViewModel.cambiarVisibilidadReflexion` | — | `RepositorioReflexion.cambiarVisibilidad` → `CacheServicios.guardarReflexionVisible` |
 
 ## 2. Core: qué hace cada clase
 
@@ -160,7 +162,7 @@ flowchart LR
 
 `BaseDePrueba.servicioSobre` arma `ServicioFinanzas` con las mismas clases Room que `Dependencias`.
 
-## 4. App: pantallas (incrementos 3 a 6)
+## 4. App: pantallas (incrementos 3 a 7)
 
 Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **Activity** conecta toques y texto con el ViewModel y dibuja su estado; el **ViewModel** guarda el estado (y lo copia a `SavedStateHandle`) y llama al servicio; **ServicioFinanzas** y el core validan y calculan; **Room** guarda y avisa con `Flow`.
 
@@ -270,11 +272,40 @@ Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **A
 |---|---|
 | `datos/local/Migracion1a2Test.kt` | `MigrationTestHelper` crea v1 con saldo Q 70, bandera activa, 12 categorías (una archivada) y 2 movimientos; valida esquema v2, conservación, FK y lectura por DAO después de reabrir |
 | `datos/local/MovimientosUsdTest.kt` | Caso e: US$ 10 × 7.66000 → 7660, original 1000 y fotografía exacta. Edición con referencia nueva conserva la histórica; US$ 12 → 9192; eliminar revierte a cero. USD → GTQ borra la fotografía |
-| `datos/remoto/BanguatTest.kt` | Fixture real, rechazos de XML y consulta HTTPS al servicio oficial desde Android |
+| `datos/remoto/BanguatTest.kt` | Fixture real y rechazos de XML, sin petición real ni dependencia del servicio |
+| `datos/remoto/BanguatEnVivoTest.kt` | Petición HTTPS al servicio oficial desde Android; solo con `-PpruebasEnVivo` |
 | `datos/repositorios/RepositorioTipoCambioTest.kt` | Fallo sin caché, recuperación de tasa guardada con metadatos, una consulta por día y lectura tras crear otro repositorio |
 | `ui/RecorridoUsdTest.kt` | Casos e e i desde la pantalla, edición histórica, conservación del conversor al recrear y registro GTQ/USD con wifi y datos del emulador desactivados; restaura la conectividad |
 
 La suite usa `-PdatosPrueba`: instala `gt.edu.umg.finanzas.app.pruebas`. `AyudaInterfaz.baseLimpia` rechaza ejecutarse sobre el paquete normal. El APK normal y la instalación de uso diario conservan `gt.edu.umg.finanzas.app`. Los resultados reales de cada ejecución viven en el README.
+
+### 4.7 Archivos del incremento 7
+
+| Archivo (app) | Responsabilidad |
+|---|---|
+| `res/layout/tarjeta_clima.xml`, `tarjeta_reflexion.xml`; `res/values/strings_servicios.xml` | Controles, textos y enlace; colores y estilo de tarjeta existentes. `activity_inicio.xml` ordena tasa → clima → reflexión bajo las finanzas |
+| `ui/inicio/InicioActivity.kt`, `TextoClima.kt` | La Activity conecta botones y observa los tres estados por separado. El helper traduce WMO y formatea temperatura/fechas; no consulta ni guarda |
+| `ui/inicio/InicioViewModel.kt` | Expone estados de tasa/clima/reflexión, inicia corrutinas independientes, recibe reintentos y visibilidad. El resumen financiero conserva su flujo Room |
+| `datos/remoto/ClienteHttp.kt` | GET y POST HTTPS con los mismos límites de tiempo/tamaño. El POST SOAP de Banguat conserva su contrato |
+| `datos/remoto/clima/ClienteOpenMeteo.kt`, `LectorRespuestaClima.kt`, `ClimaJutiapa.kt` | URL con coordenadas verificadas, petición, validación JSON y dato meteorológico. No hay geolocalización del dispositivo |
+| `datos/repositorios/RepositorioClima.kt` | Estado de carga/dato guardado/error; vigencia de 30 minutos, reintento forzado, conservación del dato ante fallo y propagación de cancelación |
+| `datos/local/CatalogoReflexiones.kt` | Tres citas RV1909 de dominio público y selección por fecha. Texto, referencia, traducción y fuente nombrados |
+| `datos/repositorios/RepositorioReflexion.kt` | Una cita por fecha de Guatemala; visibilidad persistente; lectura local independiente de red. Remoto pendiente |
+| `datos/preferencias/CacheServicios.kt` | SharedPreferences `servicios`: `climaTemperatura`, `climaCodigo`, `climaMedidoEn`, `climaConsultadoEn`; `reflexionTexto`, `reflexionReferencia`, `reflexionTraduccion`, `reflexionFuente`, `reflexionFecha`, `reflexionVisible`. Guardado atómico de cada dato con `commit` fuera del hilo principal; visibilidad con `apply`. No movimientos ni saldos |
+| `Dependencias.kt` | Construye repositorios con la misma caché; sin nuevas capas ni librerías |
+| `app/build.gradle.kts`, `androidTest/.../PruebaEnVivo.kt` | Sin `pruebasEnVivo`, excluye peticiones reales; con la propiedad ejecuta solo las anotadas. `datosPrueba` mantiene el paquete separado |
+
+Pruebas relativas a `app/src/androidTest/java/gt/edu/umg/finanzas/app/`:
+
+| Archivo | Comportamiento comprobado |
+|---|---|
+| `datos/remoto/BanguatTest.kt`, `ClimaTest.kt` | Lectores con respuestas reales guardadas y rechazos de respuestas incompletas/incompatibles, sin internet |
+| `datos/repositorios/RepositorioClimaTest.kt` | Sin caché, conservación del dato al fallar, reintento que recupera, reapertura, límite de 30 min y cancelación durante carga |
+| `datos/repositorios/RepositorioReflexionTest.kt` | Misma cita en el día y al reabrir, renovación al día siguiente, ocultar/mostrar persistente |
+| `ui/RecorridoTarjetasTest.kt` | Sin red: clima vacío o guardado con error/reintento; reflexión disponible y ocultable; conversor y registro GTQ siguen funcionando |
+| `datos/remoto/BanguatEnVivoTest.kt`, `OpenMeteoEnVivoTest.kt` | Contratos reales desde Android, ejecutados separadamente de la suite habitual |
+
+Fixtures en `app/src/androidTest/assets/openmeteo/`, `banguat/` y catálogo real de traducciones en `bolls/`. [Procedencia, licencias y comandos](referencias/SERVICIOS_INCREMENTO_7.md). Core 0.3.0, DAO, migración y esquema Room v2 no cambian.
 
 ## 5. Recorridos reales
 
@@ -309,6 +340,13 @@ Capturas del emulador: [Inicio](referencias/capturas/inc3-inicio-con-datos.png),
 3. **Editar** → `FormularioActivity.paraEditar(id)`. `FormularioViewModel.cargarMovimiento` llama a `ServicioFinanzas.obtenerParaEditar` y llena los campos. Guardar llama a `ServicioFinanzas.editar`; `OperacionesMovimientoRoom.editar` lee el anterior, valida el nuevo, calcula `CalculoSaldo.deltaEditar` y escribe movimiento y saldo en un solo `withTransaction`.
 4. **Eliminar** → `ConfirmarEliminacionDialogo`. Cancelar solo cierra el diálogo. Eliminar llama a `OperacionesViewModel.eliminar` → `ServicioFinanzas.eliminar` → `OperacionesMovimientoRoom.eliminar` (borra y aplica `deltaEliminar` en la misma transacción).
 5. Tras cada COMMIT, Room vuelve a emitir: la lista de Operaciones y el Inicio que quedó debajo se repintan sin recargar. Atrás o `botonIrInicio` cierran Operaciones.
+
+### 5.5 Incremento 7: clima y reflexión independientes
+
+1. Al abrir Inicio, el ViewModel carga clima y reflexión en corrutinas propias. Las tarjetas se dibujan después de tasa; las consultas del saldo no esperan HTTP.
+2. `RepositorioClima` lee la caché: si tiene menos de 30 min la presenta con fechas; si no, consulta Open-Meteo. Un error conserva el dato anterior o deja el estado vacío. `botonReintentarClima` fuerza otra consulta.
+3. `RepositorioReflexion` lee la cita de hoy o elige y guarda una del catálogo local. Ocultar cambia solo `reflexionVisible`; al mostrar vuelve la misma cita. Bolls queda pendiente por no ofrecer una RV1909 verificada.
+4. Ejecutado en API 37: suite habitual **56/56 con wifi/datos desactivados** y suite en vivo **2/2** (Banguat/Open-Meteo), sin fallos ni omitidas. Los recorridos de UI mantienen conversor y registro GTQ ante fallo del clima. Revisión visual y capturas: [INTERFAZ](referencias/INTERFAZ.md).
 
 ## 6. Dónde están los pilares de POO
 

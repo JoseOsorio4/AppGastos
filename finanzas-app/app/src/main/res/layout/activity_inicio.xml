@@ -340,6 +340,20 @@
                 android:layout_marginTop="12dp" />
 
             <!-- Diagnóstico del Inc. 0: confirma qué versión del JAR del core usa la app. -->
+            <include
+                android:id="@+id/tarjetaClima"
+                layout="@layout/tarjeta_clima"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp" />
+
+            <include
+                android:id="@+id/tarjetaReflexion"
+                layout="@layout/tarjeta_reflexion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp" />
+
             <TextView
                 android:id="@+id/textoConexionCore"
                 android:layout_width="match_parent"

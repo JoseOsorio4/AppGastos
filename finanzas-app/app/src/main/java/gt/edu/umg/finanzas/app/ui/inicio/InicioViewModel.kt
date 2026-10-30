@@ -12,6 +12,8 @@ import gt.edu.umg.finanzas.app.datos.local.RepositorioUsuarioRoom
 import gt.edu.umg.finanzas.app.datos.preferencias.PreferenciaTema
 import gt.edu.umg.finanzas.app.datos.preferencias.Tema
 import gt.edu.umg.finanzas.app.datos.repositorios.RepositorioTipoCambio
+import gt.edu.umg.finanzas.app.datos.repositorios.RepositorioClima
+import gt.edu.umg.finanzas.app.datos.repositorios.RepositorioReflexion
 import gt.edu.umg.finanzas.app.ui.comun.PeriodoGuardado
 import gt.edu.umg.finanzas.core.contratos.RepositorioUsuario
 import gt.edu.umg.finanzas.core.dominio.FiltroPeriodo
@@ -43,11 +45,15 @@ class InicioViewModel(
     usuarios: RepositorioUsuario,
     private val preferenciaTema: PreferenciaTema,
     private val tipoCambio: RepositorioTipoCambio,
+    private val clima: RepositorioClima,
+    private val reflexion: RepositorioReflexion,
     hoy: () -> LocalDate = { Periodo.hoy() },
 ) : ViewModel() {
 
     private val periodo = PeriodoGuardado(estadoGuardado, hoy)
     val estadoTasa = tipoCambio.estado
+    val estadoClima = clima.estado
+    val estadoReflexion = reflexion.estado
     private val errorInicial = MutableStateFlow(false)
     private val recalculo = MutableStateFlow(EstadoRecalculo())
     private val reconstruccionPendiente = usuarios.observarUsuario()
@@ -82,6 +88,8 @@ class InicioViewModel(
 
     init {
         actualizarTasa()
+        actualizarClima()
+        actualizarReflexion()
         // Si la siembra de usuario y categorías falló, el saldo nunca llegaría: se avisa en pantalla.
         viewModelScope.launch {
             if (inicializacion.await() is Resultado.Fallo) errorInicial.value = true
@@ -108,6 +116,18 @@ class InicioViewModel(
         viewModelScope.launch { tipoCambio.actualizar(forzar) }
     }
 
+    fun actualizarClima(forzar: Boolean = false) {
+        if (estadoClima.value.cargando) return
+        viewModelScope.launch { clima.actualizar(forzar) }
+    }
+
+    fun actualizarReflexion() {
+        if (estadoReflexion.value.cargando) return
+        viewModelScope.launch { reflexion.actualizar() }
+    }
+
+    fun cambiarVisibilidadReflexion() = reflexion.cambiarVisibilidad()
+
     companion object {
         /** Toma el servicio de Dependencias y crea el SavedStateHandle de esta pantalla. */
         val Fabrica: ViewModelProvider.Factory = viewModelFactory {
@@ -120,6 +140,8 @@ class InicioViewModel(
                     RepositorioUsuarioRoom(app.dependencias.baseDatos.usuarioDao()),
                     app.dependencias.preferenciaTema,
                     app.dependencias.tipoCambio,
+                    app.dependencias.clima,
+                    app.dependencias.reflexion,
                 )
             }
         }

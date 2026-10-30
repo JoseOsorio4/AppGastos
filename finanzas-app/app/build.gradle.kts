@@ -18,6 +18,8 @@ android {
         versionCode = 1
         versionName = "0.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val filtroRed = if (providers.gradleProperty("pruebasEnVivo").isPresent) "annotation" else "notAnnotation"
+        testInstrumentationRunnerArguments[filtroRed] = "gt.edu.umg.finanzas.app.PruebaEnVivo"
     }
 
     buildTypes {

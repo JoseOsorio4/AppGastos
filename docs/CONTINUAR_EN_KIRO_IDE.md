@@ -45,7 +45,7 @@ Copia este mensaje en un chat nuevo de Kiro IDE con AppGastos abierto:
 >
 > Lee AGENTS.md, README.md (Estado real), docs/MAPA_DEL_CODIGO.md, docs/DISENO_FINANZAS.md y docs/referencias/INTERFAZ.md. Resume en pocas líneas el estado y los pendientes que figuran en el README.
 >
-> Luego desarrolla solo el incremento 7 conforme al diseño (§11.3, §11.4 y §14). Conserva el estilo y las capas: XML dibuja, Activity recibe y pinta, ViewModel guarda el estado, el core decide, Room guarda. No rediseñes las finanzas ni cambies tasas históricas.
+> El incremento 7 ya tiene clima Open-Meteo y reflexión local verificados; revisa sus resultados antes de editar. Continúa solo el pendiente remoto de reflexión si puedes verificar un proveedor RV1909 y su contrato/licencia (§11.4), sin duplicar las tarjetas existentes. Conserva el estilo y las capas: XML dibuja, Activity recibe y pinta, ViewModel coordina el estado, el core decide, Room guarda. No rediseñes las finanzas ni cambies tasas históricas.
 >
 > Antes de cambiar la app, comprueba mvn clean install y .\gradlew.bat :app:assembleDebug. Usa -PdatosPrueba al instalar o ejecutar pruebas de interfaz para proteger los datos de la app normal. Distingue lo ejecutado de lo pendiente. No subas rutas locales, .bak, configuración del IDE ni finanzas-app/app/img.png. Al terminar, actualiza README y mapa, haz commit y push normal y dame el enlace.
 
@@ -61,6 +61,6 @@ Pendientes del incremento 4, sin ejecutar todavía:
 
 El archivo `finanzas-app/app/img.png` es local y no identificado: no se modifica ni se incluye en ningún commit.
 
-La tasa Banguat ya se consulta y conserva desde el Inc. 6, con respuesta real guardada como fixture y consulta ejecutada desde Android. Clima y reflexión siguen en el Inc. 7. Una revisión de documentación o una comprobación de archivos no sustituye esos resultados.
+La tasa Banguat ya se consulta y conserva desde el Inc. 6. El Inc. 7 añade clima Open-Meteo y reflexión local diaria, con 56 pruebas habituales ejecutadas sin red y 2 pruebas en vivo separadas (Banguat/Open-Meteo). El catálogo Bolls no ofrece RV1909 y la ruta candidata devolvió 404: el proveedor remoto de reflexión queda pendiente; no se crea un lector sin respuesta real. Las fuentes y comandos están en [la verificación de servicios](referencias/SERVICIOS_INCREMENTO_7.md). Una revisión de documentación no sustituye las ejecuciones.
 
 La guía detallada de compilación y errores está en [GUIA_WINDOWS.md](GUIA_WINDOWS.md). El [README](../README.md#estado-real) conserva el estado de las verificaciones.

@@ -584,17 +584,17 @@ class ServicioFinanzas(usuarios: RepositorioUsuario, categorias: RepositorioCate
 |---|---|---|---|---|---|
 | Tipo de cambio Banguat | 6 | `tarjeta_tasa.xml` en Inicio (abre el conversor); vista previa en el formulario USD | `ClienteBanguat`, `LectorRespuestaBanguat`, `RepositorioTipoCambio` | valor, fecha de referencia, fuente y momento de consulta; se actualiza 1 vez por día | Usa la última tasa con su fecha; sin tasa, USD queda deshabilitado |
 | Clima de Jutiapa (Open-Meteo) | 7 | `tarjeta_clima.xml` bajo el resumen | `ClienteOpenMeteo`, `LectorRespuestaClima`, `RepositorioClima` | temperatura, condición, hora de la medición y de la consulta; cada 30 min | Muestra el último dato con su hora, o "Sin datos del clima" |
-| Reflexión del día | 7 | `tarjeta_reflexion.xml`, que se puede ocultar | proveedor único elegido + `RepositorioReflexion` | texto, referencia/autor, traducción, fecha; 1 vez por día | Último contenido guardado o catálogo local |
+| Reflexión del día | 7 | `tarjeta_reflexion.xml`, que se puede ocultar | `CatalogoReflexiones` + `RepositorioReflexion`; remoto pendiente | texto, referencia, traducción, fuente, fecha; 1 vez por día | Catálogo local RV1909 de dominio público |
 
 **Reglas comunes:**
 - Las llamadas pasan por `ClienteHttp`: `withContext(Dispatchers.IO)`, conexión y lectura con 10 s de espera, solo HTTPS, respuesta máxima de 256 KB y error para cualquier código que no sea 2xx.
-- Cada tarjeta tiene su `StateFlow<EstadoTarjeta>` en `InicioViewModel` y se carga en su propia corrutina. Una falla no cancela las demás tarjetas ni el resumen financiero. Se relanza `CancellationException`.
-- `EstadoTarjeta` = `Cargando` · `ConDatos(dato, consultadoEn, esGuardado)` · `SinDatos(mensaje)`. `ConDatos` con `esGuardado` muestra la fecha y "sin conexión"; `SinDatos` y los datos guardados ofrecen **Reintentar**.
+- Cada tarjeta expone su `StateFlow` en `InicioViewModel` y se carga en su propia corrutina. Una falla no cancela las demás tarjetas ni el resumen financiero. Se relanza `CancellationException`.
+- Los estados concretos son `EstadoTasa`, `EstadoClima` y `EstadoReflexion`: dato opcional, carga y error; tasa/clima distinguen dato guardado, reflexión conserva visibilidad. No se crea una jerarquía genérica sin necesidad. Clima muestra fechas, «Dato guardado» y el error si falla actualizar, con **Reintentar clima**. Una caché vigente no implica por sí sola estar sin conexión.
 - La consulta ocurre al abrir Inicio o al tocar Reintentar, y solo si la caché venció. Nunca en cada redibujado.
 - Se distinguen la **fecha del proveedor** y el **momento de consulta**. Estas frecuencias son decisiones nuestras, no garantías de los proveedores.
 - Las Activities y los ViewModels nunca contienen URLs ni lectores de respuesta.
 
-El Inc. 6 concreta solo la tarjeta de tasa con `EstadoTasa` en `RepositorioTipoCambio`: dato opcional (`TasaGuardada`), carga, origen guardado y error. Lo observan Inicio, Formulario y Conversor. Se evita crear una abstracción genérica para las tarjetas todavía inexistentes del Inc. 7. El caché diario se decide por la fecha de consulta en Guatemala; Reintentar puede forzar una consulta explícita. Una respuesta fallida conserva los metadatos de la tasa anterior.
+El Inc. 6 concretó la tasa con `EstadoTasa` en `RepositorioTipoCambio`, observado por Inicio, Formulario y Conversor. El Inc. 7 añade dos flujos independientes, sin unirlos a las consultas financieras. `CacheServicios` usa claves separadas en SharedPreferences `servicios`; Room sigue en v2 con sus tres tablas. El caché diario de tasa se decide por la fecha de consulta en Guatemala; Reintentar puede forzar una consulta explícita. Una respuesta fallida conserva los metadatos anteriores.
 
 ### 11.2 Banguat — `TipoCambioDia`
 - Documentación: https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx?op=TipoCambioDia. Es un servicio **SOAP/XML**.
@@ -605,15 +605,17 @@ El Inc. 6 concreta solo la tarjeta de tasa con `EstadoTasa` en `RepositorioTipoC
 - `ClienteBanguat` consulta y parsea fuera del hilo principal; `LectorRespuestaBanguat` sigue la ruta completa con espacios XML y rechaza DTD, datos ausentes o ambiguos y fecha/tasa inválidas. `BanguatTest` comprueba el fixture y ejecuta una consulta real desde Android. No se distribuye una tasa ficticia como respaldo de producción.
 
 ### 11.3 Open-Meteo — clima
-- Petición prevista: `https://api.open-meteo.com/v1/forecast?latitude=…&longitude=…&current=temperature_2m,weather_code&timezone=America/Guatemala`. El `weather_code` (código WMO) se traduce a texto e icono en la app.
-- Uso gratuito no comercial y sin clave; se muestra la atribución "Datos del clima: Open-Meteo.com" con su enlace. Los términos se revisan en el Inc. 7.
-- Coordenadas de la **cabecera municipal de Jutiapa**: fuentes públicas dan ≈ 14°17′ N, 89°54′ O (**14.29, −89.90**). Se confirmarán con la API de geocodificación de Open-Meteo (`name=Jutiapa`, país GT, `admin1 = Jutiapa`) antes de fijarlas. No hay GPS ni permisos de ubicación.
+- **Verificado e implementado el 30/10/2026:** `ClienteOpenMeteo` hace GET de `current=temperature_2m,weather_code`, zona `America/Guatemala`, con coordenadas **14.28491, −89.88798**. El geocodificador devolvió Jutiapa, país GT, Departamento de Jutiapa, municipio Jutiapa, código PPLA. No hay GPS ni permisos de ubicación.
+- `LectorRespuestaClima` exige zona, unidades y campos reales de `current`; no convierte nulos en cero. `TextoClima` presenta condición WMO en español y fechas; el icono de la cabecera identifica la tarjeta de clima, no sustituye la condición en texto.
+- `RepositorioClima` reutiliza caché durante **30 minutos** desde la consulta (una fecha futura tampoco se considera vigente); Reintentar fuerza la consulta. Se conservan temperatura, código, fecha de medición y de consulta. Ante fallo conserva el último dato o muestra «Sin datos del clima», con error y reintento. La cancelación se propaga.
+- Términos comprobados: gratuito para uso no comercial, sin clave, datos CC BY 4.0. La atribución enlazada es «Datos del clima: Open-Meteo.com · CC BY 4.0».
+- Contrato, respuesta HTTP 200, coordenadas de celda distintas de las solicitadas, términos y fixtures: [verificación de servicios](referencias/SERVICIOS_INCREMENTO_7.md). Las pruebas habituales leen esa respuesta guardada; `OpenMeteoEnVivoTest` es optativa con `-PpruebasEnVivo`.
 
-### 11.4 Reflexión — un solo proveedor, se decide en el Inc. 7
-- **Base segura:** un catálogo local breve de frases propias o de dominio público, sin atribuir frases inventadas a autores reales.
-- **Candidato para versículos:** bolls.life (https://github.com/Bolls-Bible/bain/blob/master/docs/API.md), con una lista local de citas y una por día (`epochDay % tamaño`). Antes de elegirlo hay que probar la ruta exacta, el código de la traducción en español y la estructura del JSON, y guardarlos como archivo de prueba. **No está comprobado.**
-- Hay que revisar la licencia de la traducción: la Reina-Valera 1909 es de dominio público; la RVR1960 tiene derechos de autor. El texto local de respaldo debe ser de dominio público.
-- Alternativa: Dabar.io (RV1909). No se descarga la Biblia completa ni se repiten consultas.
+### 11.4 Reflexión — catálogo local; proveedor remoto pendiente
+- **Decisión comprobada el 30/10/2026:** el catálogo real de Bolls no ofrece RV1909; la ruta candidata `get-verse/RV1909/19/23/1/` devuelve HTTP 404, «The verse is not found». No se inventó otro código ni un JSON de éxito. No hay cliente ni lector Bolls en producción. La integración remota queda **pendiente**, también la evaluación de Dabar.
+- `datos/local/CatalogoReflexiones` contiene Salmos 23:1, Proverbios 16:3 y Filipenses 4:13, con texto exacto de RV1909 verificado en eBible y declaración de dominio público. [Fuentes, licencia y respuestas reales](referencias/SERVICIOS_INCREMENTO_7.md).
+- `RepositorioReflexion` elige una cita por día de Guatemala con `floorMod(epochDay, tamaño)` y guarda texto, referencia, traducción, fuente y fecha en `CacheServicios`. Reabrir o cambiar de tema conserva la cita; otro día renueva la selección. No descarga una Biblia ni consulta otro proveedor como sustituto silencioso.
+- La tarjeta identifica «Catálogo local · eBible», RV1909, dominio público y fecha. Ocultar/Mostrar conserva la preferencia y la cita. Un fallo al guardar permite seguir leyéndola y ofrece Reintentar guardar; no afecta las finanzas ni el clima. Al ser local, la reflexión no requiere conexión.
 
 ---
 
@@ -650,7 +652,7 @@ La combinación AGP 9.1.1, Gradle 9.3.1, JDK 17 y compileSdk 37 coincide con la 
 | 2 | Room 2.8.5 (`room-runtime`, `room-compiler` con KSP 2.3.12, plugin `androidx.room` para esquemas), `desugar_jdk_libs:2.1.5`, `androidx.test:runner:1.7.0`, `androidx.test.ext:junit:1.3.0` | Persistencia, `java.time` en API 24, pruebas instrumentadas. No se añade `room-ktx`: desde Room 2.7 está vacío y `withTransaction` vive en `room-runtime`. `room-testing` (`MigrationTestHelper`) se añade en el Inc. 6, cuando exista una migración que probar |
 | 3 | `material:1.14.0`, `core-ktx:1.19.1`, `recyclerview:1.4.0`, `lifecycle-viewmodel`, `lifecycle-viewmodel-savedstate` y `lifecycle-runtime` 2.11.0; `espresso-core:3.7.0` (pruebas) | Interfaz, ViewModel, `repeatOnLifecycle`, `SavedStateHandle`, prueba del recorrido. Desde Lifecycle 2.8 `viewModelScope` y `lifecycleScope` están en los artefactos sin `-ktx` |
 | 6 | Permiso `INTERNET`; `room-testing:2.8.5` solo en pruebas; restricción de `kotlinx-serialization-core` a 1.8.1 | HTTP y XML incluidos en Android. `dependencyInsight` mostró core 1.7.3 con json 1.8.1, causando `AbstractMethodError` al leer esquemas en `MigrationTestHelper`. Se alinea el core transitorio en 1.8.1 (ya requerido por Room migration); no se cambian AGP, Gradle, Kotlin ni Room |
-| 7 | `org.json:json` solo en pruebas locales | Las clases `org.json` de Android no funcionan en pruebas JVM |
+| 7 | Sin dependencias nuevas | Los lectores JSON y sus fixtures se prueban instrumentados con `org.json` de Android; no se añade `org.json:json` a la JVM |
 
 **Cambio del core:** subir `<version>` → `mvn clean install` → actualizar `finanzasCore` en `libs.versions.toml` → Sync → reconstruir. Así la versión mostrada por `InfoCore` coincide con el `pom.xml`.
 

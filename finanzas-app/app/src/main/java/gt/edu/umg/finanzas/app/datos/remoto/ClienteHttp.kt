@@ -7,7 +7,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class ClienteHttp {
-    suspend fun post(url: String, cuerpo: String, accionSoap: String): String = withContext(Dispatchers.IO) {
+    suspend fun get(url: String): String = solicitar(url)
+
+    suspend fun post(url: String, cuerpo: String, accionSoap: String): String = solicitar(url, cuerpo, accionSoap)
+
+    private suspend fun solicitar(
+        url: String,
+        cuerpo: String? = null,
+        accionSoap: String? = null,
+    ): String = withContext(Dispatchers.IO) {
         val direccion = URL(url)
         require(direccion.protocol == "https")
         val conexion = direccion.openConnection() as HttpsURLConnection
@@ -15,11 +23,13 @@ class ClienteHttp {
             conexion.connectTimeout = 10_000
             conexion.readTimeout = 10_000
             conexion.instanceFollowRedirects = false
-            conexion.requestMethod = "POST"
-            conexion.doOutput = true
-            conexion.setRequestProperty("Content-Type", "text/xml; charset=utf-8")
-            conexion.setRequestProperty("SOAPAction", "\"$accionSoap\"")
-            conexion.outputStream.use { it.write(cuerpo.toByteArray(Charsets.UTF_8)) }
+            if (cuerpo != null) {
+                conexion.requestMethod = "POST"
+                conexion.doOutput = true
+                conexion.setRequestProperty("Content-Type", "text/xml; charset=utf-8")
+                conexion.setRequestProperty("SOAPAction", "\"$accionSoap\"")
+                conexion.outputStream.use { it.write(cuerpo.toByteArray(Charsets.UTF_8)) }
+            }
             check(conexion.responseCode in 200..299) { "HTTP ${conexion.responseCode}" }
             conexion.inputStream.use { entrada ->
                 val salida = ByteArrayOutputStream()
