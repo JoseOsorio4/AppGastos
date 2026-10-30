@@ -1,6 +1,7 @@
 package gt.edu.umg.finanzas.app.ui
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import gt.edu.umg.finanzas.app.datos.local.AppDatabase
@@ -12,6 +13,8 @@ import gt.edu.umg.finanzas.app.ui.formulario.FormularioUiState
 import gt.edu.umg.finanzas.app.ui.formulario.FormularioViewModel
 import gt.edu.umg.finanzas.core.dominio.TipoMovimiento
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
@@ -30,6 +33,7 @@ import java.time.LocalDate
 class FormularioViewModelTest {
 
     private lateinit var baseDatos: AppDatabase
+    private val modelos = mutableListOf<FormularioViewModel>()
 
     @Before
     fun abrir() = runBlocking {
@@ -38,7 +42,11 @@ class FormularioViewModelTest {
     }
 
     @After
-    fun cerrar() = baseDatos.close()
+    fun cerrar() = runBlocking {
+        // Estas instancias no pertenecen a una Activity: la prueba debe terminar sus lecturas antes de cerrar Room.
+        modelos.forEach { it.viewModelScope.coroutineContext.job.cancelAndJoin() }
+        baseDatos.close()
+    }
 
     @Test
     fun recupera_los_campos_desde_un_estado_guardado() {
@@ -51,10 +59,7 @@ class FormularioViewModelTest {
                 FormularioViewModel.CLAVE_DESCRIPCION to "Pago",
             ),
         )
-        lateinit var viewModel: FormularioViewModel
-        InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            viewModel = FormularioViewModel(BaseDePrueba.servicioSobre(baseDatos), guardado)
-        }
+        val viewModel = crearViewModel(guardado)
 
         val estado = viewModel.estado.value
         assertEquals(TipoMovimiento.INGRESO, estado.tipo)
@@ -69,6 +74,7 @@ class FormularioViewModelTest {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
             viewModel = FormularioViewModel(BaseDePrueba.servicioSobre(baseDatos), guardado)
         }
+        modelos.add(viewModel)
         return viewModel
     }
 

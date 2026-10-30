@@ -39,7 +39,7 @@ Para correr una sola clase de pruebas: `... mvn.cmd -f finanzas-core\pom.xml tes
    `.\gradlew.bat :app:dependencyInsight --dependency finanzas-core --configuration debugRuntimeClasspath`
    Debe mencionar `gt.edu.umg.finanzas:finanzas-core:0.3.0`.
 6. `.\gradlew.bat :app:assembleDebug`, luego ejecuta `app` en el emulador (o **Run**).
-7. Pruebas instrumentadas (Room e interfaz), con el emulador abierto: `.\gradlew.bat :app:connectedDebugAndroidTest`. Deben pasar 33 pruebas; el informe queda en `app\build\reports\androidTests\connected\`. En Android Studio también se puede usar clic derecho sobre `app/src/androidTest` → **Run 'Tests in…'**.
+7. Pruebas instrumentadas (Room e interfaz), con el emulador abierto: `.\gradlew.bat :app:connectedDebugAndroidTest`. Deben pasar 37 pruebas (Inc. 5); el informe queda en `app\build\reports\androidTests\connected\`. En Android Studio también se puede usar clic derecho sobre `app/src/androidTest` → **Run 'Tests in…'**.
 
 ## 3. Qué enviar después
 La salida final (o el primer error completo) de `mvn clean install`, `dependencyInsight` y `assembleDebug`, y una captura del emulador. Con eso se actualiza el [README](../README.md#estado-real).

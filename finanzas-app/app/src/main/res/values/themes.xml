@@ -1,5 +1,5 @@
 <resources>
-    <!-- DayNight: el sistema decide claro u oscuro; el selector propio llega en el Inc. 5. -->
+    <!-- DayNight usa Sistema, Claro u Oscuro según PreferenciaTema. -->
     <style name="Theme.Finanzas" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/color_primario</item>
         <item name="colorOnPrimary">@color/color_sobre_primario</item>

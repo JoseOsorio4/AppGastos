@@ -1,4 +1,14 @@
 <resources>
+    <string name="tema">Tema</string>
+    <string-array name="opciones_tema">
+        <item>Sistema</item>
+        <item>Claro</item>
+        <item>Oscuro</item>
+    </string-array>
+    <string name="aviso_recalculo">El saldo necesita recalcularse desde tus movimientos. El saldo mostrado puede estar desactualizado.</string>
+    <string name="recalcular_saldo">Recalcular saldo</string>
+    <string name="recalculando_saldo">Recalculando…</string>
+    <string name="error_recalculo">No se pudo recalcular el saldo. Tus datos se conservan; vuelve a intentarlo.</string>
     <string name="app_name">Finanzas</string>
 
     <!-- Inicio -->

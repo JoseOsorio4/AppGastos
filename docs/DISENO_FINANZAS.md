@@ -1,6 +1,6 @@
 # Diseño — App de finanzas personales (Kotlin · Android)
 
-> **Versión 3.6 · 24/10/2026.** Existen las reglas del core (Inc. 1), la persistencia Room v1 (Inc. 2), las pantallas Inicio y Formulario en GTQ (Inc. 3) y Operaciones con detalle, edición y eliminación (Inc. 4), todas con pruebas. El selector de tema, el aviso de recálculo y las APIs todavía son diseño; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
+> **Versión 3.7 · 29/10/2026.** Existen las reglas del core (Inc. 1), la persistencia Room v1 (Inc. 2), Inicio y Formulario en GTQ (Inc. 3), Operaciones (Inc. 4), el aviso de recálculo y el selector persistente de tema (Inc. 5). Las APIs siguen pendientes; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
 > **Referencias revisadas:** captura de Canva y HTML compartidos en el chat; documentación Mi Pisto y guía de clase 14. La captura principal y las decisiones de adaptación están en [referencias/INTERFAZ.md](referencias/INTERFAZ.md). Los ejemplos del curso y del compañero sirven como apoyo; las reglas de este documento definen nuestro proyecto.
 > **Esqueletos y pseudocódigo** de este documento no están compilados.
 > Mapa del código y preguntas de defensa: **[MAPA_DEL_CODIGO.md](MAPA_DEL_CODIGO.md)**. Construcción en Windows: **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**.
@@ -227,6 +227,7 @@ app/src/main/java/gt/edu/umg/finanzas/app/
   ui/inicio/
     InicioActivity.kt                     [3] reemplaza la pantalla de diagnóstico del Inc. 0
     InicioViewModel.kt, InicioUiState.kt  [3]
+    TemaDialogo.kt                       [5] selector Sistema/Claro/Oscuro, DialogFragment
     GraficoAnilloView.kt                  [3] solo dibuja segmentos ya calculados
     LeyendaGastos.kt                      [3] filas de categoría, porcentaje e importe bajo el anillo
     ConversorDialogo.kt                   [6]
@@ -502,6 +503,8 @@ GROUP BY c.idCategoria ORDER BY total DESC;
 
 Un fallo revierte saldo y bandera. Repetir la llamada tras el éxito no cambia los datos. Esta lectura completa es una operación excepcional; Inicio sigue leyendo el saldo guardado y agregaciones del intervalo.
 
+Implementado en el Inc. 5: `InicioViewModel` observa la bandera mediante `RepositorioUsuarioRoom`. `activity_inicio.xml` declara el aviso y `botonRecalcularSaldo`; `InicioActivity` los pinta y envía el toque al ViewModel. Este conserva `recalculando` y el error, evita llamadas simultáneas y delega en `ServicioFinanzas.reconstruirSaldo`. Un fallo mantiene el aviso y permite reintentar; el éxito apaga la bandera en Room y el aviso desaparece. No se modifica el esquema ni se enciende la bandera por tener saldo cero.
+
 ---
 
 ## 10. Contratos y firmas esenciales (esqueletos)
@@ -611,6 +614,7 @@ class ServicioFinanzas(usuarios: RepositorioUsuario, categorias: RepositorioCate
 - Ingresos y gastos se distinguen también con signo (+/−), texto e icono, no solo con color. El contraste (mínimo 4.5:1 en texto) se revisa en ambos temas en el Inc. 3.
 - Preferencia **Sistema** (por defecto), **Claro** u **Oscuro** en `PreferenciaTema` (`SharedPreferences`, una sola clave). `FinanzasApp.onCreate` la aplica con `AppCompatDelegate.setDefaultNightMode` antes de abrir cualquier pantalla. Es una lectura mínima al iniciar.
 - Cambiar el tema recrea la Activity; el formulario conserva su estado como en una rotación.
+- Implementado en el Inc. 5: `opcionTema` en la cabecera de Inicio abre `TemaDialogo`. Las opciones están en `strings.xml`; el diálogo manda la elección a `InicioViewModel.elegirTema` y aplica el modo de `AppCompatDelegate`. `PreferenciaTema` guarda el nombre de `Tema` en SharedPreferences `apariencia`, clave `tema`, y lo expone como `StateFlow`. Sin valor válido usa Sistema. `FinanzasApp` lo aplica al iniciar cada proceso.
 - Referencia: https://developer.android.com/develop/ui/views/theming/darktheme
 
 ---
@@ -679,7 +683,7 @@ Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b
 
 ## 15. Estado real
 
-El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. Los incrementos 0 a 4 están cerrados; el siguiente es el Inc. 5 (aviso de recálculo y selector de tema).
+El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. El alcance actual termina en el Inc. 5; GTQ/USD y la migración corresponden al Inc. 6.
 
 ---
 
@@ -709,3 +713,4 @@ No habrá `ARQUITECTURA.md`, `GUIA_DEFENSA.md` ni `PLAN_INCREMENTOS.md` separado
 - **v3.4:** Inc. 2 implementado: entidades, DAO (con `MovimientoFila` para el JOIN de Operaciones), implementaciones Room de los contratos, `OperacionesMovimientoRoom`, `InicializadorDatos`, `Dependencias` y `FinanzasApp`. Se añade el índice `Transaccion(idUsuario)` porque Room pide indexar cada FK. La base v1 rechaza movimientos USD con `ErrorNegocio` hasta la v2. **Decisión pendiente para el Inc. 3:** `ServicioFinanzas` necesita un `ReconstructorSaldo`, pero `ReconstructorSaldoRoom` está planificado para el Inc. 5; hay que adelantarlo o definir cómo se construye el servicio mientras tanto.
 - **v3.5:** Inc. 3 implementado. Se resuelve la decisión pendiente de la v3.4 adelantando `ReconstructorSaldoRoom` (§9.6); el aviso visible sigue en el Inc. 5. `Dependencias` arma `ServicioFinanzas` con las cinco implementaciones Room. El core sube a 0.3.0 con `Dinero.aTexto`, que usan los botones +5/+10/+20/+50 para escribir el monto sin convertir texto en la app. `NavegacionPrincipal` se aplaza al Inc. 4, cuando dos pantallas compartan la barra inferior. "Más" en la cuadrícula no se crea: con 8 categorías de gasto y 4 de ingreso, todas caben en la cuadrícula de 4 columnas. targetSdk 36 dibuja bajo las barras del sistema y `BarrasSistema` reserva su espacio.
 - **v3.6:** Inc. 4 implementado. `NavegacionPrincipal` conecta la barra en Inicio y Operaciones; desde Operaciones, "Inicio" hace `finish()`. Los chips de período pasan a `chips_periodo.xml` con `ChipsPeriodo` y `PeriodoGuardado` en `ui/comun`, compartidos por las dos pantallas. Operaciones agrupa por día con `FilaOperacion`; el detalle y la confirmación son `DialogFragment`. El Formulario edita con el extra `idEnEdicion` y carga el movimiento una sola vez. Ninguna tabla cambia.
+- **v3.7:** Inc. 5 implementado. Aviso condicional, progreso y reintento en Inicio usando `ReconstructorSaldoRoom` existente. `PreferenciaTema` y `TemaDialogo` guardan y aplican Sistema/Claro/Oscuro; el arranque restaura la elección. Sin cambios del core, dependencias ni esquema.

@@ -42,6 +42,12 @@ class InicioActivity : AppCompatActivity() {
         BarrasSistema.reservarEspacio(binding.root, arriba = binding.cabecera, abajo = binding.barraNavegacion.root)
 
         binding.textoConexionCore.text = getString(R.string.version_core, InfoCore.version)
+        binding.botonRecalcularSaldo.setOnClickListener { viewModel.recalcularSaldo() }
+        binding.opcionTema.setOnClickListener {
+            if (supportFragmentManager.findFragmentByTag(TemaDialogo.ETIQUETA) == null) {
+                TemaDialogo().show(supportFragmentManager, TemaDialogo.ETIQUETA)
+            }
+        }
         NavegacionPrincipal.conectar(this, binding.barraNavegacion, DestinoPrincipal.INICIO)
         chipsPeriodo = ChipsPeriodo(
             actividad = this,
@@ -61,6 +67,10 @@ class InicioActivity : AppCompatActivity() {
     private fun pintar(estado: InicioUiState) {
         chipsPeriodo.pintar(estado.seleccion)
         binding.textoErrorInicial.isVisible = estado.errorInicial
+        binding.avisoRecalculo.isVisible = estado.reconstruccionPendiente
+        binding.botonRecalcularSaldo.isEnabled = !estado.recalculando
+        binding.botonRecalcularSaldo.setText(if (estado.recalculando) R.string.recalculando_saldo else R.string.recalcular_saldo)
+        binding.textoErrorRecalculo.isVisible = estado.errorRecalculo
 
         val resumen = estado.resumen ?: return
         binding.textoSaldoDisponible.text = Dinero.formatear(resumen.saldoDisponibleCentavos)

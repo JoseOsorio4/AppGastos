@@ -33,7 +33,29 @@ El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`.
 
 ## Estado real
 
-Último incremento cerrado: **4 — Operaciones**. Siguiente: **5 — aviso de recálculo del saldo y selector de tema**.
+Último incremento cerrado: **5 — aviso de recálculo del saldo y selector de tema**. Siguiente: **6 — GTQ/USD con Banguat y migración**, todavía sin implementar.
+
+### Incremento 5 — aviso de recálculo y tema persistente
+
+| Comprobación | Estado | Detalle |
+|---|---|---|
+| Compilaciones antes de editar | ✅ Ejecutadas | Core 0.3.0: `mvn clean install`, 55 pruebas sin fallos. App: `:app:assembleDebug`, `BUILD SUCCESSFUL` |
+| Controles y responsabilidades | ✅ Creados | `activity_inicio.xml`: `opcionTema`, `avisoRecalculo`, `textoAvisoRecalculo`, `textoErrorRecalculo` y `botonRecalcularSaldo`. Activity conecta y pinta; ViewModel conserva período, tema, bandera, recálculo en curso y error. [Recorrido por archivo](docs/MAPA_DEL_CODIGO.md#1-funciones-visibles) |
+| Core, tablas y herramientas | ✅ Conservados | Core 0.3.0 sin cambios; Room v1 con las mismas 3 tablas. Se reutiliza `ReconstructorSaldoRoom`; no se añaden dependencias ni APIs |
+| Compilación del cambio | ✅ Ejecutada | `:app:assembleDebug`, `:app:assembleDebugAndroidTest` e instalación `:app:installDebug`: `BUILD SUCCESSFUL` |
+| Suite instrumentada final en API 37 | ✅ Ejecutada | `:app:connectedDebugAndroidTest`: **37/37**, 0 fallos, 0 errores, 0 omitidas, confirmado en `app/build/outputs/androidTest-results/connected/debug/TEST-…xml` |
+| Aviso y recálculo desde la interfaz | ✅ Probados | `RecorridoSaldoTemaTest`: Q 1.23 erróneo con bandera pendiente sobrevive a recrear Inicio; el botón deja Q 70.00, oculta el aviso y apaga la bandera. Conserva los 2 movimientos; repetir el servicio devuelve Q 70.00. Sin bandera y con saldo cero no ofrece recálculo |
+| Fallo real y reintento | ✅ Probados | Trigger SQLite de prueba impide apagar la bandera después de asignar saldo: rollback conserva Q 1.23 y bandera activa; aparece el error y el mismo botón permite reintentar hasta Q 70.00. El trigger solo existe en la prueba y se elimina al terminar |
+| Tema Sistema/Claro/Oscuro | ✅ Probado | La prueba elige y vuelve a leer las 3 preferencias, verifica la opción marcada al reabrir y los recursos claros/oscuros de Inicio y Formulario. `PreferenciaTema` guarda una sola clave en SharedPreferences; `FinanzasApp` aplica el modo al iniciar |
+| App real: saldo y persistencia del tema | ✅ Revisados en emulador | BD de prueba preparada fuera de la app: ingreso Q 100 y gasto Q 30, saldo erróneo Q 1.23 y bandera activa. Aviso visible en claro y oscuro; tocar Recalcular deja Q 70.00. Las 3 opciones sobreviven a `am force-stop` y nuevo arranque; Sistema sigue `cmd uimode night yes/no`, restaurado a `no` al terminar |
+| Segundo detalle tras cancelar Eliminar | ✅ Revisado por acciones individuales de ADB; no reproducido | Se abrió Almuerzo → Eliminar → Cancelar → Almuerzo. El segundo detalle seguía abierto después de 372 s sin entrada. Tras otra cancelación y reapertura seguía abierto a los 48 s. No se cambió el código de Operaciones ni se declara corregida la causa; queda pendiente una comprobación humana con el dedo |
+| Ajustes de pruebas existentes | ✅ Ejecutados | La primera suite dio 36/37: la prueba del resumen aceptaba un total nuevo con saldo anterior porque combina dos Flow; ahora espera ambos valores finales. La segunda se interrumpió con Room cerrado mientras un ViewModel de prueba seguía leyendo; ahora cancela y espera sus corrutinas antes de cerrar la base. La suite final pasó completa |
+| Revisión del cambio | ✅ Realizada | Recorrido XML → Activity/diálogo → ViewModel → servicio/Room o preferencias; sin cálculos monetarios nuevos en UI, sin migración, sin cambios de Operaciones. `git diff --check` y hash de `img.png` comprobados |
+| Otros pendientes anteriores | ⏳ Conservados | Rotación manual con detalle o confirmación abiertos, muerte real del proceso con el formulario abierto y ejecución en API 24–25 siguen sin probarse |
+
+Capturas: [aviso claro](docs/referencias/capturas/inc5-aviso-claro.png) · [selector](docs/referencias/capturas/inc5-selector-tema.png) · [aviso oscuro](docs/referencias/capturas/inc5-aviso-oscuro.png) · [Q 70.00 tras recalcular](docs/referencias/capturas/inc5-saldo-recalculado.png) · [segundo detalle aún abierto](docs/referencias/capturas/inc5-segundo-detalle.png).
+
+La revisión visual se hizo leyendo capturas y jerarquías de Android entre acciones individuales de ADB; no fue una sesión con el dedo. El control de Windows falló al capturar la ventana (`window crop is outside captured monitor`). Al arrancar apareció también un aviso de cierre inesperado del emulador; el AVD arrancado en frío con render por software permitió ejecutar la suite. El `logcat` del recorrido final, separado de los fallos provocados por las pruebas, no contiene excepciones fatales de la app.
 
 ### Incremento 4 — Operaciones: lista, filtros, detalle, editar y eliminar
 
@@ -56,7 +78,7 @@ El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`.
 | Letra grande del sistema (`font_scale` 1.3 y 2.0) en Inicio, Formulario, Operaciones y detalle | ✅ Revisado y corregido en el emulador | Se partían "Entretenimiento", "Alimentación" y "Educación" en la cuadrícula, "Operaciones" en la barra y "Gastos del período" se salía del anillo. Ahora la cuadrícula usa 4, 3 o 2 columnas según la escala, la etiqueta de la barra queda en una línea y el centro del anillo reduce su texto dentro del hueco. Se deja así: la fila de períodos se desplaza de lado y "Q 1,250.00" ocupa dos líneas con 2.0. [Detalle y capturas](docs/referencias/INTERFAZ.md#letra-grande-del-sistema-escala-13-y-20) |
 | Rotación a mano con el detalle o la confirmación abiertos | ⏳ Pendiente de revisión manual | Son `DialogFragment`; no se rotó el emulador con ellos abiertos |
 | Muerte real del proceso con el formulario abierto, API 24–25 | ⏳ Pendientes | Igual que en el Inc. 3 |
-| Aviso visible para recalcular el saldo y selector de tema | ⏳ Inc. 5 | — |
+| Aviso visible para recalcular el saldo y selector de tema | ✅ Inc. 5 | Ver la tabla del incremento 5 |
 
 Capturas: [Operaciones](docs/referencias/capturas/inc4-operaciones-lista.png) · [vacía](docs/referencias/capturas/inc4-operaciones-vacia.png) · [detalle](docs/referencias/capturas/inc4-detalle.png) · [editar](docs/referencias/capturas/inc4-formulario-edicion.png) · [confirmar](docs/referencias/capturas/inc4-confirmar-eliminar.png) · [Inicio tras eliminar](docs/referencias/capturas/inc4-inicio-tras-eliminar.png) · [oscuro](docs/referencias/capturas/inc4-operaciones-oscuro.png) · [rango](docs/referencias/capturas/inc4-calendario-rango.png) · [fecha](docs/referencias/capturas/inc4-calendario-fecha.png).
 
@@ -82,7 +104,7 @@ El emulador se cerró solo dos veces durante las pruebas y una vez dejó de dibu
 | Selector de rango "Período" y de fecha | ✅ Resuelto en el Inc. 4 | Abiertos y usados en el emulador con toques de `adb` (no con el dedo) |
 | Rotación de la app real a mano | ⏳ Pendiente de revisión manual | Cubierta por la prueba instrumentada, no por el recorrido con `adb` |
 | Ejecución en API 24–25 | ⏳ Pendiente | Solo hay imagen API 37 |
-| Aviso visible para recalcular el saldo y selector de tema | ⏳ Inc. 5 | — |
+| Aviso visible para recalcular el saldo y selector de tema | ✅ Inc. 5 | Ver la tabla del incremento 5 |
 | Operaciones (lista, editar, eliminar) | ✅ Inc. 4 | Ver la tabla del incremento 4 |
 
 ### Incremento 2 — Room v1 sobre SQLite

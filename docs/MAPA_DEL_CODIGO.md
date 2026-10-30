@@ -26,8 +26,8 @@ Las filas marcadas **Existe** tienen todas sus columnas implementadas. En las de
 | Editar movimiento | **Existe** (Inc. 4) | `dialogo_detalle_movimiento.xml` · `botonEditar` → `activity_formulario.xml` · `botonGuardar` | `DetalleMovimientoDialogo` → `FormularioActivity.paraEditar` | `FormularioViewModel.cargarMovimiento`, `guardar` | `ValidadorMovimiento.validar`, `CalculoSaldo.deltaEditar` | `ServicioFinanzas.obtenerParaEditar` / `editar` → `OperacionesMovimientoRoom.editar` |
 | Eliminar movimiento | **Existe** (Inc. 4) | `botonEliminar` → diálogo `ConfirmarEliminacionDialogo` (Cancelar / Eliminar) | `DetalleMovimientoDialogo` → `ConfirmarEliminacionDialogo` | `OperacionesViewModel.eliminar` | `CalculoSaldo.deltaEliminar` | `ServicioFinanzas.eliminar` → `OperacionesMovimientoRoom.eliminar` |
 | Navegar con la barra inferior | **Existe** (Inc. 4) | `barra_navegacion.xml` · `botonIrInicio`, `botonAgregarMovimiento`, `botonIrOperaciones` | `ui/comun/NavegacionPrincipal.conectar` (en Inicio y Operaciones) | — | — | — |
-| Recalcular saldo | Core y Room existen (Room adelantado al Inc. 3); aviso visible Inc. 5 | aviso `botonRecalcularSaldo` | `InicioActivity` | `InicioViewModel.recalcularSaldo` | `CalculoSaldo.saldoDesde` | `datos/local/ReconstructorSaldoRoom.reconstruirSiPendiente` |
-| Cambiar tema | Pendiente (Inc. 5) | menú `opcionTema` | `InicioActivity` | — | — | `PreferenciaTema` |
+| Recalcular saldo | **Existe** (Inc. 5) | `activity_inicio.xml` · `avisoRecalculo`, `textoAvisoRecalculo`, `textoErrorRecalculo`, `botonRecalcularSaldo` | `InicioActivity.onCreate`, `pintar` | `InicioViewModel.recalcularSaldo`, `estado` | `ServicioFinanzas.reconstruirSaldo` → `CalculoSaldo.saldoDesde` | `RepositorioUsuarioRoom` observa la bandera; `ReconstructorSaldoRoom.reconstruirSiPendiente` asigna saldo y apaga bandera en una transacción |
+| Cambiar tema | **Existe** (Inc. 5) | `activity_inicio.xml` · `opcionTema`; `strings.xml` · `opciones_tema` (Sistema/Claro/Oscuro) | `InicioActivity` abre `TemaDialogo` (diálogo Material de elección única); este aplica `AppCompatDelegate` | `InicioViewModel.elegirTema`, `estado.tema` | — (preferencia visual) | `datos/preferencias/PreferenciaTema` · SharedPreferences `apariencia`, clave `tema`; `FinanzasApp.onCreate` la aplica al iniciar |
 | Consultar tasa | Core existe; pantalla Inc. 6 | `tarjeta_tasa.xml` · `botonReintentarTasa` | `InicioActivity` | `InicioViewModel.estadoTasa` | `dominio/TasaCambio` | `RepositorioTipoCambio` → `ClienteBanguat` (Inc. 6) |
 | Convertir USD → GTQ o GTQ → USD | Core existe; pantalla Inc. 6 | `dialogo_conversor.xml` · selector de sentido; `textoConversionPrevia` en el formulario | `ConversorDialogo`, `FormularioActivity` | `FormularioViewModel.onMontoCambiado` | `reglas/ConversorMoneda.usdAGtq` / `gtqAUsd` | — (usa la tasa ya cargada; solo dos direcciones). Guardar en USD requiere la base v2 (Inc. 6) |
 | Clima / Reflexión | Pendiente (Inc. 7) | `tarjeta_clima.xml`, `tarjeta_reflexion.xml` | `InicioActivity` | `estadoClima`, `estadoReflexion` | — | `RepositorioClima`, `RepositorioReflexion` |
@@ -89,7 +89,7 @@ flowchart LR
 |---|---|---|
 | `contratos/RepositorioUsuario`, `RepositorioCategoria`, `RepositorioTransaccion` | Lecturas con `Flow` (se actualizan solas) y `suspend` puntuales | **Interfaces**: `RepositorioUsuarioRoom`, `RepositorioCategoriaRoom`, `RepositorioTransaccionRoom`; fakes en las pruebas JVM |
 | `contratos/OperacionesMovimiento` | Límite atómico de crear, editar y eliminar | `OperacionesMovimientoRoom`; `fakes/OperacionesMovimientoEnMemoria` |
-| `contratos/ReconstructorSaldo` | Recalcular solo con la bandera encendida; asigna, no suma | `ReconstructorSaldoRoom` (Inc. 5); `fakes/ReconstructorSaldoEnMemoria` |
+| `contratos/ReconstructorSaldo` | Recalcular solo con la bandera encendida; asigna, no suma | `ReconstructorSaldoRoom` (adelantado al Inc. 3, aviso en el 5); `fakes/ReconstructorSaldoEnMemoria` |
 | `servicio/ServicioFinanzas` | Única entrada de los ViewModels: combina saldo y totales, calcula el anillo y delega las escrituras | ViewModels (Inc. 3); `ServicioFinanzasTest` (fakes) y `ServicioSobreRoomTest` (Room) |
 | `resultado/Resultado` | `Ok` o `Fallo` (`ErrorNegocio`, `NoEncontrado`, `ErrorAlmacenamiento`) | Todas las reglas y operaciones |
 
@@ -141,8 +141,8 @@ flowchart LR
 | `OperacionesMovimientoRoom.kt` | **Único** `withTransaction` de movimientos. Lee la categoría → `ValidadorMovimiento.validar` → `CalculoSaldo.aplicar` → escribe el movimiento y el saldo. Antes de escribir devuelve un `Fallo`; después, cualquier anomalía lanza y Room revierte. Rechaza USD en la v1 |
 | `InicializadorDatos.kt` | Usuario 1 y 12 categorías en un `withTransaction`; idempotente |
 | `ReconstructorSaldoRoom.kt` | Adelantado en el Inc. 3 porque `ServicioFinanzas` lo necesita. Solo con `reconstruccionPendiente`: lee el historial una vez (`TransaccionDao.obtenerTodas`), calcula con `CalculoSaldo.saldoDesde`, **asigna** el saldo y apaga la bandera (`UsuarioDao.marcarReconstruccion`) en el mismo `withTransaction` |
-| `Dependencias.kt` | Decide qué clase Room cumple cada contrato y arma `servicio` (`ServicioFinanzas`), lo único que reciben las pantallas |
-| `FinanzasApp.kt` | `Application` (declarada en el manifiesto): crea `Dependencias` y lanza la siembra al arrancar; deja el resultado en `inicializacion` |
+| `Dependencias.kt` | Decide qué clase Room cumple cada contrato, arma `servicio` y crea la única `PreferenciaTema` del proceso |
+| `FinanzasApp.kt` | `Application` (declarada en el manifiesto): crea `Dependencias`, aplica el tema guardado antes de abrir pantallas y lanza la siembra; deja el resultado en `inicializacion` |
 
 ### 3.4 Pruebas instrumentadas (`app/src/androidTest/.../datos/local/`)
 
@@ -156,7 +156,7 @@ flowchart LR
 
 `BaseDePrueba.servicioSobre` arma `ServicioFinanzas` con las mismas clases Room que `Dependencias`.
 
-## 4. App: pantallas (incrementos 3 y 4)
+## 4. App: pantallas (incrementos 3 a 5)
 
 Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **Activity** conecta toques y texto con el ViewModel y dibuja su estado; el **ViewModel** guarda el estado (y lo copia a `SavedStateHandle`) y llama al servicio; **ServicioFinanzas** y el core validan y calculan; **Room** guarda y avisa con `Flow`.
 
@@ -198,8 +198,10 @@ Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **A
 
 | Archivo | Responsabilidad |
 |---|---|
-| `ui/inicio/InicioActivity.kt` | Crea `ChipsPeriodo` y conecta la barra con `NavegacionPrincipal`; `pintar` formatea montos con `Dinero.formatear` y muestra u oculta el anillo |
-| `ui/inicio/InicioViewModel.kt`, `InicioUiState.kt` | Período elegido (`PeriodoGuardado`) → `flatMapLatest` sobre `observarResumen` y `observarDistribucionGastos`. Avisa si la siembra inicial falló |
+| `ui/inicio/InicioActivity.kt` | Infla `activity_inicio.xml`, conecta período, navegación, recálculo y selector de tema. `pintar` formatea montos y muestra anillo, aviso, progreso y error; no escribe datos |
+| `ui/inicio/InicioViewModel.kt`, `InicioUiState.kt` | Conserva período en `SavedStateHandle`; observa resumen, anillo, bandera del usuario y tema. `EstadoRecalculo` guarda operación en curso y error, sobrevive a recreación e impide llamadas simultáneas; `recalcularSaldo` delega en el servicio y `elegirTema` en preferencias |
+| `ui/inicio/TemaDialogo.kt` | `DialogFragment` con opciones de `R.array.opciones_tema`; marca `estado.tema`, envía la elección al ViewModel y aplica `AppCompatDelegate`, que recrea las Activities |
+| `datos/preferencias/PreferenciaTema.kt` | `Tema` define los tres modos Android. Lee y guarda una sola clave en SharedPreferences; expone `StateFlow<Tema>` al ViewModel. Sistema es el valor inicial si no hay preferencia válida |
 | `ui/operaciones/OperacionesActivity.kt` | Recibe los filtros y el toque en una fila; `pintar` entrega las filas al adaptador, marca los chips y muestra el aviso de una sola vez |
 | `ui/operaciones/OperacionesViewModel.kt`, `OperacionesUiState.kt` | `combine(período, tipo)` → `flatMapLatest` sobre `observarMovimientos`; `eliminar` traduce el `Resultado` a `AvisoOperaciones`. `FiltrosOperaciones` y `movimiento(id)` viven en el estado |
 | `ui/operaciones/FilaOperacion.kt` | `EncabezadoDia` o `Movimiento`; `agrupar` inserta un encabezado cada vez que cambia la fecha (la consulta ya llega ordenada) |
@@ -224,7 +226,7 @@ Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **A
 - **Edición:** el movimiento se carga de Room una sola vez; la bandera `movimientoCargado` evita que una rotación borre lo que ya se cambió.
 - **Estado guardado (muerte del proceso):** tipo, monto, categoría, fecha y descripción se copian a `SavedStateHandle` y un ViewModel nuevo los lee de ahí; las categorías se vuelven a consultar a Room. `FormularioViewModelTest` prueba esa recuperación con un `SavedStateHandle` precargado; matar el proceso con el formulario abierto no se ha probado.
 - **Doble toque:** `FormularioViewModel.guardar` retorna si `guardando` o `guardadoExitoso` ya están activos, y el botón se deshabilita.
-- **Tema:** sigue al sistema (`DayNight`). El selector Sistema/Claro/Oscuro llega en el Inc. 5.
+- **Tema (Inc. 5):** `opcionTema` abre `TemaDialogo`; `elegirTema` guarda la elección en SharedPreferences. El diálogo aplica `AppCompatDelegate` y `FinanzasApp` repite esa aplicación al iniciar otro proceso. El recálculo en curso y su error viven en el ViewModel; el aviso pendiente viene de Room, por lo que reaparece incluso después de cerrar la app si aún no se completó.
 
 ### 4.5 Pruebas de interfaz (`app/src/androidTest/.../ui/`)
 
@@ -247,6 +249,8 @@ Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **A
 | `…la_barra_inferior_va_y_vuelve_sin_apilar_pantallas` | Tocar Operaciones dentro de Operaciones no hace nada; Inicio la cierra |
 
 ## 5. Recorridos reales
+
+Las pruebas del Inc. 5 están en `app/src/androidTest/.../ui/RecorridoSaldoTemaTest.kt`: aviso conservado al recrear Inicio, Q 1.23 erróneo → Q 70.00 desde dos movimientos, bandera apagada y repetición sin cambios; fallo SQLite real al apagar la bandera con rollback y reintento desde el mismo botón; saldo cero sin bandera no muestra el aviso; selector de las tres opciones persistidas, opción marcada al reabrir y recursos claros/oscuros en Inicio y Formulario. Los resultados ejecutados y las limitaciones del recorrido visual están en [README](../README.md#estado-real).
 
 ### 5.1 Incremento 0: conexión core → JAR → Android (ejecutado)
 1. `finanzas-core/pom.xml` copia `<version>` en `finanzas-core.properties` y compila con destino JVM 11.
@@ -308,7 +312,9 @@ Capturas del emulador: [Inicio](referencias/capturas/inc3-inicio-con-datos.png),
 | ¿Por qué no se pierde lo escrito al rotar o cambiar de tema? | El ViewModel sobrevive a la recreación y además copia los campos a `SavedStateHandle` por si Android cierra el proceso | `FormularioViewModel.cambiarCampos` | Rotación y tema probados; recuperación desde estado guardado probada con un `SavedStateHandle` precargado |
 | ¿Quién decide los colores del tema oscuro? | Los mismos nombres de color en `values/` y `values-night/`; los layouts no cambian | `res/values-night/colors.xml` | Existe, revisado en capturas |
 | ¿Por qué la pantalla no calcula el anillo? | `DistribucionGastos` (core) calcula los puntos básicos y `GraficoAnilloView` solo dibuja | `GraficoAnilloView.mostrar` | Existe |
-| ¿Quién recalcula un saldo dañado? | `ReconstructorSaldoRoom`, solo si la bandera está activa; asigna y apaga la bandera en una transacción | `datos/local/ReconstructorSaldoRoom.kt` | Existe, probado (aviso visible Inc. 5) |
+| ¿Quién recalcula un saldo dañado? | El botón en `activity_inicio.xml` llama al ViewModel y este al servicio; `ReconstructorSaldoRoom` calcula solo con la bandera activa y asigna saldo y bandera en una transacción | `InicioViewModel.recalcularSaldo`, `datos/local/ReconstructorSaldoRoom.kt` | Existe, probado |
+| ¿Es una migración recalcular el saldo? | No cambia tablas ni columnas: reconstruye un dato derivado desde los movimientos; el esquema sigue en v1 | `ReconstructorSaldoRoom`, `AppDatabase` | Existe, probado |
+| ¿Quién recuerda el tema tras cerrar la app? | `PreferenciaTema` guarda Sistema/Claro/Oscuro; `FinanzasApp` lee esa clave y aplica el modo antes de abrir pantallas | `datos/preferencias/PreferenciaTema.kt`, `FinanzasApp.onCreate` | Existe |
 | ¿Cómo se edita sin otra pantalla? | El mismo `FormularioActivity` recibe el ID en el `Intent`; el ViewModel carga el movimiento y `guardar` llama a `editar` en vez de `registrar` | `FormularioActivity.paraEditar`, `FormularioViewModel.guardar` | Existe, probado |
 | ¿Cómo cambia el saldo al editar o eliminar? | `CalculoSaldo.deltaEditar` (nuevo impacto − anterior) y `deltaEliminar`; se escriben con el movimiento en un solo `withTransaction` | `OperacionesMovimientoRoom.editar`, `eliminar` | Existe, probado |
 | ¿Qué evita borrar por accidente? | Solo el botón Eliminar del diálogo llama a `eliminar`; Cancelar, atrás o tocar fuera no tocan la base | `ConfirmarEliminacionDialogo` | Existe, probado |

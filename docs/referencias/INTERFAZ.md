@@ -47,6 +47,17 @@ La imagen contiene montos y símbolos de demostración. En Android, el saldo se 
 - **Se deja así:** con 1.3 y 2.0 la fila de períodos no cabe entera y se desplaza de lado (Período queda a la derecha); con 2.0 "Q 1,250.00" pasa a dos líneas en la tarjeta Ingresos y "categoría · tipo" ocupa dos líneas en [Operaciones](capturas/inc4-letra-2.0-operaciones.png). Todo sigue legible y sin cortes; el formulario y la lista se desplazan para llegar a Guardar y a las últimas filas.
 - El detalle de un movimiento cabe completo con 2.0.
 
+## Incremento 5: aviso y selector de tema (emulador API 37)
+
+| Aviso claro | Selector | Aviso oscuro | Saldo corregido |
+|---|---|---|---|
+| ![Aviso claro](capturas/inc5-aviso-claro.png) | ![Selector](capturas/inc5-selector-tema.png) | ![Aviso oscuro](capturas/inc5-aviso-oscuro.png) | ![Saldo corregido](capturas/inc5-saldo-recalculado.png) |
+
+- `opcionTema` ocupa el extremo derecho de la cabecera verde. Abre un diálogo Material con Sistema, Claro y Oscuro; los colores y layouts existentes se conservan.
+- El aviso aparece antes de las tarjetas solo con bandera pendiente. Explica que el saldo puede estar desactualizado y ofrece Recalcular saldo. Durante la operación el botón indica Recalculando y queda deshabilitado; un error mantiene la tarjeta con opción de reintentar.
+- En una base de prueba con Q 100 de ingreso y Q 30 de gasto, el botón cambió Q 1.23 erróneo a Q 70.00 y ocultó la tarjeta. Tema y aviso se revisaron en claro y oscuro; las tres opciones persistieron tras forzar el cierre y abrir otro proceso. Sistema siguió el modo claro/oscuro de Android.
+- Revisión mediante capturas, jerarquías Android y acciones individuales de ADB. El [segundo detalle](capturas/inc5-segundo-detalle.png) seguía abierto 372 s después de cancelar una eliminación y reabrirlo; no se declara corregida la observación anterior. Los otros pendientes conservan su estado en el README.
+
 ## Vistas y conexiones
 
 | Vista | Orden y controles | De dónde sale lo que muestra |

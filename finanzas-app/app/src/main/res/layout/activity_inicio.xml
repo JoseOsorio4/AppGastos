@@ -19,14 +19,30 @@
         android:paddingTop="16dp"
         android:paddingBottom="12dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/saldo_disponible"
-            android:textAllCaps="true"
-            android:letterSpacing="0.1"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            android:textColor="@color/color_sobre_cabecera_secundario" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/saldo_disponible"
+                android:textAllCaps="true"
+                android:letterSpacing="0.1"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="@color/color_sobre_cabecera_secundario" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/opcionTema"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tema"
+                android:textColor="@color/color_sobre_cabecera" />
+        </LinearLayout>
 
         <!-- Saldo histórico de la tabla Usuario: no depende del período elegido. -->
         <TextView
@@ -67,6 +83,48 @@
                 android:text="@string/error_inicializacion"
                 android:textColor="?attr/colorError"
                 android:visibility="gone" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/avisoRecalculo"
+                style="@style/Widget.Finanzas.Tarjeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/textoAvisoRecalculo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:accessibilityLiveRegion="polite"
+                        android:text="@string/aviso_recalculo"
+                        android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+                    <TextView
+                        android:id="@+id/textoErrorRecalculo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:accessibilityLiveRegion="polite"
+                        android:text="@string/error_recalculo"
+                        android:textColor="?attr/colorError"
+                        android:visibility="gone" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/botonRecalcularSaldo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/recalcular_saldo" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Ingresos y gastos juntos, como en la maqueta. -->
             <LinearLayout

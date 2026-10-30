@@ -1,5 +1,6 @@
 package gt.edu.umg.finanzas.app.ui.inicio
 
+import gt.edu.umg.finanzas.app.datos.preferencias.Tema
 import gt.edu.umg.finanzas.app.ui.comun.SeleccionPeriodo
 import gt.edu.umg.finanzas.core.dominio.ResumenPeriodo
 import gt.edu.umg.finanzas.core.dominio.SegmentoGasto
@@ -10,4 +11,13 @@ data class InicioUiState(
     val resumen: ResumenPeriodo? = null,
     val segmentos: List<SegmentoGasto> = emptyList(),
     val errorInicial: Boolean = false,
+    val reconstruccionPendiente: Boolean = false,
+    val recalculando: Boolean = false,
+    val errorRecalculo: Boolean = false,
+    val tema: Tema = Tema.SISTEMA,
+)
+
+data class EstadoRecalculo(
+    val recalculando: Boolean = false,
+    val error: Boolean = false,
 )

@@ -3,7 +3,7 @@
 El proyecto continúa en este repositorio:
 https://github.com/JoseOsorio4/AppGastos
 
-Están cerrados los incrementos 0 a 4: conexión core → Android, reglas del core, Room v1, Inicio y Formulario en GTQ, y Operaciones con detalle, edición y eliminación. El último commit del incremento 4 es [ab661c7](https://github.com/JoseOsorio4/AppGastos/commit/ab661c7ea1fb73917f912b28b678683ee90514d2). El siguiente es el **incremento 5**: aviso visible para recalcular el saldo y selector de tema Sistema/Claro/Oscuro.
+Están cerrados los incrementos 0 a 5: conexión core → Android, reglas del core, Room v1, Inicio y Formulario en GTQ, Operaciones y aviso de recálculo con tema Sistema/Claro/Oscuro persistente. El siguiente es el **incremento 6**, todavía sin implementar: GTQ/USD con Banguat y migración v1 → v2. Consulta `git log -1` y el [estado real](../README.md#estado-real) para identificar el cierre más reciente.
 
 Para continuar se abre el mismo código; no se crea otro proyecto Android ni otra librería.
 
@@ -41,20 +41,20 @@ Los dos proyectos permanecen independientes como unidades de construcción, dent
 
 Copia este mensaje en un chat nuevo de Kiro IDE con AppGastos abierto:
 
-> Continúa AppGastos (https://github.com/JoseOsorio4/AppGastos), rama main. Los incrementos 0–4 están cerrados; el último es el commit ab661c7.
+> Continúa AppGastos (https://github.com/JoseOsorio4/AppGastos), rama main. Los incrementos 0–5 están cerrados. Revisa git status y git log -1 antes de editar.
 >
-> Lee AGENTS.md, README.md (Estado real), docs/MAPA_DEL_CODIGO.md, docs/DISENO_FINANZAS.md (§9.6, §12 y §14) y docs/referencias/INTERFAZ.md. Resume en pocas líneas el estado y los pendientes del Inc. 4 que figuran en el README.
+> Lee AGENTS.md, README.md (Estado real), docs/MAPA_DEL_CODIGO.md, docs/DISENO_FINANZAS.md y docs/referencias/INTERFAZ.md. Resume en pocas líneas el estado y los pendientes que figuran en el README.
 >
-> Luego desarrolla solo el incremento 5: aviso visible para recalcular el saldo (ReconstructorSaldoRoom ya existe) y selector de tema Sistema/Claro/Oscuro que persista. Conserva el estilo claro y oscuro actual y las capas: XML dibuja, Activity recibe y pinta, ViewModel guarda el estado, el core decide, Room guarda.
+> Luego desarrolla solo el incremento 6 conforme al diseño (§6.2, §7, §9.3, §11.2 y §14). Conserva el estilo y las capas: XML dibuja, Activity recibe y pinta, ViewModel guarda el estado, el core decide, Room guarda. No adelantes clima ni reflexión.
 >
 > Antes de cambiar la app, comprueba mvn clean install y .\gradlew.bat :app:assembleDebug. Distingue lo ejecutado de lo pendiente. No subas rutas locales, .bak, configuración del IDE ni finanzas-app/app/img.png. Al terminar, actualiza README y mapa, haz commit y push normal y dame el enlace.
 
 ## 4. Punto de cierre
 
-Cada incremento termina cuando se observa lo indicado en la tabla de §14 del diseño. Los incrementos 0 a 4 ya cumplen ese criterio (33 pruebas instrumentadas y recorrido en el emulador API 37); el siguiente es el 5.
+Cada incremento termina cuando se observa lo indicado en la tabla de §14 del diseño. Los incrementos 0 a 5 ya cumplen ese criterio (37 pruebas instrumentadas y recorrido en el emulador API 37); el siguiente es el 6.
 
 Pendientes del incremento 4, sin ejecutar todavía:
-- **Segundo detalle que se cerró solo:** en dos recorridos con `adb`, tras cancelar una eliminación, el detalle abierto por segunda vez se cerró antes de tocar Eliminar. No se repitió en un tercer recorrido ni en `RecorridoOperacionesTest`, que hace la misma secuencia. Hay que comprobarlo a mano con el dedo; no se encontró la causa.
+- **Segundo detalle que se cerró solo:** en el Inc. 5 se revisó de nuevo con acciones individuales de ADB: tras cancelar, el segundo detalle permaneció abierto 372 s y otra reapertura, 48 s. No se reprodujo, no se cambió Operaciones y no se identificó una causa. La comprobación humana con el dedo sigue pendiente.
 - **Rotación con diálogos abiertos:** rotar a mano con el detalle o con la confirmación de eliminar abiertos. Son `DialogFragment`, pero no se ha rotado el emulador con ellos.
 - **Muerte real del proceso con el formulario abierto:** solo se probó la recuperación desde un `SavedStateHandle` precargado (`FormularioViewModelTest`).
 - **API 24–25:** solo existe la imagen API 37 del emulador.

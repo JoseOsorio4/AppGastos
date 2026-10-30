@@ -8,13 +8,16 @@ import gt.edu.umg.finanzas.app.datos.local.ReconstructorSaldoRoom
 import gt.edu.umg.finanzas.app.datos.local.RepositorioCategoriaRoom
 import gt.edu.umg.finanzas.app.datos.local.RepositorioTransaccionRoom
 import gt.edu.umg.finanzas.app.datos.local.RepositorioUsuarioRoom
+import gt.edu.umg.finanzas.app.datos.preferencias.PreferenciaTema
 import gt.edu.umg.finanzas.core.servicio.ServicioFinanzas
 
 /**
  * Construcción manual: aquí se decide qué implementación Room cumple cada contrato del core.
- * No contiene reglas ni SQL. Las pantallas solo reciben [servicio].
+ * No contiene reglas ni SQL. Las fábricas de ViewModel toman de aquí el servicio y las preferencias.
  */
 class Dependencias(context: Context) {
+
+    val preferenciaTema = PreferenciaTema(context)
 
     val baseDatos: AppDatabase = AppDatabase.crear(context)
 

@@ -2,6 +2,7 @@ package gt.edu.umg.finanzas.app
 
 import android.app.Application
 import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
 import gt.edu.umg.finanzas.core.resultado.Resultado
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -27,6 +28,7 @@ class FinanzasApp : Application() {
     override fun onCreate() {
         super.onCreate()
         dependencias = Dependencias(this)
+        AppCompatDelegate.setDefaultNightMode(dependencias.preferenciaTema.tema.value.modoNocturno)
         inicializacion = alcance.async {
             dependencias.inicializador.inicializar().also { resultado ->
                 if (resultado is Resultado.ErrorAlmacenamiento) {

@@ -110,7 +110,14 @@ class ServicioSobreRoomTest {
     @Test
     fun el_flow_del_resumen_emite_de_nuevo_despues_de_guardar() = runBlocking {
         // El colector empieza antes de guardar: solo termina si Room vuelve a emitir con el gasto.
-        val conGasto = async { withTimeout(5_000) { servicio.observarResumen(mes).first { it.gastosCentavos == 3_000L } } }
+        val conGasto = async {
+            withTimeout(5_000) {
+                // Son dos Flow combinados: el total puede llegar antes que el saldo del mismo COMMIT.
+                servicio.observarResumen(mes).first {
+                    it.gastosCentavos == 3_000L && it.saldoDisponibleCentavos == -3_000L
+                }
+            }
+        }
         servicio.registrar(gasto(baseDatos, "30"), hoy).esperarOk()
 
         assertEquals(-3_000L, conGasto.await().saldoDisponibleCentavos)
