@@ -87,13 +87,29 @@ La imagen contiene montos y símbolos de demostración. En Android, el saldo se 
 - `tarjeta_reflexion.xml` muestra la cita, referencia, RV1909, **Catálogo local · eBible · Dominio público** y fecha. **Ocultar reflexión** contrae el contenido y deja **Mostrar reflexión** disponible; la preferencia y la cita sobreviven a recrear la Activity (prueba instrumentada). No presenta el contenido como descargado de Bolls.
 - Con wifi/datos desactivados, [el reintento conservó el clima guardado](capturas/inc7-clima-guardado-sin-red.png) y añadió el error, mientras reflexión y navegación seguían disponibles. `am force-stop` y abrir otra vez conservó los datos y la misma cita. Tras restaurar internet, [Reintentar actualizó la consulta a 01:14](capturas/inc7-clima-recuperado.png) y quitó el error; durante la petición se observó «Consultando el clima…».
 - En una instalación `.pruebas` vaciada expresamente para este recorrido, [sin red y sin caché](capturas/inc7-clima-sin-datos.png) se mostró «Sin datos del clima», error y reintento; la reflexión local siguió disponible desde el primer arranque. La base de la app normal nunca se vació ni se reinstaló. Se restauró wifi/datos al terminar.
-- Revisión por capturas, jerarquía Android y acciones de ADB. No se repite aquí la revisión de toda la app con letra 2.0 ni API 24–25. La integración remota de reflexión queda pendiente por el bloqueo documentado en [la verificación de proveedores](SERVICIOS_INCREMENTO_7.md); las capturas muestran el catálogo local permitido.
+- Revisión por capturas, jerarquía Android y acciones de ADB. No se repite aquí la revisión de toda la app con letra 2.0 ni API 24–25. En `4df6fa8` la integración remota quedó pendiente; esas capturas muestran el catálogo local. La continuación siguiente resuelve la fuente con Dabar.
+
+## Continuación del incremento 7: reflexión remota RV1909
+
+| Remota clara | Remota oscura |
+|---|---|
+| ![Reflexión remota clara](capturas/inc7-dabar-claro.png) | ![Reflexión remota oscura](capturas/inc7-dabar-oscuro.png) |
+
+| Remota guardada sin red | Respaldo local sin caché |
+|---|---|
+| ![Remota sin red](capturas/inc7-dabar-sin-red.png) | ![Respaldo local](capturas/inc7-dabar-respaldo-local.png) |
+
+- Se conserva `tarjeta_reflexion.xml` bajo el clima, sin cambiar navegación, colores, tipografía ni el orden financiero. El botón `botonReintentarReflexion`, antes reservado al fallo de guardado, ahora ofrece **Actualizar reflexión** o **Reintentar reflexión** y queda deshabilitado durante la petición. Ocultar/Mostrar sigue en el mismo lugar.
+- Cita real revisada en API 37: Filipenses 4:13, «Todo lo puedo en Cristo que me fortalece.», **Reina Valera 1909 · Dabar.io · Dominio público · 30/10/2026**. En claro y oscuro se ven cita, referencia, fuente, traducción, fecha y ambos botones sin cortes; el contenido se desplaza como antes.
+- Con wifi/datos desactivados, Reintentar conservó la cita remota y sus metadatos y añadió el error. `am force-stop` y volver a abrir sin red mantuvo la cita de hoy desde la caché, sin pedir otra automáticamente.
+- Se vació **solo `.pruebas`** para un arranque sin caché ni red. La tarjeta presentó la misma referencia del día desde **Catálogo local · eBible · Reina-Valera 1909**, con error y reintento. Reiniciar sin red conservó ese respaldo y su fuente local. Al restaurar internet y pulsar Actualizar se [recuperó la fuente remota](capturas/inc7-dabar-recuperado.png) y desapareció el error; se observó «Preparando la reflexión…» durante la petición.
+- Las pruebas instrumentadas verificaron estos metadatos en claro/oscuro, respaldo, reintento sin red y recreación de Inicio. Las capturas se obtuvieron con acciones de ADB sobre `.pruebas`; no se tocaron datos normales. Wifi/datos quedaron restaurados. API 24–25, letra grande de toda la app y los pendientes anteriores conservan su estado.
 
 ## Vistas y conexiones
 
 | Vista | Orden y controles | De dónde sale lo que muestra |
 |---|---|---|
-| Inicio | Saldo disponible; Día/Semana/Mes/Año/Período; ingresos y gastos; anillo; categorías; tasa/conversor; clima; reflexión local ocultable | InicioViewModel observa el servicio del core/Room y expone tres estados auxiliares separados de sus repositorios |
+| Inicio | Saldo disponible; Día/Semana/Mes/Año/Período; ingresos y gastos; anillo; categorías; tasa/conversor; clima; reflexión RV1909 ocultable con respaldo local | InicioViewModel observa el servicio del core/Room y expone tres estados auxiliares separados de sus repositorios |
 | Formulario | Tipo Ingreso/Gasto; monto; moneda desde Inc. 6; botones +5/+10/+20/+50; cuadrícula de categorías; fecha; descripción; Guardar | FormularioViewModel conserva los campos; el core valida; OperacionesMovimientoRoom guarda |
 | Operaciones | Filtros por tipo y fechas; filas con encabezados por día; detalle; Editar; Eliminar con confirmación | OperacionesViewModel observa consultas del intervalo; el mismo Formulario sirve para editar |
 

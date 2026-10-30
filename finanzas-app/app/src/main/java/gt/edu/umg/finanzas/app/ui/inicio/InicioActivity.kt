@@ -51,7 +51,7 @@ class InicioActivity : AppCompatActivity() {
         binding.tarjetaClima.botonReintentarClima.setOnClickListener { viewModel.actualizarClima(forzar = true) }
         binding.tarjetaClima.enlaceOpenMeteo.movementMethod = LinkMovementMethod.getInstance()
         binding.tarjetaReflexion.botonVisibilidadReflexion.setOnClickListener { viewModel.cambiarVisibilidadReflexion() }
-        binding.tarjetaReflexion.botonReintentarReflexion.setOnClickListener { viewModel.actualizarReflexion() }
+        binding.tarjetaReflexion.botonReintentarReflexion.setOnClickListener { viewModel.actualizarReflexion(forzar = true) }
         binding.tarjetaTasa.botonConversor.setOnClickListener {
             if (supportFragmentManager.findFragmentByTag(ConversorDialogo.ETIQUETA) == null) {
                 ConversorDialogo().show(supportFragmentManager, ConversorDialogo.ETIQUETA)
@@ -111,8 +111,12 @@ class InicioActivity : AppCompatActivity() {
                 )
             },
             if (estado.error) getString(R.string.reflexion_error_guardar) else null,
+            if (estado.errorConsulta) getString(R.string.reflexion_error_consulta) else null,
+            if (estado.cargando && estado.dato != null) getString(R.string.reflexion_cargando) else null,
         ).joinToString("\n")
-        botonReintentarReflexion.isVisible = estado.error
+        botonReintentarReflexion.setText(
+            if (estado.error || estado.errorConsulta) R.string.reintentar_reflexion else R.string.actualizar_reflexion,
+        )
         botonReintentarReflexion.isEnabled = !estado.cargando
     }
 

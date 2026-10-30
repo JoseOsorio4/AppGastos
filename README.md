@@ -28,15 +28,31 @@ La moneda base es el quetzal (GTQ). El conversor tiene únicamente **dólares a 
 1. **Core:** abre `finanzas-core/pom.xml` en IntelliJ y ejecuta `mvn clean install`.
 2. **App:** abre la carpeta `finanzas-app/` en Android Studio, sincroniza Gradle y ejecuta `app`.
 3. **Pruebas instrumentadas (Room e interfaz):** con un emulador abierto, `.\gradlew.bat -PdatosPrueba :app:connectedDebugAndroidTest` desde `finanzas-app`. La instalación `.pruebas` protege los datos de la app normal. La suite habitual excluye las peticiones reales y usa respuestas guardadas; funciona con wifi/datos desactivados si las dependencias de construcción ya están disponibles.
-4. **Servicios en vivo, por separado:** `.\gradlew.bat -PdatosPrueba -PpruebasEnVivo :app:connectedDebugAndroidTest` ejecuta solo Banguat y Open-Meteo con internet. [Comandos, contratos, respuestas y derechos de uso](docs/referencias/SERVICIOS_INCREMENTO_7.md).
+4. **Servicios en vivo, por separado:** `.\gradlew.bat -PdatosPrueba -PpruebasEnVivo :app:connectedDebugAndroidTest` ejecuta solo Banguat, Open-Meteo y Dabar con internet. Se puede seleccionar una sola clase. [Comandos, contratos, respuestas y derechos de uso](docs/referencias/SERVICIOS_INCREMENTO_7.md).
 
 El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`. Se necesita JDK 17 o superior. Las herramientas y dependencias que todavía no estén en caché requieren internet para descargarse.
 
 ## Estado real
 
-Último incremento cerrado: **6 — tasa Banguat, GTQ/USD y migración Room v1 → v2**. El **7** añade clima y reflexión local; la integración remota de reflexión sigue expresamente pendiente porque Bolls no ofrece una RV1909 verificada. No se declara completada esa integración.
+Último incremento funcional verificado: **7 — clima y reflexión RV1909 con Dabar, caché y respaldo local**, ejecutado en API 37. El pendiente de fuente remota quedó resuelto con un proveedor y respuestas reales verificados; Bolls sigue descartado. Los pendientes generales y el fallo de escritura de preferencias no forzado siguen indicados abajo.
 
-### Incremento 7 — clima, reflexión local y pruebas de red separadas
+### Continuación del incremento 7 — fuente remota de reflexión
+
+| Comprobación | Estado | Resultado real |
+|---|---|---|
+| Estado y compilaciones iniciales | ✅ Ejecutados | `main`, HEAD `4df6fa8`; solo `app/img.png` sin seguimiento. Core 0.3.0: `mvn clean install`, **55/55** sin fallos. App: `:app:assembleDebug`, correcto antes de editar |
+| Documentación, permiso de uso y respuesta previa al código | ✅ Verificados | Dabar publica `rv1909`, «Reina Valera 1909», español y «Public Domain». Documenta consulta por referencia y uso gratuito sin abuso. Se corroboró el dominio público en eBible y se obtuvieron HTTP 200 de las tres citas. [URLs, licencia, fixtures y timeout inicial de Salmos](docs/referencias/SERVICIOS_INCREMENTO_7.md#reflexión-dabar-verificado-antes-de-implementar) |
+| Cliente y lector | ✅ Creados y compilados | `datos/remoto/reflexion/ClienteDabar.kt` usa el HTTP existente, referencia en español y `translation=rv1909`; lector fuera del hilo principal. Exige RV1909, licencia, referencia y un solo versículo coherente; rechaza nulos, HTML y textos vacíos/largos |
+| Caché y respaldo | ✅ Ejecutados | `RepositorioReflexion` guarda la cita remota o la local con referencia/traducción/fuente/fecha. Una cita de hoy evita otra consulta automática. Un error conserva la válida de hoy o usa el catálogo de hoy, sin cambiar su atribución. El botón existente permite Actualizar/Reintentar; no invalida la cita local de una instalación anterior |
+| Suite habitual sin red API 37 | ✅ Ejecutada | **65/65**, 0 fallos, errores u omitidas; wifi y datos desactivados. Fixtures reales, caché diaria/reapertura, cambio de día, respaldo local, reintento que recupera, conservación de una remota ante fallo y cancelación. UI de reflexión probada en claro/oscuro; el resto de la suite sigue pasando |
+| Petición real separada API 37 | ✅ Ejecutada | **DabarEnVivoTest 1/1**, sin fallos: Filipenses 4:13, «Todo lo puedo en Cristo que me fortalece.», «Reina Valera 1909», fuente Dabar.io. Se seleccionó solo esa clase con `pruebasEnVivo`; Banguat/Open-Meteo no se repitieron en esta continuación |
+| Compilación final y datos protegidos | ✅ Ejecutadas | `:app:assembleDebug` normal y `-PdatosPrueba :app:installDebug`, correctos. Core, clima, movimientos, DAO, Room v2 y dependencias sin cambios. Base/WAL normal e `img.png` conservan hashes iniciales; solo se usa y vacía `.pruebas` para los recorridos |
+
+La interfaz conserva la tarjeta, colores y navegación existentes: cita y metadatos siempre visibles; el mismo botón ofrece Actualizar/Reintentar reflexión. [Comparación y capturas](docs/referencias/INTERFAZ.md#continuación-del-incremento-7-reflexión-remota-rv1909). El respaldo local y la cita remota sobrevivieron a `am force-stop` sin red; al restaurar internet y actualizar se recuperó la fuente Dabar.io y desapareció el error. Wifi/datos restaurados. La integración no supone disponibilidad garantizada del proveedor.
+
+**Pendientes conservados:** no se forzó un fallo al escribir las preferencias de reflexión; API 24–25; muerte real del proceso con Formulario abierto; rotación manual con detalle/confirmación; comprobación humana del segundo detalle. No se declaran resueltos por integrar Dabar.
+
+### Implementación inicial del incremento 7 — clima y reflexión local (`4df6fa8`)
 
 | Comprobación | Estado | Detalle |
 |---|---|---|
@@ -45,7 +61,7 @@ El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`.
 | Ubicación, contrato y respuesta del clima | ✅ Verificados | Geocodificador: Jutiapa, GT, cabecera, 14.28491/−89.88798. GET Open-Meteo HTTP 200, 18.3 °C, WMO 0, medición 30/10/2026 00:45. JSON originales en `app/src/androidTest/assets/openmeteo/`. Sin GPS ni permiso de ubicación |
 | Clima y caché | ✅ Creados y compilados | `ClienteHttp.get`, `ClienteOpenMeteo`, lector estricto y `RepositorioClima`. Caché de 30 min, fechas de medición/consulta, condición en español, atribución enlazada CC BY 4.0, carga/error/reintento independientes |
 | Reflexión y licencia | ✅ Catálogo local verificado | Tres citas RV1909, texto y dominio público comprobados en eBible. `CatalogoReflexiones` y `RepositorioReflexion` guardan una por día de Guatemala, referencia, traducción, fuente y fecha; Ocultar/Mostrar persiste. No necesita internet |
-| Proveedor remoto de reflexión | ⏳ Bloqueado / pendiente | Catálogo real Bolls HTTP 200 sin RV1909; ruta candidata `get-verse/RV1909/19/23/1/` devuelve HTTP 404. No hay cliente/lector remoto ni respuesta exitosa inventada. No se ha validado Dabar. [Evidencia y fuentes](docs/referencias/SERVICIOS_INCREMENTO_7.md) |
+| Proveedor remoto de reflexión en ese commit | ⏳ Pendiente entonces | Bolls sin RV1909 y ruta candidata HTTP 404. Se mantuvo solo el catálogo local. La continuación anterior de este documento resuelve la fuente con Dabar; se conserva este resultado histórico |
 | Core, Room y datos reales | ✅ Conservados | Core 0.3.0 y esquema Room v2 sin cambios; mismas tres tablas. Caché auxiliar en SharedPreferences `servicios`. Base/WAL de la app normal e `img.png` conservan los hashes iniciales; solo se instala/usa `.pruebas` |
 | Compilación y pruebas finales del core | ✅ Ejecutadas | `mvn clean install`: **55/55**, sin fallos ni omitidas. No se cambian versión ni fuentes del core |
 | Suite habitual final API 37 | ✅ Ejecutada sin red | **56/56**, 0 fallos, 0 errores, 0 omitidas; wifi y datos desactivados durante toda la ejecución. Incluye lectores con fixtures, Room, UI, caché 30 min, reintento, cancelación, cita diaria y visibilidad. La última repetición incluye fuente/traducción persistidas |

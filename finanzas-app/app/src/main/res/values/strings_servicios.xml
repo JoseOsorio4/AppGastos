@@ -30,5 +30,7 @@
     <string name="reflexion_cargando">Preparando la reflexión…</string>
     <string name="fuente_reflexion">%1$s · %2$s\n%3$s · Dominio público · %4$s</string>
     <string name="reflexion_error_guardar">No se pudo guardar la cita del día.</string>
-    <string name="reintentar_guardar_reflexion">Reintentar guardar</string>
+    <string name="reintentar_reflexion">Reintentar reflexión</string>
+    <string name="actualizar_reflexion">Actualizar reflexión</string>
+    <string name="reflexion_error_consulta">No se pudo consultar Dabar.io. Se conserva el contenido disponible.</string>
 </resources>

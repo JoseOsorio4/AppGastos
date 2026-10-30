@@ -121,9 +121,9 @@ class InicioViewModel(
         viewModelScope.launch { clima.actualizar(forzar) }
     }
 
-    fun actualizarReflexion() {
+    fun actualizarReflexion(forzar: Boolean = false) {
         if (estadoReflexion.value.cargando) return
-        viewModelScope.launch { reflexion.actualizar() }
+        viewModelScope.launch { reflexion.actualizar(forzar) }
     }
 
     fun cambiarVisibilidadReflexion() = reflexion.cambiarVisibilidad()

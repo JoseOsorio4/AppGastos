@@ -584,7 +584,7 @@ class ServicioFinanzas(usuarios: RepositorioUsuario, categorias: RepositorioCate
 |---|---|---|---|---|---|
 | Tipo de cambio Banguat | 6 | `tarjeta_tasa.xml` en Inicio (abre el conversor); vista previa en el formulario USD | `ClienteBanguat`, `LectorRespuestaBanguat`, `RepositorioTipoCambio` | valor, fecha de referencia, fuente y momento de consulta; se actualiza 1 vez por día | Usa la última tasa con su fecha; sin tasa, USD queda deshabilitado |
 | Clima de Jutiapa (Open-Meteo) | 7 | `tarjeta_clima.xml` bajo el resumen | `ClienteOpenMeteo`, `LectorRespuestaClima`, `RepositorioClima` | temperatura, condición, hora de la medición y de la consulta; cada 30 min | Muestra el último dato con su hora, o "Sin datos del clima" |
-| Reflexión del día | 7 | `tarjeta_reflexion.xml`, que se puede ocultar | `CatalogoReflexiones` + `RepositorioReflexion`; remoto pendiente | texto, referencia, traducción, fuente, fecha; 1 vez por día | Catálogo local RV1909 de dominio público |
+| Reflexión del día | 7 | `tarjeta_reflexion.xml`, que se puede ocultar | `ClienteDabar`, `LectorRespuestaReflexion`, `RepositorioReflexion` + `CatalogoReflexiones` | texto, referencia, traducción, fuente, fecha; 1 vez por día | Cita de hoy guardada o catálogo local RV1909 de dominio público |
 
 **Reglas comunes:**
 - Las llamadas pasan por `ClienteHttp`: `withContext(Dispatchers.IO)`, conexión y lectura con 10 s de espera, solo HTTPS, respuesta máxima de 256 KB y error para cualquier código que no sea 2xx.
@@ -611,11 +611,14 @@ El Inc. 6 concretó la tasa con `EstadoTasa` en `RepositorioTipoCambio`, observa
 - Términos comprobados: gratuito para uso no comercial, sin clave, datos CC BY 4.0. La atribución enlazada es «Datos del clima: Open-Meteo.com · CC BY 4.0».
 - Contrato, respuesta HTTP 200, coordenadas de celda distintas de las solicitadas, términos y fixtures: [verificación de servicios](referencias/SERVICIOS_INCREMENTO_7.md). Las pruebas habituales leen esa respuesta guardada; `OpenMeteoEnVivoTest` es optativa con `-PpruebasEnVivo`.
 
-### 11.4 Reflexión — catálogo local; proveedor remoto pendiente
-- **Decisión comprobada el 30/10/2026:** el catálogo real de Bolls no ofrece RV1909; la ruta candidata `get-verse/RV1909/19/23/1/` devuelve HTTP 404, «The verse is not found». No se inventó otro código ni un JSON de éxito. No hay cliente ni lector Bolls en producción. La integración remota queda **pendiente**, también la evaluación de Dabar.
+### 11.4 Reflexión — Dabar RV1909 y respaldo local
+- **Proveedor único comprobado el 30/10/2026:** Dabar documenta y entrega `rv1909`, español, «Reina Valera 1909», «Public Domain». La consulta por referencia en español devuelve un versículo JSON; se guardaron respuestas reales de las tres citas antes de implementar. La documentación permite el uso gratuito sin abuso (15 peticiones/30 s), y eBible corrobora el dominio público de RV1909. [Contrato, licencia, URLs, éxitos y timeout observado](referencias/SERVICIOS_INCREMENTO_7.md#reflexión-dabar-verificado-antes-de-implementar).
+- Bolls se mantiene descartado: su catálogo no ofrecía RV1909 y la ruta candidata devolvió 404. No se usa RV1960 ni se crea un segundo proveedor alternativo.
 - `datos/local/CatalogoReflexiones` contiene Salmos 23:1, Proverbios 16:3 y Filipenses 4:13, con texto exacto de RV1909 verificado en eBible y declaración de dominio público. [Fuentes, licencia y respuestas reales](referencias/SERVICIOS_INCREMENTO_7.md).
-- `RepositorioReflexion` elige una cita por día de Guatemala con `floorMod(epochDay, tamaño)` y guarda texto, referencia, traducción, fuente y fecha en `CacheServicios`. Reabrir o cambiar de tema conserva la cita; otro día renueva la selección. No descarga una Biblia ni consulta otro proveedor como sustituto silencioso.
-- La tarjeta identifica «Catálogo local · eBible», RV1909, dominio público y fecha. Ocultar/Mostrar conserva la preferencia y la cita. Un fallo al guardar permite seguir leyéndola y ofrece Reintentar guardar; no afecta las finanzas ni el clima. Al ser local, la reflexión no requiere conexión.
+- `ClienteDabar` codifica la referencia española y consulta por HTTPS con `translation=rv1909`. `LectorRespuestaReflexion` exige traducción/licencia, referencia, un solo versículo y texto coherente, no nulo ni HTML; solo recorta espacios exteriores. Petición y lectura ocurren fuera del hilo principal.
+- `RepositorioReflexion` conserva la selección por día de Guatemala (`floorMod(epochDay, tamaño)`) y consulta ese pasaje. Guarda texto, referencia, traducción, fuente y fecha en `CacheServicios`, con las mismas claves. Reabrir conserva una cita local o remota ya guardada para hoy; otro día renueva la selección. No descarga una Biblia ni consulta otro proveedor como sustituto silencioso.
+- Si falla la consulta, conserva una cita válida de hoy o usa el catálogo local de hoy; un nuevo día no reetiqueta una remota antigua. Se guarda también el respaldo local para evitar peticiones automáticas repetidas. **Actualizar/Reintentar reflexión** puede forzar una consulta explícita; queda deshabilitado mientras carga. Una cita local guardada por la versión anterior sigue siendo válida hasta cambiar de día o actualizar explícitamente.
+- La tarjeta muestra cita, referencia, traducción, fuente real («Dabar.io» o «Catálogo local · eBible»), dominio público y fecha. Carga, fallo de consulta y fallo al guardar son estados distintos; Ocultar/Mostrar conserva preferencia y cita. Un fallo de reflexión no cancela clima, tasa ni finanzas. El catálogo local permite seguir leyendo sin conexión.
 
 ---
 

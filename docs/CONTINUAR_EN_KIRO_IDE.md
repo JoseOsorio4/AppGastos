@@ -3,7 +3,7 @@
 El proyecto continúa en este repositorio:
 https://github.com/JoseOsorio4/AppGastos
 
-Están cerrados los incrementos 0 a 6: conexión core → Android, reglas del core, Room, Inicio/Formulario/Operaciones, recálculo y tema, y GTQ/USD con Banguat y migración v1 → v2. El siguiente es el **incremento 7**, todavía sin implementar: clima y reflexión. Consulta `git log -1` y el [estado real](../README.md#estado-real) para identificar el cierre más reciente.
+Los incrementos 0 a 7 tienen sus funciones verificadas en API 37: core, Room, pantallas, recálculo/tema, GTQ/USD con Banguat, clima y reflexión RV1909 con Dabar y respaldo local. No hay un incremento 8 definido. Consulta `git log -1` y el [estado real](../README.md#estado-real) para identificar las comprobaciones y los pendientes generales antes de editar.
 
 Para continuar se abre el mismo código; no se crea otro proyecto Android ni otra librería.
 
@@ -41,17 +41,17 @@ Los dos proyectos permanecen independientes como unidades de construcción, dent
 
 Copia este mensaje en un chat nuevo de Kiro IDE con AppGastos abierto:
 
-> Continúa AppGastos (https://github.com/JoseOsorio4/AppGastos), rama main. Los incrementos 0–6 están cerrados. Revisa git status y git log -1 antes de editar.
+> Continúa AppGastos (https://github.com/JoseOsorio4/AppGastos), rama main. Los incrementos 0–7 tienen sus funciones verificadas en API 37. Revisa git status y git log -1 antes de editar.
 >
 > Lee AGENTS.md, README.md (Estado real), docs/MAPA_DEL_CODIGO.md, docs/DISENO_FINANZAS.md y docs/referencias/INTERFAZ.md. Resume en pocas líneas el estado y los pendientes que figuran en el README.
 >
-> El incremento 7 ya tiene clima Open-Meteo y reflexión local verificados; revisa sus resultados antes de editar. Continúa solo el pendiente remoto de reflexión si puedes verificar un proveedor RV1909 y su contrato/licencia (§11.4), sin duplicar las tarjetas existentes. Conserva el estilo y las capas: XML dibuja, Activity recibe y pinta, ViewModel coordina el estado, el core decide, Room guarda. No rediseñes las finanzas ni cambies tasas históricas.
+> El incremento 7 ya tiene clima Open-Meteo y reflexión RV1909 desde Dabar con caché diaria y respaldo local. No vuelvas a implementar esa integración ni crees otro proveedor. Revisa los pendientes del README y limita el cambio a lo que solicite el usuario. Conserva el estilo y las capas: XML dibuja, Activity recibe y pinta, ViewModel coordina el estado, el core decide, Room guarda. No rediseñes las finanzas ni cambies tasas históricas.
 >
 > Antes de cambiar la app, comprueba mvn clean install y .\gradlew.bat :app:assembleDebug. Usa -PdatosPrueba al instalar o ejecutar pruebas de interfaz para proteger los datos de la app normal. Distingue lo ejecutado de lo pendiente. No subas rutas locales, .bak, configuración del IDE ni finanzas-app/app/img.png. Al terminar, actualiza README y mapa, haz commit y push normal y dame el enlace.
 
 ## 4. Punto de cierre
 
-Cada incremento termina cuando se observa lo indicado en la tabla de §14 del diseño. Los incrementos 0 a 6 ya cumplen ese criterio (48 pruebas instrumentadas y recorrido en el emulador API 37); el siguiente es el 7.
+Cada incremento termina cuando se observa lo indicado en la tabla de §14 del diseño. Las funciones de los incrementos 0 a 7 se verificaron en API 37; la continuación de reflexión terminó con 65 pruebas habituales sin red y una petición Dabar real separada. Esto no declara resueltas las comprobaciones generales pendientes.
 
 Pendientes del incremento 4, sin ejecutar todavía:
 - **Segundo detalle que se cerró solo:** en el Inc. 5 se revisó de nuevo con acciones individuales de ADB: tras cancelar, el segundo detalle permaneció abierto 372 s y otra reapertura, 48 s. No se reprodujo, no se cambió Operaciones y no se identificó una causa. La comprobación humana con el dedo sigue pendiente.
@@ -61,6 +61,6 @@ Pendientes del incremento 4, sin ejecutar todavía:
 
 El archivo `finanzas-app/app/img.png` es local y no identificado: no se modifica ni se incluye en ningún commit.
 
-La tasa Banguat ya se consulta y conserva desde el Inc. 6. El Inc. 7 añade clima Open-Meteo y reflexión local diaria, con 56 pruebas habituales ejecutadas sin red y 2 pruebas en vivo separadas (Banguat/Open-Meteo). El catálogo Bolls no ofrece RV1909 y la ruta candidata devolvió 404: el proveedor remoto de reflexión queda pendiente; no se crea un lector sin respuesta real. Las fuentes y comandos están en [la verificación de servicios](referencias/SERVICIOS_INCREMENTO_7.md). Una revisión de documentación no sustituye las ejecuciones.
+La tasa Banguat se consulta y conserva desde el Inc. 6. El Inc. 7 añade clima Open-Meteo y reflexión diaria RV1909 de Dabar con respaldo local. Bolls quedó descartado; Dabar se verificó con documentación, licencia, tres respuestas reales guardadas y una petición desde Android. Las fuentes y comandos están en [la verificación de servicios](referencias/SERVICIOS_INCREMENTO_7.md). Una revisión de documentación no sustituye las ejecuciones. El fallo forzado de escritura de preferencias de reflexión también continúa pendiente.
 
 La guía detallada de compilación y errores está en [GUIA_WINDOWS.md](GUIA_WINDOWS.md). El [README](../README.md#estado-real) conserva el estado de las verificaciones.
