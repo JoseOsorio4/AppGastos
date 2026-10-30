@@ -34,7 +34,29 @@ El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`.
 
 ## Estado real
 
-Último incremento funcional verificado: **7 — clima y reflexión RV1909 con Dabar, caché y respaldo local**, ejecutado en API 37. El pendiente de fuente remota quedó resuelto con un proveedor y respuestas reales verificados; Bolls sigue descartado. Los pendientes generales y el fallo de escritura de preferencias no forzado siguen indicados abajo.
+Último incremento funcional verificado: **7 — clima y reflexión RV1909 con Dabar, caché y respaldo local**, ejecutado en API 37. La revisión final siguiente actualiza el estado de los pendientes; no añade funciones ni rediseña pantallas.
+
+### Revisión final de pendientes — 30/10/2026
+
+| Comprobación | Estado | Resultado real |
+|---|---|---|
+| Estado y compilaciones iniciales | ✅ Ejecutados | `main`, HEAD `fbd2181`; solo `app/img.png` sin seguimiento. `mvn clean install`: **55/55**, sin fallos. `:app:assembleDebug`: correcto antes de editar |
+| Detalle abierto al rotar | ✅ Ejecutado en API 37 | `RotacionDialogosTest`: giro real vertical → horizontal → vertical mediante `UiAutomation`, misma descripción y acciones; Editar abre el gasto de Q 30.00 correcto. Se mantienen 2 movimientos y saldo Q 70.00. Sin cambios en Activities ni diálogos |
+| Confirmación de eliminación al rotar | ✅ Ejecutada en API 37 | Dos recorridos independientes: Cancelar conserva los 2 movimientos y Q 70.00; Eliminar borra el gasto una sola vez y deja un movimiento con Q 100.00. La confirmación permanece durante ambos giros |
+| Muerte real del proceso: alta GTQ | ✅ Ejecutada por ADB | Formulario con ingreso Q 123.45, Regalo, 29/10/2026 y «Revision proceso real». HOME, esperar segundo plano, `am kill`, PID ausente y recuperación de la tarea desde Recientes: **7677 → 7925**. Conserva tipo, moneda, monto, categoría, fecha y descripción; Guardar crea ID 1 y saldo 12345 centavos |
+| Muerte real del proceso: edición GTQ | ✅ Ejecutada por ADB | Borrador del ID 1 cambiado a Q 234.56, Negocio, 28/10/2026 y «Revision edicion real». Mismo procedimiento, PID **7925 → 8626**. Recupera «Editar movimiento» y los cambios sin guardarlos antes de tiempo; Guardar conserva ID 1, una sola fila y saldo 23456 centavos, comprobados sobre una copia temporal de la BD de `.pruebas` |
+| Fallo físico de preferencias de reflexión | ✅ Reproducido y corregido | `FalloGuardadoReflexionTest` quita temporalmente permisos de escritura a la carpeta de un almacén Android aislado de `.pruebas`. El `commit` falla y el XML anterior queda intacto. Se reprodujo que otra llamada a `actualizar()` ocultaba el aviso al leer el dato nuevo solo en memoria. El repositorio ahora evita ese acierto de caché mientras existe error de guardado. Restaurar permisos y reintentar persiste la cita y apaga el error |
+| Alcance del cambio | ✅ Revisado | Única corrección de producción: condición de caché en `RepositorioReflexion`. Se añaden pruebas reales de disco y de giro; no hay cambios de Formulario, diálogos, core, Room, servicios remotos, herramientas ni interfaz |
+| Pruebas finales API 37 | ✅ Ejecutadas | Suite habitual con wifi/datos desactivados: **69/69**, 0 fallos, 0 errores y 0 omitidas. Incluye las 65 anteriores y las 4 nuevas de disco/giro; peticiones reales excluidas. Antes se ejecutaron por separado los recorridos dirigidos de la corrección y la rotación |
+| Compilación y protección finales | ✅ Ejecutadas | `:app:assembleDebug` normal e instalación con `-PdatosPrueba :app:installDebug`, correctos. `.pruebas` queda instalada en el emulador API 37; wifi/datos restaurados. SHA-256 de la base normal, su WAL e `img.png` idénticos al inicio; la imagen sigue fuera de Git |
+| API 24–25 | ⏳ No ejecutado | SDK/AVD disponibles: únicamente `android-37.0/x86_64` y `Medium_Phone_API_37.0`. No se descargó ni se creó otra imagen. Compilar con minSdk 24 no sustituye ejecutarla allí |
+| Segundo detalle con interacción propia del usuario | ⏳ **Pendiente del usuario** | La comprobación con tu propia interacción la harás tú en el emulador. Las rotaciones automatizadas y la recuperación del proceso no la sustituyen ni permiten declararla resuelta |
+
+La muerte del proceso se prueba con la tarea enviada a segundo plano para que Android guarde su estado; se verifica que el PID desaparezca antes de tocar su tarjeta en Recientes. No se usa `force-stop`, no se vacía la base y no equivale a precargar un `SavedStateHandle`. Los datos indicados son exclusivamente de prueba. Los pendientes históricos de rotación, proceso y escritura que aparecen más abajo quedan sustituidos por esta revisión; API 24–25 y la interacción propia del usuario siguen pendientes.
+
+La nueva prueba de giro espera a que la ventana quede inactiva antes de pulsar Editar: una pulsación durante la transición no abrió el Formulario en una ejecución de la suite. No se cambió la navegación de la app por ese resultado.
+
+Repetir la suite desde `finanzas-app`: `.\gradlew.bat -PdatosPrueba :app:connectedDebugAndroidTest`. Para los cuatro casos nuevos, añadir `'-Pandroid.testInstrumentationRunnerArguments.class=gt.edu.umg.finanzas.app.datos.repositorios.FalloGuardadoReflexionTest,gt.edu.umg.finanzas.app.ui.RotacionDialogosTest'`. Las pruebas de proceso fueron recorridos ADB sobre la tarea real, documentados arriba, no métodos JUnit que maten su propio runner.
 
 ### Continuación del incremento 7 — fuente remota de reflexión
 

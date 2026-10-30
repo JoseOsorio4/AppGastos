@@ -33,7 +33,8 @@ class RepositorioReflexion(
     suspend fun actualizar(forzar: Boolean = false) = consulta.withLock {
         val fecha = hoy()
         val guardada = cache.leerReflexion()
-        if (!forzar && guardada?.fecha == fecha) {
+        // Un commit fallido puede dejar la cita solo en memoria de SharedPreferences.
+        if (!forzar && guardada?.fecha == fecha && !actual.value.error) {
             actual.value = actual.value.copy(dato = guardada, cargando = false, error = false, errorConsulta = false)
             return@withLock
         }
