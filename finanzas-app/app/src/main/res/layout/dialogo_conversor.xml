@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/grupoSentido"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:singleSelection="true"
+            app:selectionRequired="true">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/botonUsdAGtq"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/usd_a_gtq" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/botonGtqAUsd"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/gtq_a_usd" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/campoMontoConversor"
+            style="?attr/textInputOutlinedStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="@string/monto">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/entradaMontoConversor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <TextView
+            android:id="@+id/textoResultadoConversion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:accessibilityLiveRegion="polite"
+            android:textAppearance="?attr/textAppearanceTitleLarge" />
+        <TextView
+            android:id="@+id/textoTasaConversor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textAppearance="?attr/textAppearanceBodySmall" />
+    </LinearLayout>
+</ScrollView>

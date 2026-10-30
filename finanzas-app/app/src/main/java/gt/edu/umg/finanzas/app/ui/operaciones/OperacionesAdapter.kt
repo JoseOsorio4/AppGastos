@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -14,6 +15,8 @@ import gt.edu.umg.finanzas.app.databinding.ItemOperacionBinding
 import gt.edu.umg.finanzas.app.ui.comun.Fechas
 import gt.edu.umg.finanzas.app.ui.comun.MontoConSigno
 import gt.edu.umg.finanzas.app.ui.comun.RecursosCategoria
+import gt.edu.umg.finanzas.core.dominio.Moneda
+import gt.edu.umg.finanzas.core.reglas.Dinero
 
 /** Dibuja encabezados de día y filas de movimiento; avisa qué movimiento tocó el usuario. */
 class OperacionesAdapter(
@@ -58,12 +61,17 @@ class OperacionesAdapter(
             textoDescripcion.text = movimiento.descripcion
             textoCategoriaYTipo.text = contexto.getString(R.string.categoria_y_tipo, movimiento.nombreCategoria, tipo)
             textoMonto.text = monto
+            textoOriginalUsd.isVisible = movimiento.conversion != null
+            textoOriginalUsd.text = movimiento.conversion?.let {
+                contexto.getString(R.string.original_usd, Dinero.formatear(it.montoOriginalCentavos, Moneda.USD))
+            }
             textoMonto.setTextColor(ContextCompat.getColor(contexto, MontoConSigno.color(movimiento.tipo)))
             // TalkBack lee la fila completa, incluida la fecha que en pantalla está en el encabezado.
             root.contentDescription = contexto.getString(
                 R.string.descripcion_fila_operacion,
                 tipo, movimiento.descripcion, movimiento.nombreCategoria, monto, Fechas.texto(movimiento.fecha),
             )
+            if (movimiento.conversion != null) root.contentDescription = "${root.contentDescription}. ${textoOriginalUsd.text}"
             root.setOnClickListener { alTocar(movimiento.idTransaccion) }
         }
     }

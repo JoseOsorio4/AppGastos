@@ -8,14 +8,18 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import gt.edu.umg.finanzas.app.FinanzasApp
+import gt.edu.umg.finanzas.app.datos.repositorios.RepositorioTipoCambio
 import gt.edu.umg.finanzas.core.dominio.CampoMovimiento
 import gt.edu.umg.finanzas.core.dominio.DatosMovimiento
 import gt.edu.umg.finanzas.core.dominio.Moneda
 import gt.edu.umg.finanzas.core.dominio.Periodo
+import gt.edu.umg.finanzas.core.dominio.TasaCambio
 import gt.edu.umg.finanzas.core.dominio.TipoMovimiento
 import gt.edu.umg.finanzas.core.reglas.Dinero
 import gt.edu.umg.finanzas.core.resultado.Resultado
 import gt.edu.umg.finanzas.core.servicio.ServicioFinanzas
+import java.math.BigDecimal
+import java.time.LocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +29,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 /**
  * Estado del formulario para registrar y para editar. Recibe cada cambio de campo, los copia a
@@ -37,6 +40,7 @@ class FormularioViewModel(
     private val servicio: ServicioFinanzas,
     private val estadoGuardado: SavedStateHandle,
     private val hoy: () -> LocalDate = { Periodo.hoy() },
+    private val tipoCambio: RepositorioTipoCambio? = null,
 ) : ViewModel() {
 
     // Llega como extra del Intent (FormularioActivity.paraEditar); SavedStateHandle lo recibe solo.
@@ -46,6 +50,10 @@ class FormularioViewModel(
     val estado: StateFlow<FormularioUiState> = _estado.asStateFlow()
 
     init {
+        if (tipoCambio != null) {
+            viewModelScope.launch { tipoCambio.estado.collect { tasa -> _estado.update { it.copy(estadoTasa = tasa) } } }
+            actualizarTasa()
+        }
         // Tras rotar o recrear el proceso, los campos ya vienen de SavedStateHandle: no se vuelve a
         // cargar el movimiento para no borrar lo que el usuario cambió.
         if (idEnEdicion != null && estadoGuardado.get<Boolean>(CLAVE_CARGADO) != true) cargarMovimiento(idEnEdicion)
@@ -71,13 +79,23 @@ class FormularioViewModel(
         }
     }
 
+    fun elegirMoneda(moneda: Moneda) {
+        if (moneda == Moneda.USD && !_estado.value.usdDisponible) return
+        cambiarCampos { it.copy(moneda = moneda, errores = ErroresFormulario()) }
+    }
+
+    fun actualizarTasa() {
+        if (tipoCambio == null || tipoCambio.estado.value.cargando) return
+        viewModelScope.launch { tipoCambio.actualizar() }
+    }
+
     fun onMontoCambiado(texto: String) {
         if (texto == _estado.value.montoTexto) return
         cambiarCampos { it.copy(montoTexto = texto, errores = it.errores.copy(monto = null)) }
     }
 
     /** Botones +5/+10/+20/+50: suman al monto escrito. Un monto inválido no se toca y se explica por qué. */
-    fun sumar(quetzales: Int) {
+    fun sumar(unidades: Int) {
         val texto = _estado.value.montoTexto
         val actual = if (texto.isBlank()) {
             0L
@@ -92,7 +110,7 @@ class FormularioViewModel(
             }
         }
         // Si la suma pasa del máximo, el core lo rechaza al guardar como cualquier otro monto.
-        val suma = actual + quetzales * CENTAVOS_POR_QUETZAL
+        val suma = actual + unidades * CENTAVOS_POR_UNIDAD
         cambiarCampos { it.copy(montoTexto = Dinero.aTexto(suma), errores = it.errores.copy(monto = null)) }
     }
 
@@ -117,11 +135,13 @@ class FormularioViewModel(
             when (val leido = servicio.obtenerParaEditar(id)) {
                 is Resultado.Ok -> {
                     val movimiento = leido.valor
-                    // El monto se muestra en GTQ: la base v1 no guarda conversiones USD.
+                    val conversion = movimiento.conversion
                     cambiarCampos {
                         it.copy(
                             tipo = movimiento.tipo,
-                            montoTexto = Dinero.aTexto(movimiento.montoCentavos),
+                            montoTexto = Dinero.aTexto(conversion?.montoOriginalCentavos ?: movimiento.montoCentavos),
+                            moneda = if (conversion == null) Moneda.GTQ else Moneda.USD,
+                            tasaHistorica = conversion?.tasa,
                             idCategoria = movimiento.idCategoria,
                             fecha = movimiento.fecha,
                             descripcion = movimiento.descripcion,
@@ -154,8 +174,8 @@ class FormularioViewModel(
         val datos = DatosMovimiento(
             tipo = actual.tipo,
             montoTexto = actual.montoTexto,
-            moneda = Moneda.GTQ,
-            tasa = null,
+            moneda = actual.moneda,
+            tasa = actual.tasa,
             idCategoria = idCategoria,
             descripcion = actual.descripcion,
             fecha = actual.fecha,
@@ -181,7 +201,7 @@ class FormularioViewModel(
         CampoMovimiento.CATEGORIA -> ErroresFormulario(categoria = error.mensaje)
         CampoMovimiento.FECHA -> ErroresFormulario(fecha = error.mensaje)
         CampoMovimiento.DESCRIPCION -> ErroresFormulario(descripcion = error.mensaje)
-        // MONEDA no se usa en GTQ; un error sin campo (por ejemplo, desborde del saldo) va al aviso general.
+        // Los errores de moneda y de saldo van al aviso general, sin borrar lo escrito.
         CampoMovimiento.MONEDA, null -> ErroresFormulario(general = error.mensaje)
     }
 
@@ -194,6 +214,10 @@ class FormularioViewModel(
         estadoGuardado[CLAVE_CATEGORIA] = campos.idCategoria
         estadoGuardado[CLAVE_FECHA] = campos.fecha.toEpochDay()
         estadoGuardado[CLAVE_DESCRIPCION] = campos.descripcion
+        estadoGuardado[CLAVE_MONEDA] = campos.moneda.name
+        estadoGuardado[CLAVE_TASA_HISTORICA] = campos.tasaHistorica?.gtqPorUsd?.toPlainString()
+        estadoGuardado[CLAVE_FECHA_TASA] = campos.tasaHistorica?.fechaReferencia?.toString()
+        estadoGuardado[CLAVE_FUENTE_TASA] = campos.tasaHistorica?.fuente
     }
 
     private fun leerCampos() = FormularioUiState(
@@ -203,23 +227,31 @@ class FormularioViewModel(
         fecha = estadoGuardado.get<Long>(CLAVE_FECHA)?.let { LocalDate.ofEpochDay(it) } ?: hoy(),
         descripcion = estadoGuardado.get<String>(CLAVE_DESCRIPCION).orEmpty(),
         enEdicion = idEnEdicion != null,
+        moneda = estadoGuardado.get<String>(CLAVE_MONEDA)?.let(Moneda::valueOf) ?: Moneda.GTQ,
+        tasaHistorica = estadoGuardado.get<String>(CLAVE_TASA_HISTORICA)?.let {
+            TasaCambio(BigDecimal(it), LocalDate.parse(estadoGuardado[CLAVE_FECHA_TASA]), checkNotNull(estadoGuardado[CLAVE_FUENTE_TASA]))
+        },
     )
 
     companion object {
         /** Extra del Intent con el ID a editar; sin él, el formulario registra un movimiento nuevo. */
         const val CLAVE_ID_EN_EDICION = "idEnEdicion"
         private const val CLAVE_CARGADO = "movimientoCargado"
+        private const val CLAVE_MONEDA = "moneda"
+        private const val CLAVE_TASA_HISTORICA = "tasaHistorica"
+        private const val CLAVE_FECHA_TASA = "fechaTasa"
+        private const val CLAVE_FUENTE_TASA = "fuenteTasa"
         internal const val CLAVE_TIPO = "tipo"
         internal const val CLAVE_MONTO = "montoTexto"
         internal const val CLAVE_CATEGORIA = "idCategoria"
         internal const val CLAVE_FECHA = "fechaEpochDay"
         internal const val CLAVE_DESCRIPCION = "descripcion"
-        private const val CENTAVOS_POR_QUETZAL = 100L
+        private const val CENTAVOS_POR_UNIDAD = 100L
 
         val Fabrica: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FinanzasApp
-                FormularioViewModel(app.dependencias.servicio, createSavedStateHandle())
+                FormularioViewModel(app.dependencias.servicio, createSavedStateHandle(), tipoCambio = app.dependencias.tipoCambio)
             }
         }
     }

@@ -8,7 +8,9 @@ import gt.edu.umg.finanzas.app.datos.local.ReconstructorSaldoRoom
 import gt.edu.umg.finanzas.app.datos.local.RepositorioCategoriaRoom
 import gt.edu.umg.finanzas.app.datos.local.RepositorioTransaccionRoom
 import gt.edu.umg.finanzas.app.datos.local.RepositorioUsuarioRoom
+import gt.edu.umg.finanzas.app.datos.preferencias.CacheServicios
 import gt.edu.umg.finanzas.app.datos.preferencias.PreferenciaTema
+import gt.edu.umg.finanzas.app.datos.repositorios.RepositorioTipoCambio
 import gt.edu.umg.finanzas.core.servicio.ServicioFinanzas
 
 /**
@@ -18,6 +20,8 @@ import gt.edu.umg.finanzas.core.servicio.ServicioFinanzas
 class Dependencias(context: Context) {
 
     val preferenciaTema = PreferenciaTema(context)
+    val cacheServicios = CacheServicios(context)
+    val tipoCambio = RepositorioTipoCambio(cacheServicios)
 
     val baseDatos: AppDatabase = AppDatabase.crear(context)
 

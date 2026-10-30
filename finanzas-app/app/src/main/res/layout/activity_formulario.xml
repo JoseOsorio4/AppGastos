@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Formulario para registrar un ingreso o gasto en GTQ. La moneda USD se añade en el Inc. 6. -->
+<!-- Formulario compartido para crear o editar en GTQ y USD. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/raiz"
@@ -79,6 +79,29 @@
                     app:icon="@drawable/ic_ingreso" />
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/grupoMoneda"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:selectionRequired="true"
+                app:singleSelection="true">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/botonMonedaGtq"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/moneda_gtq" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/botonMonedaUsd"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/moneda_usd" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/campoMonto"
                 style="?attr/textInputOutlinedStyle"
@@ -98,6 +121,20 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Accesos rápidos de la maqueta: suman al monto escrito y no evitan la validación. -->
+            <TextView
+                android:id="@+id/textoTasaFormulario"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textAppearance="?attr/textAppearanceBodySmall" />
+            <TextView
+                android:id="@+id/textoConversionPrevia"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:accessibilityLiveRegion="polite"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
+
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/grupoSumar"
                 android:layout_width="wrap_content"

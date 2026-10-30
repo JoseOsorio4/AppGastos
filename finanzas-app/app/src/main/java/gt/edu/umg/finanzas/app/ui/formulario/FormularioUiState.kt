@@ -1,6 +1,11 @@
 package gt.edu.umg.finanzas.app.ui.formulario
 
+import gt.edu.umg.finanzas.app.datos.repositorios.EstadoTasa
+import gt.edu.umg.finanzas.app.ui.comun.ConversionMonto
+import gt.edu.umg.finanzas.app.ui.comun.SentidoConversion
 import gt.edu.umg.finanzas.core.dominio.Categoria
+import gt.edu.umg.finanzas.core.dominio.Moneda
+import gt.edu.umg.finanzas.core.dominio.TasaCambio
 import gt.edu.umg.finanzas.core.dominio.TipoMovimiento
 import java.time.LocalDate
 
@@ -22,7 +27,14 @@ data class FormularioUiState(
     val cargandoMovimiento: Boolean = false,
     val guardando: Boolean = false,
     val guardadoExitoso: Boolean = false,
-)
+    val moneda: Moneda = Moneda.GTQ,
+    val tasaHistorica: TasaCambio? = null,
+    val estadoTasa: EstadoTasa = EstadoTasa(),
+) {
+    val tasa: TasaCambio? get() = if (moneda == Moneda.USD) tasaHistorica ?: estadoTasa.dato?.tasa else null
+    val usdDisponible: Boolean get() = tasaHistorica != null || estadoTasa.dato != null
+    val conversionPrevia get() = ConversionMonto.calcular(montoTexto, SentidoConversion.USD_A_GTQ, tasa)
+}
 
 /**
  * Un mensaje por campo. Los textos de monto, fecha y descripción vienen del core; [faltaCategoria]

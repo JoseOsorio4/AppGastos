@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import gt.edu.umg.finanzas.app.datos.local.dao.CategoriaDao
 import gt.edu.umg.finanzas.app.datos.local.dao.TransaccionDao
 import gt.edu.umg.finanzas.app.datos.local.dao.UsuarioDao
@@ -12,14 +13,14 @@ import gt.edu.umg.finanzas.app.datos.local.entidades.TransaccionEntity
 import gt.edu.umg.finanzas.app.datos.local.entidades.UsuarioEntity
 
 /**
- * Base Room sobre SQLite, versión 1. exportSchema deja el esquema en app/schemas para
- * comparar contra él en la migración 1 → 2 del Inc. 6.
+ * Base Room sobre SQLite. Los esquemas exportados permiten validar la migración sin borrar datos.
  */
 @Database(
     entities = [UsuarioEntity::class, CategoriaEntity::class, TransaccionEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
+@TypeConverters(Convertidores::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun usuarioDao(): UsuarioDao
@@ -31,6 +32,8 @@ abstract class AppDatabase : RoomDatabase() {
 
         // Sin fallbackToDestructiveMigration: si falta una migración, la app falla en lugar de borrar datos.
         fun crear(context: Context, nombreArchivo: String = NOMBRE_ARCHIVO): AppDatabase =
-            Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, nombreArchivo).build()
+            Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, nombreArchivo)
+                .addMigrations(Migracion1a2)
+                .build()
     }
 }

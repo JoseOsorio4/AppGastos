@@ -17,6 +17,7 @@ import gt.edu.umg.finanzas.app.ui.comun.BarrasSistema
 import gt.edu.umg.finanzas.app.ui.comun.ChipsPeriodo
 import gt.edu.umg.finanzas.app.ui.comun.DestinoPrincipal
 import gt.edu.umg.finanzas.app.ui.comun.NavegacionPrincipal
+import gt.edu.umg.finanzas.app.ui.comun.TextoTasa
 import gt.edu.umg.finanzas.core.InfoCore
 import gt.edu.umg.finanzas.core.reglas.Dinero
 import kotlinx.coroutines.launch
@@ -42,6 +43,12 @@ class InicioActivity : AppCompatActivity() {
         BarrasSistema.reservarEspacio(binding.root, arriba = binding.cabecera, abajo = binding.barraNavegacion.root)
 
         binding.textoConexionCore.text = getString(R.string.version_core, InfoCore.version)
+        binding.tarjetaTasa.botonReintentarTasa.setOnClickListener { viewModel.actualizarTasa(forzar = true) }
+        binding.tarjetaTasa.botonConversor.setOnClickListener {
+            if (supportFragmentManager.findFragmentByTag(ConversorDialogo.ETIQUETA) == null) {
+                ConversorDialogo().show(supportFragmentManager, ConversorDialogo.ETIQUETA)
+            }
+        }
         binding.botonRecalcularSaldo.setOnClickListener { viewModel.recalcularSaldo() }
         binding.opcionTema.setOnClickListener {
             if (supportFragmentManager.findFragmentByTag(TemaDialogo.ETIQUETA) == null) {
@@ -59,7 +66,14 @@ class InicioActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.estado.collect(::pintar)
+                launch { viewModel.estado.collect(::pintar) }
+                launch {
+                    viewModel.estadoTasa.collect { tasa ->
+                        binding.tarjetaTasa.textoTasa.text = TextoTasa.estado(this@InicioActivity, tasa)
+                        binding.tarjetaTasa.botonReintentarTasa.isEnabled = !tasa.cargando
+                        binding.tarjetaTasa.botonConversor.isEnabled = tasa.dato != null
+                    }
+                }
             }
         }
     }

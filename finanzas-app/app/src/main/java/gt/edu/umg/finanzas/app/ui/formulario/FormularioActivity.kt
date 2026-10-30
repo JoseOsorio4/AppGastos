@@ -22,9 +22,13 @@ import gt.edu.umg.finanzas.app.R
 import gt.edu.umg.finanzas.app.databinding.ActivityFormularioBinding
 import gt.edu.umg.finanzas.app.ui.comun.BarrasSistema
 import gt.edu.umg.finanzas.app.ui.comun.Fechas
+import gt.edu.umg.finanzas.app.ui.comun.TextoTasa
+import gt.edu.umg.finanzas.core.dominio.Moneda
 import gt.edu.umg.finanzas.core.dominio.Periodo
 import gt.edu.umg.finanzas.core.dominio.TipoMovimiento
 import gt.edu.umg.finanzas.core.dominio.Transaccion
+import gt.edu.umg.finanzas.core.reglas.Dinero
+import gt.edu.umg.finanzas.core.resultado.Resultado
 import kotlinx.coroutines.launch
 
 /**
@@ -88,6 +92,9 @@ class FormularioActivity : AppCompatActivity() {
     }
 
     private fun conectarAcciones() {
+        binding.grupoMoneda.addOnButtonCheckedListener { _, id, marcado ->
+            if (marcado) viewModel.elegirMoneda(if (id == R.id.botonMonedaUsd) Moneda.USD else Moneda.GTQ)
+        }
         binding.grupoTipo.addOnButtonCheckedListener { _, idBoton, marcado ->
             if (!marcado) return@addOnButtonCheckedListener
             viewModel.elegirTipo(if (idBoton == R.id.botonTipoIngreso) TipoMovimiento.INGRESO else TipoMovimiento.GASTO)
@@ -116,6 +123,21 @@ class FormularioActivity : AppCompatActivity() {
         escribirSiCambio(binding.entradaMonto, estado.montoTexto)
         escribirSiCambio(binding.entradaDescripcion, estado.descripcion)
         binding.entradaFecha.setText(Fechas.texto(estado.fecha))
+        val idMoneda = if (estado.moneda == Moneda.USD) R.id.botonMonedaUsd else R.id.botonMonedaGtq
+        if (binding.grupoMoneda.checkedButtonId != idMoneda) binding.grupoMoneda.check(idMoneda)
+        binding.botonMonedaUsd.isEnabled = estado.usdDisponible
+        binding.campoMonto.prefixText = estado.moneda.simbolo
+        binding.textoTasaFormulario.isVisible = estado.moneda == Moneda.USD || !estado.usdDisponible
+        binding.textoTasaFormulario.text = if (estado.moneda == Moneda.USD && estado.tasaHistorica != null) {
+            "${TextoTasa.referencia(this, estado.tasaHistorica)}\n${getString(R.string.tasa_historica, Fechas.texto(estado.tasaHistorica.fechaReferencia))}"
+        } else TextoTasa.estado(this, estado.estadoTasa)
+        val previa = if (estado.moneda == Moneda.USD) estado.conversionPrevia else null
+        binding.textoConversionPrevia.isVisible = previa != null
+        binding.textoConversionPrevia.text = when (previa) {
+            is Resultado.Ok -> getString(R.string.conversion_previa, Dinero.formatear(previa.valor))
+            is Resultado.ErrorNegocio -> previa.mensaje
+            else -> ""
+        }
 
         binding.textoCargandoCategorias.isVisible = estado.categorias.isEmpty()
         categorias.mostrar(estado.categorias, estado.idCategoria)

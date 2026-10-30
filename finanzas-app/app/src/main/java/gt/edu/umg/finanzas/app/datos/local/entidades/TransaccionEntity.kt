@@ -1,15 +1,18 @@
 package gt.edu.umg.finanzas.app.datos.local.entidades
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import gt.edu.umg.finanzas.core.dominio.Moneda
 import gt.edu.umg.finanzas.core.dominio.TipoMovimiento
+import java.math.BigDecimal
 
 /**
  * Tabla `Transaccion`: Ingreso y Gasto comparten esta tabla y se distinguen por `tipo`.
  * Las FK usan RESTRICT: no se puede borrar un usuario ni una categoría con movimientos.
- * Las columnas de conversión USD llegan en la versión 2 (Migracion1a2, Inc. 6).
+ * La conversión conserva la tasa histórica; los reportes siguen usando montoCentavos en GTQ.
  */
 @Entity(
     tableName = "Transaccion",
@@ -46,4 +49,9 @@ data class TransaccionEntity(
     val descripcion: String,
     /** LocalDate.toEpochDay(): un entero ordena y filtra por fecha sin texto. */
     val fechaEpochDay: Long,
+    @ColumnInfo(defaultValue = "'GTQ'") val monedaOriginal: Moneda = Moneda.GTQ,
+    @ColumnInfo(defaultValue = "0") val montoOriginalCentavos: Long = montoCentavos,
+    @ColumnInfo(defaultValue = "'1'") val tasaGtqPorUsd: BigDecimal = BigDecimal.ONE,
+    val fechaTasaEpochDay: Long? = null,
+    val fuenteTasa: String? = null,
 )

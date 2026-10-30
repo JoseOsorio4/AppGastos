@@ -332,6 +332,13 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <include
+                android:id="@+id/tarjetaTasa"
+                layout="@layout/tarjeta_tasa"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp" />
+
             <!-- Diagnóstico del Inc. 0: confirma qué versión del JAR del core usa la app. -->
             <TextView
                 android:id="@+id/textoConexionCore"

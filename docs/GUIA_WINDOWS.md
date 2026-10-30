@@ -39,7 +39,9 @@ Para correr una sola clase de pruebas: `... mvn.cmd -f finanzas-core\pom.xml tes
    `.\gradlew.bat :app:dependencyInsight --dependency finanzas-core --configuration debugRuntimeClasspath`
    Debe mencionar `gt.edu.umg.finanzas:finanzas-core:0.3.0`.
 6. `.\gradlew.bat :app:assembleDebug`, luego ejecuta `app` en el emulador (o **Run**).
-7. Pruebas instrumentadas (Room e interfaz), con el emulador abierto: `.\gradlew.bat :app:connectedDebugAndroidTest`. Deben pasar 37 pruebas (Inc. 5); el informe queda en `app\build\reports\androidTests\connected\`. En Android Studio también se puede usar clic derecho sobre `app/src/androidTest` → **Run 'Tests in…'**.
+7. Pruebas instrumentadas (Room e interfaz), con el emulador abierto: `.\gradlew.bat -PdatosPrueba :app:connectedDebugAndroidTest`. Deben pasar 48 pruebas (Inc. 6); el informe queda en `app\build\reports\androidTests\connected\`. Este comando instala `gt.edu.umg.finanzas.app.pruebas`, separado de la app normal; la limpieza de las pruebas rechaza el paquete normal. Se necesita internet para la consulta Banguat real. Una prueba apaga wifi/datos del emulador y restaura su estado; esa prueba exige emulador.
+
+Para un recorrido manual sin tocar la instalación de uso diario: `.\gradlew.bat -PdatosPrueba :app:installDebug`. Las clases y los recursos conservan su paquete de código; solo cambia el identificador de instalación. Construir o ejecutar sin la propiedad conserva el paquete normal y usa la migración v1 → v2 al abrir una base anterior.
 
 ## 3. Qué enviar después
 La salida final (o el primer error completo) de `mvn clean install`, `dependencyInsight` y `assembleDebug`, y una captura del emulador. Con eso se actualiza el [README](../README.md#estado-real).

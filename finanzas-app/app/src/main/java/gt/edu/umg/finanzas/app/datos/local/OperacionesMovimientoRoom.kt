@@ -8,13 +8,14 @@ import gt.edu.umg.finanzas.core.contratos.OperacionesMovimiento
 import gt.edu.umg.finanzas.core.dominio.CampoMovimiento
 import gt.edu.umg.finanzas.core.dominio.Categoria
 import gt.edu.umg.finanzas.core.dominio.DatosMovimiento
+import gt.edu.umg.finanzas.core.dominio.Moneda
 import gt.edu.umg.finanzas.core.dominio.Transaccion
 import gt.edu.umg.finanzas.core.dominio.Usuario
 import gt.edu.umg.finanzas.core.reglas.CalculoSaldo
 import gt.edu.umg.finanzas.core.reglas.ValidadorMovimiento
 import gt.edu.umg.finanzas.core.resultado.Resultado
-import kotlinx.coroutines.CancellationException
 import java.time.LocalDate
+import kotlinx.coroutines.CancellationException
 
 /**
  * Único lugar que abre withTransaction para movimientos: el movimiento y el saldo se escriben
@@ -36,7 +37,6 @@ class OperacionesMovimientoRoom(
             is Resultado.Ok -> validacion.valor
             is Resultado.Fallo -> return@enTransaccion validacion
         }
-        if (nueva.conversion != null) return@enTransaccion usdNoDisponible()
         val saldoNuevo = when (val saldo = CalculoSaldo.aplicar(saldoActual(), CalculoSaldo.deltaCrear(nueva))) {
             is Resultado.Ok -> saldo.valor
             is Resultado.Fallo -> return@enTransaccion saldo
@@ -50,11 +50,15 @@ class OperacionesMovimientoRoom(
     override suspend fun editar(id: Long, datos: DatosMovimiento, hoy: LocalDate): Resultado<Unit> = enTransaccion {
         val anterior = transacciones.obtenerPorId(id)?.aDominio() ?: return@enTransaccion Resultado.NoEncontrado
         val categoria = leerCategoria(datos) ?: return@enTransaccion categoriaInexistente()
-        val nueva = when (val validacion = ValidadorMovimiento.validar(datos, categoria, hoy, anterior.idCategoria)) {
+        // En edición USD se conserva la tasa del registro, incluso si la caché ya tiene otra.
+        val tasaAnterior = anterior.conversion?.tasa
+        val datosConTasa = if (datos.moneda == Moneda.USD && tasaAnterior != null) {
+            datos.copy(tasa = tasaAnterior)
+        } else datos
+        val nueva = when (val validacion = ValidadorMovimiento.validar(datosConTasa, categoria, hoy, anterior.idCategoria)) {
             is Resultado.Ok -> validacion.valor
             is Resultado.Fallo -> return@enTransaccion validacion
         }
-        if (nueva.conversion != null) return@enTransaccion usdNoDisponible()
         val delta = CalculoSaldo.deltaEditar(anterior, nueva)
         val saldoNuevo = when (val saldo = CalculoSaldo.aplicar(saldoActual(), delta)) {
             is Resultado.Ok -> saldo.valor
@@ -102,7 +106,4 @@ class OperacionesMovimientoRoom(
 
     private fun categoriaInexistente() = Resultado.ErrorNegocio("Categoría inexistente", CampoMovimiento.CATEGORIA)
 
-    // La v1 no guarda la conversión; los movimientos en USD llegan con la versión 2 (Inc. 6).
-    private fun usdNoDisponible() =
-        Resultado.ErrorNegocio("Los movimientos en USD todavía no se pueden guardar", CampoMovimiento.MONEDA)
 }

@@ -58,6 +58,23 @@ La imagen contiene montos y símbolos de demostración. En Android, el saldo se 
 - En una base de prueba con Q 100 de ingreso y Q 30 de gasto, el botón cambió Q 1.23 erróneo a Q 70.00 y ocultó la tarjeta. Tema y aviso se revisaron en claro y oscuro; las tres opciones persistieron tras forzar el cierre y abrir otro proceso. Sistema siguió el modo claro/oscuro de Android.
 - Revisión mediante capturas, jerarquías Android y acciones individuales de ADB. El [segundo detalle](capturas/inc5-segundo-detalle.png) seguía abierto 372 s después de cancelar una eliminación y reabrirlo; no se declara corregida la observación anterior. Los otros pendientes conservan su estado en el README.
 
+## Incremento 6: tasa y movimientos USD (emulador API 37)
+
+| Tasa clara | Tasa oscura | Conversor claro | Conversor oscuro |
+|---|---|---|---|
+| ![Tasa clara](capturas/inc6-inicio-tasa-claro.png) | ![Tasa oscura](capturas/inc6-inicio-tasa-oscuro.png) | ![Conversor claro](capturas/inc6-conversor-claro.png) | ![Conversor oscuro](capturas/inc6-conversor-oscuro.png) |
+
+| Formulario claro | Formulario oscuro | Detalle claro | Detalle oscuro |
+|---|---|---|---|
+| ![Formulario claro](capturas/inc6-formulario-usd-claro.png) | ![Formulario oscuro](capturas/inc6-formulario-usd-oscuro.png) | ![Detalle claro](capturas/inc6-detalle-usd-claro.png) | ![Detalle oscuro](capturas/inc6-detalle-usd-oscuro.png) |
+
+- Se conserva la jerarquía de Canva: cabecera verde, saldo en Q, resumen/anillo y navegación verde con Añadir amarillo. `tarjeta_tasa.xml` aparece bajo el contenido financiero, con fuente, fecha del proveedor, momento de consulta, Convertir y Reintentar.
+- El conversor ofrece solo USD → GTQ y GTQ → USD en un grupo de dos botones. El monto, el sentido y el resultado se conservaron al cambiar de tema. No hay pares de selectores libres ni otras monedas.
+- El Formulario conserva tipo, accesos rápidos y cuadrícula. Añade el selector GTQ/USD antes del monto y, debajo, los metadatos de la tasa y el equivalente. USD se deshabilita sin tasa disponible. Al editar se muestra la tasa histórica y se conserva el monto original.
+- [Operaciones](capturas/inc6-operaciones-usd-claro.png) mantiene el equivalente con signo en Q y añade «Original: US$ …». El detalle muestra original, tasa, fecha y fuente. El detalle USD de prueba también se revisó con letra 2.0 y sus acciones quedaron visibles; no se declara revisada toda la app con esa escala en este incremento.
+- Datos reales del servicio en una instalación separada de prueba: referencia 7.64187 del 30/10/2026; US$ 10 → Q 76.42. [Sin red](capturas/inc6-tasa-sin-red.png), el saldo y la tasa real guardada se conservaron al reiniciar; Reintentar mostró que no se pudo actualizar sin borrar el dato. La conectividad y el tema del sistema se restauraron al terminar.
+- Comparación por capturas y acciones de ADB. Las pruebas instrumentadas adicionales usan tasas explícitamente ficticias y la instalación `.pruebas`; no se reemplazan datos de la instalación normal.
+
 ## Vistas y conexiones
 
 | Vista | Orden y controles | De dónde sale lo que muestra |

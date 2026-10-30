@@ -11,12 +11,14 @@ import gt.edu.umg.finanzas.app.FinanzasApp
 import gt.edu.umg.finanzas.app.datos.local.RepositorioUsuarioRoom
 import gt.edu.umg.finanzas.app.datos.preferencias.PreferenciaTema
 import gt.edu.umg.finanzas.app.datos.preferencias.Tema
+import gt.edu.umg.finanzas.app.datos.repositorios.RepositorioTipoCambio
 import gt.edu.umg.finanzas.app.ui.comun.PeriodoGuardado
 import gt.edu.umg.finanzas.core.contratos.RepositorioUsuario
 import gt.edu.umg.finanzas.core.dominio.FiltroPeriodo
 import gt.edu.umg.finanzas.core.dominio.Periodo
 import gt.edu.umg.finanzas.core.resultado.Resultado
 import gt.edu.umg.finanzas.core.servicio.ServicioFinanzas
+import java.time.LocalDate
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +30,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 /**
  * Estado de Inicio. Observa el servicio con el período elegido: cada guardado en Room vuelve a
@@ -41,10 +42,12 @@ class InicioViewModel(
     inicializacion: Deferred<Resultado<Unit>>,
     usuarios: RepositorioUsuario,
     private val preferenciaTema: PreferenciaTema,
+    private val tipoCambio: RepositorioTipoCambio,
     hoy: () -> LocalDate = { Periodo.hoy() },
 ) : ViewModel() {
 
     private val periodo = PeriodoGuardado(estadoGuardado, hoy)
+    val estadoTasa = tipoCambio.estado
     private val errorInicial = MutableStateFlow(false)
     private val recalculo = MutableStateFlow(EstadoRecalculo())
     private val reconstruccionPendiente = usuarios.observarUsuario()
@@ -78,6 +81,7 @@ class InicioViewModel(
             )
 
     init {
+        actualizarTasa()
         // Si la siembra de usuario y categorías falló, el saldo nunca llegaría: se avisa en pantalla.
         viewModelScope.launch {
             if (inicializacion.await() is Resultado.Fallo) errorInicial.value = true
@@ -99,6 +103,11 @@ class InicioViewModel(
 
     fun elegirTema(tema: Tema) = preferenciaTema.guardar(tema)
 
+    fun actualizarTasa(forzar: Boolean = false) {
+        if (estadoTasa.value.cargando) return
+        viewModelScope.launch { tipoCambio.actualizar(forzar) }
+    }
+
     companion object {
         /** Toma el servicio de Dependencias y crea el SavedStateHandle de esta pantalla. */
         val Fabrica: ViewModelProvider.Factory = viewModelFactory {
@@ -110,6 +119,7 @@ class InicioViewModel(
                     app.inicializacion,
                     RepositorioUsuarioRoom(app.dependencias.baseDatos.usuarioDao()),
                     app.dependencias.preferenciaTema,
+                    app.dependencias.tipoCambio,
                 )
             }
         }

@@ -21,6 +21,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Instalación separada para que las pruebas de interfaz no vacíen la app de uso diario.
+            if (providers.gradleProperty("datosPrueba").isPresent) applicationIdSuffix = ".pruebas"
+        }
         release {
             isMinifyEnabled = false
         }
@@ -52,6 +56,10 @@ room {
 }
 
 dependencies {
+    constraints {
+        // Room testing 2.8.5 necesita los métodos default de 1.8.1; con core 1.7.3 lanza AbstractMethodError.
+        implementation(libs.kotlinx.serialization.core)
+    }
     implementation(libs.finanzas.core)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -67,4 +75,5 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.room.testing)
 }

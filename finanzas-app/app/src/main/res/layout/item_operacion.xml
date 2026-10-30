@@ -52,6 +52,12 @@
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="Alimentación · Gasto" />
+            <TextView
+                android:id="@+id/textoOriginalUsd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:visibility="gone" />
         </LinearLayout>
 
         <TextView

@@ -28,8 +28,10 @@ Las filas marcadas **Existe** tienen todas sus columnas implementadas. En las de
 | Navegar con la barra inferior | **Existe** (Inc. 4) | `barra_navegacion.xml` · `botonIrInicio`, `botonAgregarMovimiento`, `botonIrOperaciones` | `ui/comun/NavegacionPrincipal.conectar` (en Inicio y Operaciones) | — | — | — |
 | Recalcular saldo | **Existe** (Inc. 5) | `activity_inicio.xml` · `avisoRecalculo`, `textoAvisoRecalculo`, `textoErrorRecalculo`, `botonRecalcularSaldo` | `InicioActivity.onCreate`, `pintar` | `InicioViewModel.recalcularSaldo`, `estado` | `ServicioFinanzas.reconstruirSaldo` → `CalculoSaldo.saldoDesde` | `RepositorioUsuarioRoom` observa la bandera; `ReconstructorSaldoRoom.reconstruirSiPendiente` asigna saldo y apaga bandera en una transacción |
 | Cambiar tema | **Existe** (Inc. 5) | `activity_inicio.xml` · `opcionTema`; `strings.xml` · `opciones_tema` (Sistema/Claro/Oscuro) | `InicioActivity` abre `TemaDialogo` (diálogo Material de elección única); este aplica `AppCompatDelegate` | `InicioViewModel.elegirTema`, `estado.tema` | — (preferencia visual) | `datos/preferencias/PreferenciaTema` · SharedPreferences `apariencia`, clave `tema`; `FinanzasApp.onCreate` la aplica al iniciar |
-| Consultar tasa | Core existe; pantalla Inc. 6 | `tarjeta_tasa.xml` · `botonReintentarTasa` | `InicioActivity` | `InicioViewModel.estadoTasa` | `dominio/TasaCambio` | `RepositorioTipoCambio` → `ClienteBanguat` (Inc. 6) |
-| Convertir USD → GTQ o GTQ → USD | Core existe; pantalla Inc. 6 | `dialogo_conversor.xml` · selector de sentido; `textoConversionPrevia` en el formulario | `ConversorDialogo`, `FormularioActivity` | `FormularioViewModel.onMontoCambiado` | `reglas/ConversorMoneda.usdAGtq` / `gtqAUsd` | — (usa la tasa ya cargada; solo dos direcciones). Guardar en USD requiere la base v2 (Inc. 6) |
+| Consultar tasa | **Existe** (Inc. 6) | `tarjeta_tasa.xml` bajo el anillo · `textoTasa`, `botonReintentarTasa`, `botonConversor` | `InicioActivity.onCreate` observa y pinta `estadoTasa` | `InicioViewModel.actualizarTasa`, `estadoTasa` | `dominio/TasaCambio` | `datos/repositorios/RepositorioTipoCambio` → `datos/remoto/tipocambio/ClienteBanguat` → `ClienteHttp`; `CacheServicios` guarda la última referencia con fecha, fuente e instante de consulta |
+| Convertir USD → GTQ o GTQ → USD | **Existe** (Inc. 6) | `dialogo_conversor.xml` · `grupoSentido`, `botonUsdAGtq`, `botonGtqAUsd`, `entradaMontoConversor`, `textoResultadoConversion`, `textoTasaConversor` | `ui/inicio/ConversorDialogo` | `ConversorViewModel.cambiarMonto`, `elegirSentido`, `ConversorUiState.resultado` | `Dinero.desdeTexto` y `ConversorMoneda` mediante `ui/comun/ConversionMonto`; exactamente 2 sentidos | Usa el estado de `RepositorioTipoCambio`; no escribe movimientos |
+| Registrar USD y ver el equivalente | **Existe** (Inc. 6) | `activity_formulario.xml` · `grupoMoneda`, `botonMonedaGtq`, `botonMonedaUsd`, `textoTasaFormulario`, `textoConversionPrevia` | `FormularioActivity.conectarAcciones`, `pintar` | `FormularioViewModel.elegirMoneda`, `guardar`; `FormularioUiState.tasa`, `conversionPrevia` | `ValidadorMovimiento` calcula el equivalente y crea `ConversionAplicada` | `OperacionesMovimientoRoom` → `Mapeos.aEntity` → `TransaccionDao`; monto original, tasa decimal, fecha y fuente en Room v2 |
+| Ver y editar USD histórico | **Existe** (Inc. 6) | `item_operacion.xml` · `textoOriginalUsd`; `dialogo_detalle_movimiento.xml` · `textoConversionDetalle`; Formulario compartido | `OperacionesAdapter`, `DetalleMovimientoDialogo`, `FormularioActivity` | `FormularioViewModel.cargarMovimiento` conserva moneda y tasa histórica en `SavedStateHandle` | `ConversionAplicada`, `ConversorMoneda`, `ValidadorMovimiento` | `MovimientoFila` trae la fotografía; `Mapeos.aVista` la reconstruye. `OperacionesMovimientoRoom.editar` usa la tasa anterior si sigue en USD |
 | Clima / Reflexión | Pendiente (Inc. 7) | `tarjeta_clima.xml`, `tarjeta_reflexion.xml` | `InicioActivity` | `estadoClima`, `estadoReflexion` | — | `RepositorioClima`, `RepositorioReflexion` |
 
 ## 2. Core: qué hace cada clase
@@ -108,13 +110,13 @@ flowchart LR
   D --> B[(finanzas.db<br/>SQLite)]
 ```
 
-### 3.1 Tablas (`datos/local/entidades/`, esquema en `app/schemas/.../1.json`)
+### 3.1 Tablas (`datos/local/entidades/`, esquemas en `app/schemas/.../1.json` y `2.json`)
 
 | Archivo | Tabla | Claves e índices | Decisión |
 |---|---|---|---|
 | `UsuarioEntity.kt` | `Usuario` | PK `idUsuario` (siempre 1) | `saldoCentavos` guardado; `reconstruccionPendiente` con `DEFAULT 0` |
 | `CategoriaEntity.kt` | `Categoria` | PK autoincremental; índice **único** en `clave` | El índice único permite sembrar con `INSERT OR IGNORE` sin duplicar |
-| `TransaccionEntity.kt` | `Transaccion` | FK `idUsuario` → `Usuario` y `idCategoria` → `Categoria`, ambas `RESTRICT`; índices `fechaEpochDay`, `(tipo, fechaEpochDay)`, `idCategoria`, `idUsuario` | Ingreso y Gasto en una tabla con `tipo`; fecha como `toEpochDay()`; sin columnas USD hasta la v2 (Inc. 6) |
+| `TransaccionEntity.kt` | `Transaccion` | FK `idUsuario` → `Usuario` y `idCategoria` → `Categoria`, ambas `RESTRICT`; índices `fechaEpochDay`, `(tipo, fechaEpochDay)`, `idCategoria`, `idUsuario` | Ingreso y Gasto en una tabla con `tipo`; fecha como `toEpochDay()`. Desde v2 añade `monedaOriginal`, `montoOriginalCentavos`, `tasaGtqPorUsd` (TEXT vía `Convertidores`), `fechaTasaEpochDay`, `fuenteTasa`. Las sumas siguen usando `montoCentavos` en GTQ |
 
 `montoCentavos > 0` no se declara como `CHECK` (Room no lo genera): lo garantiza el `init` de `Transaccion`, que también corre al leer.
 
@@ -135,10 +137,12 @@ flowchart LR
 
 | Archivo | Responsabilidad |
 |---|---|
-| `AppDatabase.kt` | `@Database` v1 con las 3 entidades y `exportSchema = true`. **Sin** `fallbackToDestructiveMigration` |
+| `AppDatabase.kt` | `@Database` v2 con las mismas 3 entidades, `Convertidores`, `exportSchema = true` y `addMigrations(Migracion1a2)`. **Sin** `fallbackToDestructiveMigration` |
+| `Migracion1a2.kt` | Cinco `ADD COLUMN` y copia `montoOriginalCentavos = montoCentavos` para los registros GTQ de v1. No cambia saldos, importes, categorías, IDs ni la bandera de reconstrucción |
+| `Convertidores.kt` | `BigDecimal` ↔ TEXT mediante `toPlainString`; no pasa por `Double` |
 | `Mapeos.kt` | Único archivo que convierte entity ↔ dominio. `aDominio()` reconstruye `Ingreso` o `Gasto` según `tipo` |
 | `RepositorioUsuarioRoom`, `RepositorioCategoriaRoom`, `RepositorioTransaccionRoom` | Cumplen los contratos de lectura; traducen `Periodo` a días epoch |
-| `OperacionesMovimientoRoom.kt` | **Único** `withTransaction` de movimientos. Lee la categoría → `ValidadorMovimiento.validar` → `CalculoSaldo.aplicar` → escribe el movimiento y el saldo. Antes de escribir devuelve un `Fallo`; después, cualquier anomalía lanza y Room revierte. Rechaza USD en la v1 |
+| `OperacionesMovimientoRoom.kt` | **Único** `withTransaction` de movimientos. Lee categoría → `ValidadorMovimiento.validar` → `CalculoSaldo.aplicar` → escribe movimiento y saldo, incluida la fotografía USD en v2. Antes de escribir devuelve un `Fallo`; después, cualquier anomalía lanza y Room revierte. Al editar USD toma la tasa del registro anterior; pasar a GTQ elimina la conversión |
 | `InicializadorDatos.kt` | Usuario 1 y 12 categorías en un `withTransaction`; idempotente |
 | `ReconstructorSaldoRoom.kt` | Adelantado en el Inc. 3 porque `ServicioFinanzas` lo necesita. Solo con `reconstruccionPendiente`: lee el historial una vez (`TransaccionDao.obtenerTodas`), calcula con `CalculoSaldo.saldoDesde`, **asigna** el saldo y apaga la bandera (`UsuarioDao.marcarReconstruccion`) en el mismo `withTransaction` |
 | `Dependencias.kt` | Decide qué clase Room cumple cada contrato, arma `servicio` y crea la única `PreferenciaTema` del proceso |
@@ -156,7 +160,7 @@ flowchart LR
 
 `BaseDePrueba.servicioSobre` arma `ServicioFinanzas` con las mismas clases Room que `Dependencias`.
 
-## 4. App: pantallas (incrementos 3 a 5)
+## 4. App: pantallas (incrementos 3 a 6)
 
 Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **Activity** conecta toques y texto con el ViewModel y dibuja su estado; el **ViewModel** guarda el estado (y lo copia a `SavedStateHandle`) y llama al servicio; **ServicioFinanzas** y el core validan y calculan; **Room** guarda y avisa con `Flow`.
 
@@ -248,6 +252,30 @@ Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **A
 | `…cancelar_la_eliminacion_no_borra_y_confirmar_si` | Cancelar deja 3 movimientos; Eliminar deja 2 e Inicio vuelve a Q 70.00 |
 | `…la_barra_inferior_va_y_vuelve_sin_apilar_pantallas` | Tocar Operaciones dentro de Operaciones no hace nada; Inicio la cierra |
 
+### 4.6 Archivos del incremento 6
+
+| Archivo | Responsabilidad y datos |
+|---|---|
+| `datos/remoto/ClienteHttp.kt` | POST HTTPS en `Dispatchers.IO`, conexión/lectura de 10 s, límite de 256 KiB y rechazo de HTTP fuera de 2xx; cierra conexión y streams |
+| `datos/remoto/tipocambio/ClienteBanguat.kt` | URL y sobre SOAP 1.1 comprobados con el servicio oficial; consulta y lectura XML fuera del hilo principal |
+| `datos/remoto/tipocambio/LectorRespuestaBanguat.kt` | Sigue Envelope/Body/TipoCambioDiaResponse/TipoCambioDiaResult/CambioDolar/VarDolar en sus espacios XML. Rechaza DTD, campos ausentes/repetidos, fecha inválida y tasa no positiva; crea `BigDecimal` desde texto |
+| `datos/preferencias/CacheServicios.kt` | SharedPreferences `servicios`: tasa como texto exacto, fecha del proveedor, fuente y momento de consulta. No contiene movimientos ni saldos |
+| `datos/repositorios/RepositorioTipoCambio.kt` | `EstadoTasa` expone dato, carga, origen guardado y error. Reutiliza la consulta del día en Guatemala; un reintento explícito puede forzar otra. `Mutex` serializa consultas. Si falla, conserva la tasa guardada o deja la ausencia explícita |
+| `ui/comun/TextoTasa.kt` | Formatea fuente, fecha del proveedor, fecha/hora de consulta y avisos «guardada», «última disponible» y error; no convierte montos |
+| `ui/comun/ConversionMonto.kt` | `SentidoConversion` tiene solo USD_A_GTQ y GTQ_A_USD. Adapta texto al core para conversor y vista previa; ninguna fórmula monetaria vive aquí |
+| `ui/inicio/ConversorViewModel.kt`, `ConversorDialogo.kt` | Monto y sentido en `SavedStateHandle`; observa tasa y presenta resultado del core en el XML del diálogo |
+| `ui/formulario/FormularioViewModel.kt` | Observa la tasa disponible antes de guardar; conserva la histórica al editar. Envía texto, moneda y tasa en `DatosMovimiento`. Guardar nunca espera una consulta de red |
+
+| Prueba | Comportamiento comprobado |
+|---|---|
+| `datos/local/Migracion1a2Test.kt` | `MigrationTestHelper` crea v1 con saldo Q 70, bandera activa, 12 categorías (una archivada) y 2 movimientos; valida esquema v2, conservación, FK y lectura por DAO después de reabrir |
+| `datos/local/MovimientosUsdTest.kt` | Caso e: US$ 10 × 7.66000 → 7660, original 1000 y fotografía exacta. Edición con referencia nueva conserva la histórica; US$ 12 → 9192; eliminar revierte a cero. USD → GTQ borra la fotografía |
+| `datos/remoto/BanguatTest.kt` | Fixture real, rechazos de XML y consulta HTTPS al servicio oficial desde Android |
+| `datos/repositorios/RepositorioTipoCambioTest.kt` | Fallo sin caché, recuperación de tasa guardada con metadatos, una consulta por día y lectura tras crear otro repositorio |
+| `ui/RecorridoUsdTest.kt` | Casos e e i desde la pantalla, edición histórica, conservación del conversor al recrear y registro GTQ/USD con wifi y datos del emulador desactivados; restaura la conectividad |
+
+La suite usa `-PdatosPrueba`: instala `gt.edu.umg.finanzas.app.pruebas`. `AyudaInterfaz.baseLimpia` rechaza ejecutarse sobre el paquete normal. El APK normal y la instalación de uso diario conservan `gt.edu.umg.finanzas.app`. Los resultados reales de cada ejecución viven en el README.
+
 ## 5. Recorridos reales
 
 Las pruebas del Inc. 5 están en `app/src/androidTest/.../ui/RecorridoSaldoTemaTest.kt`: aviso conservado al recrear Inicio, Q 1.23 erróneo → Q 70.00 desde dos movimientos, bandera apagada y repetición sin cambios; fallo SQLite real al apagar la bandera con rollback y reintento desde el mismo botón; saldo cero sin bandera no muestra el aviso; selector de las tres opciones persistidas, opción marcada al reabrir y recursos claros/oscuros en Inicio y Formulario. Los resultados ejecutados y las limitaciones del recorrido visual están en [README](../README.md#estado-real).
@@ -306,7 +334,7 @@ Capturas del emulador: [Inicio](referencias/capturas/inc3-inicio-con-datos.png),
 | ¿Qué impide un movimiento con una categoría inexistente? | La validación lee la categoría y, además, la FK de SQLite lo rechaza | `TransaccionEntity`, `OperacionesMovimientoRoomTest` | Existe, probado |
 | ¿Cómo se actualiza Inicio sin "refrescar"? | Los DAO devuelven `Flow`; Room vuelve a emitir tras cada COMMIT y `InicioViewModel` lo observa con `flatMapLatest` | `TransaccionDao`, `InicioViewModel.estado` | Existe, probado y comprobado en el emulador |
 | ¿Por qué funciona `LocalDate` en Android 7? | `coreLibraryDesugaring` reescribe `java.time` como `j$.time` dentro del APK | `app/build.gradle.kts` | Comprobado en el dex; ejecución en API 24 pendiente |
-| ¿Qué pasa al cambiar el esquema? | Se sube la versión y se escribe una `Migration`; sin ella la app falla en vez de borrar datos | `AppDatabase`, `app/schemas/` | v1 existe; migración en Inc. 6 |
+| ¿Qué pasa al cambiar el esquema? | `Migracion1a2` añade las columnas USD y copia el monto original de GTQ; no recalcula saldos ni borra datos | `AppDatabase`, `Migracion1a2`; esquemas `1.json` y `2.json` en `app/schemas/gt.edu.umg.finanzas.app.datos.local.AppDatabase/` | v1 → v2 probada con datos |
 | ¿Dónde se dibuja el botón Guardar? | En el XML del formulario, con ID `botonGuardar` | `activity_formulario.xml` | Existe |
 | ¿Qué pasa al presionarlo? | La Activity llama a `guardar()`; el ViewModel ignora toques repetidos y llama al servicio | `FormularioActivity.conectarAcciones`, `FormularioViewModel.guardar` | Existe, probado (doble toque = 1 movimiento) |
 | ¿Por qué no se pierde lo escrito al rotar o cambiar de tema? | El ViewModel sobrevive a la recreación y además copia los campos a `SavedStateHandle` por si Android cierra el proceso | `FormularioViewModel.cambiarCampos` | Rotación y tema probados; recuperación desde estado guardado probada con un `SavedStateHandle` precargado |
@@ -320,6 +348,8 @@ Capturas del emulador: [Inicio](referencias/capturas/inc3-inicio-con-datos.png),
 | ¿Qué evita borrar por accidente? | Solo el botón Eliminar del diálogo llama a `eliminar`; Cancelar, atrás o tocar fuera no tocan la base | `ConfirmarEliminacionDialogo` | Existe, probado |
 | ¿Por qué el detalle no se pierde al rotar? | Es un `DialogFragment`: Android lo vuelve a crear y lee el mismo ViewModel | `DetalleMovimientoDialogo` | Existe |
 | ¿Por qué "Inicio" no abre otra pantalla de Inicio? | Inicio siempre está debajo de Operaciones; `NavegacionPrincipal` hace `finish()` | `ui/comun/NavegacionPrincipal.kt` | Existe, probado |
-| ¿Qué pasa sin internet? | Las finanzas funcionan; USD usa la última tasa guardada o queda deshabilitado | `RepositorioTipoCambio` | Inc. 6 |
+| ¿Qué pasa sin internet? | GTQ funciona; USD usa la tasa guardada con fuente/fecha o queda deshabilitado. Guardar no espera a la red | `RepositorioTipoCambio`, `FormularioViewModel.guardar` | Existe, probado sin wifi ni datos en emulador |
+| ¿Por qué una tasa nueva no altera lo anterior? | Cada fila USD guarda original, equivalente y tasa histórica. Consultar solo actualiza SharedPreferences; editar USD vuelve a usar la tasa de la fila | `TransaccionEntity`, `OperacionesMovimientoRoom.editar` | Existe, caso e probado en Room y UI |
+| ¿Dónde están las fórmulas del conversor? | En el core (`ConversorMoneda`); la UI solo elige uno de dos sentidos y presenta el resultado | `ui/comun/ConversionMonto`, `reglas/ConversorMoneda` | Existe, caso i probado |
 
 Al terminar cada incremento: cambia "Pendiente" por la ruta y la función reales, y añade el recorrido del incremento en la §5.

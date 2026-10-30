@@ -5,6 +5,7 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -16,8 +17,11 @@ import gt.edu.umg.finanzas.app.databinding.DialogoDetalleMovimientoBinding
 import gt.edu.umg.finanzas.app.ui.comun.Fechas
 import gt.edu.umg.finanzas.app.ui.comun.MontoConSigno
 import gt.edu.umg.finanzas.app.ui.comun.RecursosCategoria
+import gt.edu.umg.finanzas.app.ui.comun.TextoTasa
 import gt.edu.umg.finanzas.app.ui.formulario.FormularioActivity
+import gt.edu.umg.finanzas.core.dominio.Moneda
 import gt.edu.umg.finanzas.core.dominio.MovimientoVista
+import gt.edu.umg.finanzas.core.reglas.Dinero
 import kotlinx.coroutines.launch
 
 /**
@@ -72,6 +76,10 @@ class DetalleMovimientoDialogo : DialogFragment() {
             Fechas.texto(movimiento.fecha),
         )
         vista.textoDescripcionDetalle.text = movimiento.descripcion
+        vista.textoConversionDetalle.isVisible = movimiento.conversion != null
+        vista.textoConversionDetalle.text = movimiento.conversion?.let {
+            "${getString(R.string.original_usd, Dinero.formatear(it.montoOriginalCentavos, Moneda.USD))}\n${TextoTasa.referencia(contexto, it.tasa)}"
+        }
     }
 
     companion object {

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.Finanzas.Tarjeta"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tipo_cambio"
+            android:textAppearance="@style/TextAppearance.Finanzas.Etiqueta" />
+        <TextView
+            android:id="@+id/textoTasa"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:accessibilityLiveRegion="polite"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/botonConversor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/convertir" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/botonReintentarTasa"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/reintentar_tasa" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

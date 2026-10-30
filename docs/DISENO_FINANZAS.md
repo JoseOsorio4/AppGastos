@@ -1,6 +1,6 @@
 # Diseño — App de finanzas personales (Kotlin · Android)
 
-> **Versión 3.7 · 29/10/2026.** Existen las reglas del core (Inc. 1), la persistencia Room v1 (Inc. 2), Inicio y Formulario en GTQ (Inc. 3), Operaciones (Inc. 4), el aviso de recálculo y el selector persistente de tema (Inc. 5). Las APIs siguen pendientes; las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
+> **Versión 3.8 · 30/10/2026.** Existen las reglas del core (Inc. 1), Room (Inc. 2), Inicio y Formulario (Inc. 3), Operaciones (Inc. 4), recálculo y tema (Inc. 5), y tasa Banguat, GTQ/USD y migración v1 → v2 (Inc. 6). Clima y reflexión siguen pendientes. Las comprobaciones de construcción y ejecución están en el [README](../README.md#estado-real).
 > **Referencias revisadas:** captura de Canva y HTML compartidos en el chat; documentación Mi Pisto y guía de clase 14. La captura principal y las decisiones de adaptación están en [referencias/INTERFAZ.md](referencias/INTERFAZ.md). Los ejemplos del curso y del compañero sirven como apoyo; las reglas de este documento definen nuestro proyecto.
 > **Esqueletos y pseudocódigo** de este documento no están compilados.
 > Mapa del código y preguntas de defensa: **[MAPA_DEL_CODIGO.md](MAPA_DEL_CODIGO.md)**. Construcción en Windows: **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**.
@@ -193,8 +193,8 @@ app/src/main/java/gt/edu/umg/finanzas/app/
   FinanzasApp.kt                          [2] Application: Dependencias, tema, inicialización
   Dependencias.kt                         [2] construcción manual; sin lógica
   datos/local/
-    AppDatabase.kt                        [2] versión 1; versión 2 y Migracion1a2 en 6
-    Migraciones.kt                        [6] Migration(1,2) explícita
+    AppDatabase.kt                        [2] versión 2 desde el Inc. 6
+    Migracion1a2.kt                        [6] Migration(1,2) explícita
     Convertidores.kt                      [6] BigDecimal ↔ TEXT
     entidades/{UsuarioEntity, CategoriaEntity, TransaccionEntity}.kt   [2]
     dao/{UsuarioDao, CategoriaDao, TransaccionDao, MovimientoFila}.kt  [2]
@@ -205,15 +205,14 @@ app/src/main/java/gt/edu/umg/finanzas/app/
     ReconstructorSaldoRoom.kt             [3] adelantado: ServicioFinanzas lo necesita; el aviso visible sigue en 5
   datos/preferencias/
     PreferenciaTema.kt                    [5] Sistema/Claro/Oscuro
-    CacheServicios.kt                     [6] última tasa, clima y reflexión con sus fechas
+    CacheServicios.kt                     [6] última tasa con fecha, fuente y consulta; clima/reflexión no implementados
   datos/remoto/
     ClienteHttp.kt                        [6] GET/POST, tiempos de espera, hilo de E/S
     tipocambio/{ClienteBanguat, LectorRespuestaBanguat}.kt   [6]
     clima/{ClienteOpenMeteo, LectorRespuestaClima}.kt        [7]
     reflexion/…                           [7] solo el proveedor elegido
   datos/repositorios/
-    ConsultaRemota.kt                     [6] Actual / Guardada / SinDatos
-    RepositorioTipoCambio.kt              [6] caché diaria + Banguat
+    RepositorioTipoCambio.kt              [6] EstadoTasa, caché diaria + Banguat
     RepositorioClima.kt                   [7] caché 30 min + Open-Meteo
     RepositorioReflexion.kt               [7] caché diaria + catálogo local
   ui/comun/
@@ -223,7 +222,7 @@ app/src/main/java/gt/edu/umg/finanzas/app/
     RecursosCategoria.kt                  [3] clave → icono y color; genérico si es desconocida
     Fechas.kt                             [3] dd/MM/yyyy, encabezado de día [4] y milisegundos UTC de MaterialDatePicker
     BarrasSistema.kt                      [3] espacio para barras del sistema y teclado (edge-to-edge)
-    EstadoTarjeta.kt                      [6] Cargando / ConDatos / SinDatos
+    ConversionMonto.kt, TextoTasa.kt       [6] adaptación al core y presentación de metadatos
   ui/inicio/
     InicioActivity.kt                     [3] reemplaza la pantalla de diagnóstico del Inc. 0
     InicioViewModel.kt, InicioUiState.kt  [3]
@@ -231,6 +230,7 @@ app/src/main/java/gt/edu/umg/finanzas/app/
     GraficoAnilloView.kt                  [3] solo dibuja segmentos ya calculados
     LeyendaGastos.kt                      [3] filas de categoría, porcentaje e importe bajo el anillo
     ConversorDialogo.kt                   [6]
+    ConversorViewModel.kt                 [6] texto/sentido guardados y resultado del core
   ui/formulario/{FormularioActivity, FormularioViewModel, FormularioUiState, CategoriasAdapter}.kt   [3]
   ui/operaciones/{OperacionesActivity, OperacionesViewModel, OperacionesUiState, OperacionesAdapter, FilaOperacion}.kt  [4]
   ui/operaciones/{DetalleMovimientoDialogo, ConfirmarEliminacionDialogo}.kt  [4] DialogFragment
@@ -317,6 +317,8 @@ app/src/main/res/
   Solo usa `ADD COLUMN`, que SQLite admite en todas las versiones de Android desde API 24. **No** usa `RENAME COLUMN` (requiere SQLite 3.25, que no viene en todos los Android desde API 24). Los `DEFAULT` se declaran igual en la entidad (`@ColumnInfo(defaultValue = …)`) para que Room valide el esquema. La migración no toca `montoCentavos` ni `saldoCentavos`.
 - Prueba con `MigrationTestHelper`: insertar filas en v1, migrar y comprobar montos, tipo, categoría, saldo y `montoOriginalCentavos = montoCentavos`.
 
+Implementado en `datos/local/Migracion1a2.kt` y registrado en `AppDatabase.crear`. Los esquemas 1 y 2 están versionados. `Migracion1a2Test` crea su propio archivo v1 con datos, valida el esquema v2 y lo abre con los DAO actuales; no utiliza la base de uso diario.
+
 ### 6.3 Tipo y categoría
 - `tipo` se repite en `Transaccion` para reconstruir `Ingreso`/`Gasto` sin JOIN y para filtrar con el índice `(tipo, fechaEpochDay)`.
 - **Garantía:** `ValidadorMovimiento` compara el tipo con el de la categoría leída **dentro** de `withTransaction`, al crear y al editar. Las categorías tienen tipo inmutable.
@@ -358,6 +360,8 @@ app/src/main/res/
   - Cambiar el monto USD usa la **tasa histórica** del movimiento y lo indica en pantalla ("Se conserva la tasa del 21/10/2026").
   - Usar una tasa nueva requiere tocar **"Usar tasa actual"** (opcional del Inc. 6).
   - Cambiar USD → GTQ elimina la conversión. GTQ → USD necesita una tasa disponible.
+
+En el Inc. 6 no se añade la opción opcional «Usar tasa actual». La edición que permanece en USD conserva siempre la tasa del registro, también si cambia el monto: el ViewModel la presenta y `OperacionesMovimientoRoom.editar` la toma del movimiento anterior antes de validar. La consulta de una referencia nueva solo cambia la caché, nunca las filas anteriores.
 
 ### 7.4 Sin internet
 | Situación | Comportamiento |
@@ -466,6 +470,8 @@ suspend fun editar(id, datos, hoy): Resultado<Unit> =
 3. Cada cambio de monto actualiza `textoConversionPrevia` con `ConversorMoneda`.
 4. `guardar()` envía `DatosMovimiento` con esa `TasaCambio`. La escritura en Room no espera a la red.
 5. El validador recalcula el monto base con la misma regla y el flujo sigue como en 9.1.
+
+Implementado: la consulta comienza al abrir Inicio o Formulario, en una corrutina independiente. USD solo se habilita si hay una tasa disponible o una histórica del registro en edición. `FormularioUiState` expone moneda, tasa efectiva y vista previa; `ConversionMonto` delega en `Dinero.desdeTexto` y `ConversorMoneda`. Los datos enviados a Guardar contienen texto, moneda y tasa, y ninguna operación de Room consulta la red. `SavedStateHandle` conserva la moneda y los campos de la tasa histórica para no perderla al recuperar una edición ya cargada.
 
 ### 9.4 Inicio: filtro y anillo
 ```
@@ -588,12 +594,15 @@ class ServicioFinanzas(usuarios: RepositorioUsuario, categorias: RepositorioCate
 - Se distinguen la **fecha del proveedor** y el **momento de consulta**. Estas frecuencias son decisiones nuestras, no garantías de los proveedores.
 - Las Activities y los ViewModels nunca contienen URLs ni lectores de respuesta.
 
+El Inc. 6 concreta solo la tarjeta de tasa con `EstadoTasa` en `RepositorioTipoCambio`: dato opcional (`TasaGuardada`), carga, origen guardado y error. Lo observan Inicio, Formulario y Conversor. Se evita crear una abstracción genérica para las tarjetas todavía inexistentes del Inc. 7. El caché diario se decide por la fecha de consulta en Guatemala; Reintentar puede forzar una consulta explícita. Una respuesta fallida conserva los metadatos de la tasa anterior.
+
 ### 11.2 Banguat — `TipoCambioDia`
 - Documentación: https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx?op=TipoCambioDia. Es un servicio **SOAP/XML**.
 - `ClienteBanguat` hace un POST SOAP al `.asmx` con la acción de esa operación. `LectorRespuestaBanguat` (con `javax.xml.parsers`, que existe en Android y en la JVM de pruebas) toma `fecha` y `referencia` **solo** de `CambioDolar/VarDolar`.
 - `referencia` se lee como texto y se crea con `BigDecimal(texto)`, aunque el esquema lo declare `float`. Se exige que sea mayor que 0 y que la fecha tenga formato `dd/MM/yyyy`; si falta un campo, la respuesta se rechaza.
 - Se muestra como "Referencia Banguat", no como compra/venta de un banco comercial.
-- **Pendiente en el Inc. 6:** la página respondió 403 desde este entorno. El sobre SOAP exacto y los nombres de elementos se confirmarán con una respuesta real guardada como archivo de prueba antes de escribir el lector.
+- **Comprobado antes de escribir el lector:** el 29/10/2026 la [operación oficial](https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx?op=TipoCambioDia) respondió y un POST SOAP 1.1 devolvió HTTP 200, fecha `29/10/2026` y referencia `7.64382`. La respuesta sin modificar y su procedencia están en `app/src/androidTest/assets/banguat/`. El sobre usa `http://schemas.xmlsoap.org/soap/envelope/`, la operación vacía `TipoCambioDia` y SOAPAction `"http://www.banguat.gob.gt/variables/ws/TipoCambioDia"`.
+- `ClienteBanguat` consulta y parsea fuera del hilo principal; `LectorRespuestaBanguat` sigue la ruta completa con espacios XML y rechaza DTD, datos ausentes o ambiguos y fecha/tasa inválidas. `BanguatTest` comprueba el fixture y ejecuta una consulta real desde Android. No se distribuye una tasa ficticia como respaldo de producción.
 
 ### 11.3 Open-Meteo — clima
 - Petición prevista: `https://api.open-meteo.com/v1/forecast?latitude=…&longitude=…&current=temperature_2m,weather_code&timezone=America/Guatemala`. El `weather_code` (código WMO) se traduce a texto e icono en la app.
@@ -640,7 +649,7 @@ La combinación AGP 9.1.1, Gradle 9.3.1, JDK 17 y compileSdk 37 coincide con la 
 | 1 | `kotlinx-coroutines-core:1.10.2` (core); `junit-bom:5.14.4` + `junit-jupiter`, `kotlin-test-junit5:2.2.10` y `kotlinx-coroutines-test:1.10.2` (solo pruebas) | `Flow` en los contratos; pruebas. Se eligió 1.10.2 porque 1.11.0 exige `kotlin-stdlib` 2.2.20, más nuevo que el Kotlin 2.2.10 del core |
 | 2 | Room 2.8.5 (`room-runtime`, `room-compiler` con KSP 2.3.12, plugin `androidx.room` para esquemas), `desugar_jdk_libs:2.1.5`, `androidx.test:runner:1.7.0`, `androidx.test.ext:junit:1.3.0` | Persistencia, `java.time` en API 24, pruebas instrumentadas. No se añade `room-ktx`: desde Room 2.7 está vacío y `withTransaction` vive en `room-runtime`. `room-testing` (`MigrationTestHelper`) se añade en el Inc. 6, cuando exista una migración que probar |
 | 3 | `material:1.14.0`, `core-ktx:1.19.1`, `recyclerview:1.4.0`, `lifecycle-viewmodel`, `lifecycle-viewmodel-savedstate` y `lifecycle-runtime` 2.11.0; `espresso-core:3.7.0` (pruebas) | Interfaz, ViewModel, `repeatOnLifecycle`, `SavedStateHandle`, prueba del recorrido. Desde Lifecycle 2.8 `viewModelScope` y `lifecycleScope` están en los artefactos sin `-ktx` |
-| 6 | Ninguna biblioteca; permiso `INTERNET` | HTTP y XML incluidos en Android |
+| 6 | Permiso `INTERNET`; `room-testing:2.8.5` solo en pruebas; restricción de `kotlinx-serialization-core` a 1.8.1 | HTTP y XML incluidos en Android. `dependencyInsight` mostró core 1.7.3 con json 1.8.1, causando `AbstractMethodError` al leer esquemas en `MigrationTestHelper`. Se alinea el core transitorio en 1.8.1 (ya requerido por Room migration); no se cambian AGP, Gradle, Kotlin ni Room |
 | 7 | `org.json:json` solo en pruebas locales | Las clases `org.json` de Android no funcionan en pruebas JVM |
 
 **Cambio del core:** subir `<version>` → `mvn clean install` → actualizar `finanzasCore` en `libs.versions.toml` → Sync → reconstruir. Así la versión mostrada por `InfoCore` coincide con el `pom.xml`.
@@ -666,7 +675,7 @@ Numeración trazable con la versión anterior. Tus 7 puntos corresponden así: 1
 
 Ejecutados en el Inc. 1 con `mvn clean install`: a, b, f, g, h, la parte pura de e (US$ 10.00 × 7.66000 = 7660 y la tasa guardada como `"7.66000"`), i en el core y la parte pura de j. Las pruebas viven en `finanzas-core/src/test/kotlin/` y el mapa indica cuál cubre cada caso. 
 
-Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b sobre Room, c (falla al guardar el saldo en crear, editar y eliminar), d (cerrar y reabrir el archivo) y el rollback de j. En el Inc. 3, d también se comprobó desde la interfaz: tras registrar Q 100 y Q 30 en la app real, `am force-stop` y volver a abrir conserva el saldo Q 70.00. En el Inc. 4, a se ejecuta completo desde la interfaz (`RecorridoOperacionesTest.caso_a_editar_y_eliminar_el_gasto_desde_operaciones`: Q 70 → Q 80 → Q 100). Siguen pendientes la parte de Room de e (Inc. 6) y la interfaz de i (Inc. 6).
+Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b sobre Room, c (falla al guardar el saldo en crear, editar y eliminar), d (cerrar y reabrir el archivo) y el rollback de j. En el Inc. 3, d también se comprobó desde la interfaz: tras registrar Q 100 y Q 30 en la app real, `am force-stop` y volver a abrir conserva el saldo Q 70.00. En el Inc. 4, a se ejecuta completo desde la interfaz (`RecorridoOperacionesTest.caso_a_editar_y_eliminar_el_gasto_desde_operaciones`: Q 70 → Q 80 → Q 100). En el Inc. 6, `MovimientosUsdTest` y `RecorridoUsdTest` cubren e con Room, caché y pantalla; el conversor real cubre i con exactamente dos sentidos. Los resultados de ejecución están en el README.
 
 - **a.** Saldo inicial Q 0. Ingreso Q 100 → **Q 70** tras un gasto de Q 30. Editar el gasto a Q 20 → **Q 80**. Eliminar el gasto → **Q 100**.
 - **b.** Q 1,000 ingreso → Q 750 (gasto Q 250) → Q 700 (gasto editado a Q 300) → Q 1,300 (ese movimiento pasa a ingreso Q 300) → Q 300 (se borra el ingreso de Q 1,000) → **Q 0** (se borra el ingreso restante de Q 300).
@@ -683,7 +692,7 @@ Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b
 
 ## 15. Estado real
 
-El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. El alcance actual termina en el Inc. 5; GTQ/USD y la migración corresponden al Inc. 6.
+El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. El alcance implementado termina en el Inc. 6. El Inc. 7 permanece pendiente.
 
 ---
 
@@ -714,3 +723,4 @@ No habrá `ARQUITECTURA.md`, `GUIA_DEFENSA.md` ni `PLAN_INCREMENTOS.md` separado
 - **v3.5:** Inc. 3 implementado. Se resuelve la decisión pendiente de la v3.4 adelantando `ReconstructorSaldoRoom` (§9.6); el aviso visible sigue en el Inc. 5. `Dependencias` arma `ServicioFinanzas` con las cinco implementaciones Room. El core sube a 0.3.0 con `Dinero.aTexto`, que usan los botones +5/+10/+20/+50 para escribir el monto sin convertir texto en la app. `NavegacionPrincipal` se aplaza al Inc. 4, cuando dos pantallas compartan la barra inferior. "Más" en la cuadrícula no se crea: con 8 categorías de gasto y 4 de ingreso, todas caben en la cuadrícula de 4 columnas. targetSdk 36 dibuja bajo las barras del sistema y `BarrasSistema` reserva su espacio.
 - **v3.6:** Inc. 4 implementado. `NavegacionPrincipal` conecta la barra en Inicio y Operaciones; desde Operaciones, "Inicio" hace `finish()`. Los chips de período pasan a `chips_periodo.xml` con `ChipsPeriodo` y `PeriodoGuardado` en `ui/comun`, compartidos por las dos pantallas. Operaciones agrupa por día con `FilaOperacion`; el detalle y la confirmación son `DialogFragment`. El Formulario edita con el extra `idEnEdicion` y carga el movimiento una sola vez. Ninguna tabla cambia.
 - **v3.7:** Inc. 5 implementado. Aviso condicional, progreso y reintento en Inicio usando `ReconstructorSaldoRoom` existente. `PreferenciaTema` y `TemaDialogo` guardan y aplican Sistema/Claro/Oscuro; el arranque restaura la elección. Sin cambios del core, dependencias ni esquema.
+- **v3.8:** Inc. 6: migración explícita v1 → v2 y fotografía USD, POST Banguat verificado, caché de tasa y estados independientes, tarjeta de tasa, conversor de dos sentidos y edición histórica. El core sigue en 0.3.0. Pruebas con instalación `.pruebas` para proteger los datos existentes; sin clima ni reflexión.

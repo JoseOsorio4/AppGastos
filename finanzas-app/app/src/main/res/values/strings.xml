@@ -1,4 +1,23 @@
 <resources>
+    <string name="tipo_cambio">Tipo de cambio de referencia</string>
+    <string name="referencia_tasa">1 USD = Q %1$s\n%2$s · %3$s</string>
+    <string name="consultando_tasa">Consultando referencia Banguat…</string>
+    <string name="sin_tasa">Sin tasa disponible. Conéctate para obtenerla. Puedes seguir registrando en GTQ.</string>
+    <string name="tasa_guardada">Tasa guardada · consultada</string>
+    <string name="tasa_consultada">Consulta realizada</string>
+    <string name="ultima_tasa">Última disponible</string>
+    <string name="error_actualizar_tasa">No se pudo actualizar. Se conserva la tasa guardada.</string>
+    <string name="reintentar_tasa">Reintentar</string>
+    <string name="convertir">Convertir</string>
+    <string name="conversor">Conversor GTQ / USD</string>
+    <string name="usd_a_gtq">USD → GTQ</string>
+    <string name="gtq_a_usd">GTQ → USD</string>
+    <string name="moneda_gtq">GTQ</string>
+    <string name="moneda_usd">USD</string>
+    <string name="conversion_previa">Equivale a %1$s</string>
+    <string name="tasa_historica">Se conserva la tasa del %1$s</string>
+    <string name="original_usd">Original: %1$s</string>
+    <string name="cerrar">Cerrar</string>
     <string name="tema">Tema</string>
     <string-array name="opciones_tema">
         <item>Sistema</item>

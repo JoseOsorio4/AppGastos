@@ -12,7 +12,7 @@ Proyecto de Programación 2 (Universidad Mariano Gálvez de Guatemala). Es una a
 
 La app recibe el core como dependencia Maven `gt.edu.umg.finanzas:finanzas-core`, publicada en el repositorio Maven local (`~/.m2`).
 
-La moneda base es el quetzal (GTQ). El conversor tiene únicamente **dólares a quetzales (USD → GTQ)** y **quetzales a dólares (GTQ → USD)**. Las reglas ya existen en el core (Inc. 1); la pantalla llega en el incremento 6.
+La moneda base es el quetzal (GTQ). El conversor tiene únicamente **dólares a quetzales (USD → GTQ)** y **quetzales a dólares (GTQ → USD)**. Desde el incremento 6 la app consulta la referencia Banguat, conserva su última tasa y registra movimientos USD con su fotografía histórica; saldo y reportes siguen en GTQ.
 
 ## Documentación
 
@@ -27,13 +27,37 @@ La moneda base es el quetzal (GTQ). El conversor tiene únicamente **dólares a 
 
 1. **Core:** abre `finanzas-core/pom.xml` en IntelliJ y ejecuta `mvn clean install`.
 2. **App:** abre la carpeta `finanzas-app/` en Android Studio, sincroniza Gradle y ejecuta `app`.
-3. **Pruebas instrumentadas (Room e interfaz):** con un emulador abierto, `.\gradlew.bat :app:connectedDebugAndroidTest` desde `finanzas-app`.
+3. **Pruebas instrumentadas (Room e interfaz):** con un emulador abierto, `.\gradlew.bat -PdatosPrueba :app:connectedDebugAndroidTest` desde `finanzas-app`. La instalación `.pruebas` protege los datos de la app normal. La prueba sin red desactiva y restaura wifi/datos del emulador; la prueba Banguat real requiere conexión.
 
 El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`. Se necesita JDK 17 o superior. Las herramientas y dependencias que todavía no estén en caché requieren internet para descargarse.
 
 ## Estado real
 
-Último incremento cerrado: **5 — aviso de recálculo del saldo y selector de tema**. Siguiente: **6 — GTQ/USD con Banguat y migración**, todavía sin implementar.
+Último incremento cerrado: **6 — tasa Banguat, GTQ/USD y migración Room v1 → v2**. Siguiente: **7 — clima y reflexión**, todavía sin implementar.
+
+### Incremento 6 — referencia Banguat, USD histórico y migración
+
+| Comprobación | Estado | Detalle |
+|---|---|---|
+| Core y app antes de editar | ✅ Ejecutados | `mvn clean install`: 55 pruebas, 0 fallos, `BUILD SUCCESS`. `:app:assembleDebug`: `BUILD SUCCESSFUL`. Rama main, último commit inicial `5f9a940`; solo `img.png` sin seguimiento |
+| Contrato y respuesta Banguat antes del lector | ✅ Comprobados | Contrato oficial de `TipoCambioDia` y POST SOAP 1.1 HTTP 200 el 29/10/2026: referencia 7.64382, fecha 29/10/2026. Cuerpo sin modificar y procedencia en `app/src/androidTest/assets/banguat/`; el fixture no rellena la caché de producción |
+| Core | ✅ Conservado | 0.3.0 sin cambios: `Dinero`, `ConversorMoneda`, `ValidadorMovimiento` y `ConversionAplicada` ya proporcionaban las reglas. Ninguna fórmula ni redondeo se copia en la UI |
+| Persistencia v2 | ✅ Creada y compilada | Mismas 3 tablas. `TransaccionEntity`, `Convertidores`, `Mapeos` y `MovimientoFila` conservan original USD, equivalente GTQ y tasa histórica (valor TEXT, fecha y fuente). Esquema `app/schemas/…/2.json` exportado y versionado; v1 intacto |
+| Migración con datos v1 | ✅ Ejecutada | `Migracion1a2Test`: `MigrationTestHelper` crea otra base con Q 70, bandera activa, 12 categorías (una archivada) y 2 movimientos. Valida v2, importes originales GTQ, IDs, tipo, fecha, descripción, usuario, categoría, bandera, saldo y FK. Reabre con los DAO actuales y repetir la siembra conserva los datos |
+| Caché y consulta | ✅ Creadas y probadas | `ClienteHttp` (HTTPS, 10 s por conexión/lectura, 256 KiB), `ClienteBanguat`, lector de XML por ruta y espacios; `CacheServicios` conserva tasa, fuente, fecha del proveedor y momento de consulta. `RepositorioTipoCambio` usa caché del día y mantiene el dato anterior ante fallo |
+| Compilación final | ✅ Ejecutada | `:app:assembleDebug`, `:app:assembleDebugAndroidTest` con `-PdatosPrueba`; también compilación normal sin el sufijo y `installDebug` de la instalación de prueba. Sin cambios de AGP, Gradle, Kotlin ni Room |
+| Suite instrumentada final API 37 | ✅ Ejecutada | `-PdatosPrueba :app:connectedDebugAndroidTest`: **48/48**, 0 fallos, 0 errores, 0 omitidas en el XML de `app/build/outputs/androidTest-results/connected/debug/` |
+| Caso e y edición histórica | ✅ Ejecutados en Room y UI | US$ 10 × tasa ficticia 7.66000 → 7660 centavos GTQ y original 1000. Guardar en caché 7.70000 no altera fila ni saldo. Editar a US$ 12 conserva 7.66000 y deja Q 91.92. USD → GTQ elimina la conversión; borrar USD revierte el saldo |
+| Caso i y conversor | ✅ Ejecutados en UI | El diálogo tiene exactamente USD → GTQ y GTQ → USD. Con tasa ficticia 7.66000: US$ 10 → Q 76.60 y Q 100 → US$ 13.05. Recrear Inicio con el conversor abierto conserva monto, sentido y resultado |
+| Sin red | ✅ Ejecutado en emulador | `RecorridoUsdTest` desactiva wifi y datos: sin caché USD queda deshabilitado y GTQ registra Q 100; con tasa de prueba guardada anterior registra US$ 10 y deja Q 176.60. Muestra fuente/fecha, «Última disponible» y fallo de actualización; restaura la conectividad |
+| Banguat real desde Android | ✅ Ejecutado | `BanguatTest.consulta_el_servicio_oficial_desde_android` completó la petición real. En el recorrido visual del 30/10/2026 se obtuvo 7.64187 del 30/10/2026; US$ 10 registrados desde Formulario dejaron Q 76.42 en saldo/ingresos y «Original: US$ 10.00» en Operaciones |
+| Comparación visual | ✅ Revisada | Tarjeta, conversor, Formulario USD y detalle con capturas claras/oscuras. Conservan cabeceras verdes, acento amarillo, tres destinos y cuadrícula de categorías. Cambiar el tema conservó el monto y el resultado. El detalle USD de prueba también cabe con `font_scale` 2.0; se restauró la escala |
+| Reabrir sin red con la tasa real | ✅ Revisado por ADB | `force-stop` y nuevo arranque de `.pruebas` conservan Q 76.42 y la referencia real 7.64187; Reintentar sin red muestra que se conserva la tasa guardada. Al restaurar la red, Reintentar vuelve a completar la consulta |
+| Incompatibilidad encontrada y corregida | ✅ Verificada | `MigrationTestHelper` falló antes de migrar por core de serialización 1.7.3 mezclado con json 1.8.1. `dependencyInsight` confirmó el conflicto; una restricción alinea core en 1.8.1, requerido por Room migration. La prueba de migración y después la suite completa pasaron |
+| Protección de datos y archivo local | ✅ Comprobada | Las pruebas usan `gt.edu.umg.finanzas.app.pruebas`; `AyudaInterfaz` rechaza limpiar el paquete normal. Hashes de `finanzas.db` y su WAL de la instalación original iguales antes/después. `img.png` conserva su hash y no se incluye. No se reinstaló ni se borró la app normal |
+| Otros pendientes | ⏳ Conservados | API 24–25; muerte real del proceso con Formulario abierto; rotación manual con detalle/confirmación; comprobación humana con el dedo del segundo detalle. «Usar tasa actual» es opcional y no se implementó: al editar USD siempre se conserva la histórica. Clima y reflexión siguen en Inc. 7 |
+
+Capturas y comparación: [INTERFAZ → Incremento 6](docs/referencias/INTERFAZ.md#incremento-6-tasa-y-movimientos-usd-emulador-api-37). La revisión visual fue por capturas, jerarquías y acciones de ADB, sin datos reales. La respuesta de Banguat se comprobó contra [el contrato oficial](https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx?op=TipoCambioDia).
 
 ### Incremento 5 — aviso de recálculo y tema persistente
 
@@ -127,7 +151,7 @@ El emulador se cerró solo dos veces durante las pruebas y una vez dejó de dibu
 | `java.time` ejecutándose en un dispositivo API 24–25 | ⏳ Pendiente | Solo hay imagen API 37 y no está instalado `sdkmanager` para descargar otra |
 | Arranque de la app real crea y siembra `finanzas.db` | ✅ Resuelto en el Inc. 3 | Con los datos borrados (`pm clear`), la app real abrió Inicio con Q 0.00 y el formulario mostró las categorías leídas de Room. No se inspeccionó el archivo con `sqlite3` |
 | Forzar el cierre de la app y conservar datos desde la interfaz | ✅ Resuelto en el Inc. 3 | Tras registrar Q 100 y Q 30 en la app real, `am force-stop` y reabrir conservó saldo Q 70.00 |
-| Movimientos en USD | ⏳ Pendiente (Inc. 6) | La v1 los rechaza con `ErrorNegocio` en el campo moneda |
+| Movimientos en USD | ✅ Inc. 6 | La v2 guarda la fotografía histórica y convierte con las reglas del core; ver resultados del Inc. 6 |
 
 ### Incremento 0 — conexión core → JAR → Android
 

@@ -17,6 +17,7 @@ object AyudaInterfaz {
 
     /** Vacía la base y vuelve a sembrar el usuario y las 12 categorías, como una instalación nueva. */
     fun baseLimpia() = runBlocking {
+        check(app.packageName.endsWith(".pruebas")) { "Ejecuta con -PdatosPrueba para proteger los datos de uso diario" }
         app.inicializacion.await()
         app.dependencias.baseDatos.clearAllTables()
         assertTrue(app.dependencias.inicializador.inicializar() is Resultado.Ok)
