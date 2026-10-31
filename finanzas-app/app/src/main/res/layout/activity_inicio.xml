@@ -77,6 +77,24 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/botonSeguridad"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="@string/seguridad_local"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/botonBloquear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/bloquear_app"/>
+            </LinearLayout>
             <TextView
                 android:id="@+id/textoErrorInicial"
                 android:layout_width="match_parent"

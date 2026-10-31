@@ -21,6 +21,8 @@ import gt.edu.umg.finanzas.core.servicio.ServicioFinanzas
  */
 class Dependencias(context: Context) {
 
+    val bloqueo = gt.edu.umg.finanzas.app.datos.preferencias.BloqueoLocal(context.noBackupFilesDir)
+
     val preferenciaTema = PreferenciaTema(context)
     val cacheServicios = CacheServicios(context)
     val tipoCambio = RepositorioTipoCambio(cacheServicios)

@@ -4,7 +4,6 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -14,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import gt.edu.umg.finanzas.app.R
 import gt.edu.umg.finanzas.app.databinding.ActivityOperacionesBinding
+import gt.edu.umg.finanzas.app.ui.comun.ActivityProtegida
 import gt.edu.umg.finanzas.app.ui.comun.BarrasSistema
 import gt.edu.umg.finanzas.app.ui.comun.ChipsPeriodo
 import gt.edu.umg.finanzas.app.ui.comun.DestinoPrincipal
@@ -22,7 +22,7 @@ import gt.edu.umg.finanzas.core.dominio.TipoMovimiento
 import kotlinx.coroutines.launch
 
 /** Recibe los filtros y el toque en una fila; dibuja la lista que entrega OperacionesViewModel. */
-class OperacionesActivity : AppCompatActivity() {
+class OperacionesActivity : ActivityProtegida() {
 
     private lateinit var binding: ActivityOperacionesBinding
     private lateinit var chipsPeriodo: ChipsPeriodo

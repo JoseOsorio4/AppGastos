@@ -29,6 +29,7 @@ class InicializadorDatos(private val baseDatos: AppDatabase) {
         }
 
     private companion object {
-        const val NOMBRE_PERFIL = "Principal"
+        // La bienvenida completa el nombre nuevo; IGNORE conserva el perfil de una actualización.
+        const val NOMBRE_PERFIL = ""
     }
 }

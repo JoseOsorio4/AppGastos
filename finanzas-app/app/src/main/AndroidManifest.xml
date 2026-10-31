@@ -20,6 +20,8 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".ui.acceso.AccesoActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+
         <!-- Siempre se abre desde Inicio: volver o tocar "Inicio" en su barra la cierra. -->
         <activity
             android:name=".ui.operaciones.OperacionesActivity"

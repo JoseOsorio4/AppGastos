@@ -231,7 +231,7 @@ Cada capa tiene un solo trabajo: el **XML** declara las vistas y sus IDs; la **A
 ### 4.4 Rotación, tema y doble toque
 
 - **Rotación o cambio de tema:** la Activity se recrea y el ViewModel sobrevive. La Activity vuelve a pintar desde `estado`, y los selectores abiertos recuperan sus acciones por etiqueta. En Operaciones, el detalle y la confirmación son `DialogFragment`: Android los vuelve a crear y leen el mismo ViewModel. Los filtros de tipo y período se guardan en `SavedStateHandle`.
-- **Segundo detalle con interacción propia:** pendiente de la prueba del usuario en el emulador. Los recorridos automatizados de giro y edición no cierran esa observación.
+- **Segundo detalle con interacción propia:** confirmado por el usuario en su teléfono al solicitar el incremento 8: permanece abierto. También confirmó teclado/Guardar y persistencia del tema.
 - **Letra grande:** `FormularioActivity.columnasCategorias` usa de 1 a 4 columnas, reservando 104 dp por nombre multiplicados por la escala de letra; en 360dp/fuente 2.0 usa una columna. Las etiquetas de la barra (`Widget.Finanzas.EtiquetaBarra`) y el centro del anillo se reducen solo lo necesario para no partirse ni salirse.
 - **Edición:** el movimiento se carga de Room una sola vez; la bandera `movimientoCargado` evita que una rotación borre lo que ya se cambió.
 - **Estado guardado (muerte del proceso):** tipo, monto, categoría, fecha y descripción se copian a `SavedStateHandle` y un ViewModel nuevo los lee de ahí; las categorías se vuelven a consultar a Room. Además de `FormularioViewModelTest` con estado precargado, se ejecutó la muerte real con `am kill` tras enviar la tarea a segundo plano y se recuperó desde Recientes: alta y edición GTQ, campos restaurados, PID nuevo y mismo ID al guardar la edición. Resultados y alcance en README → Revisión final de pendientes.
@@ -426,3 +426,25 @@ Ejecutados en API 37, 360 × 640 dp y fuente 2.0: teclado **4/4**, servicios **1
 | ¿Dónde están las fórmulas del conversor? | En el core (`ConversorMoneda`); la UI solo elige uno de dos sentidos y presenta el resultado | `ui/comun/ConversionMonto`, `reglas/ConversorMoneda` | Existe, caso i probado |
 
 Al terminar cada incremento: cambia "Pendiente" por la ruta y la función reales, y añade el recorrido del incremento en la §5.
+
+## 8. Bienvenida y PIN local
+
+| Control / ruta XML | Activity y acción | Estado / coordinación | Datos y regla |
+|---|---|---|---|
+| `activity_acceso.xml / entradaNombre, botonAcceso` | `ui/acceso/AccesoActivity` entrega el nombre | `AccesoViewModel.nombre` valida 1–40 caracteres y pasa a BIENVENIDA | `UsuarioDao.cambiarNombre` actualiza solo `Usuario.nombrePerfil`; core/saldo sin cambios |
+| `tituloAcceso, botonConfigurarPin` | Dibuja «Bienvenido, nombre»; abre configuración | `PasoAcceso.BIENVENIDA` → `CONFIGURAR` | Nombre leído de Room; al reabrir un nombre ya guardado se omite la pregunta; no cuenta remota |
+| `botonContinuar` | Continuar sin PIN o Volver desde ajustes | `AccesoViewModel.continuar` | `BloqueoLocal.completarBienvenida`; nunca permite salir de un bloqueo activo |
+| `entradaPinNuevo, entradaPinConfirmacion, botonAcceso` | Entrega los textos y limpia los campos | `AccesoViewModel.guardar`, estado ocupado/error | `BloqueoLocal.cambiar`: seis dígitos, confirmación, actual si existía; sal y derivación en archivo privado |
+| `entradaPinActual, botonAcceso, errorAcceso` | Recibe el PIN y dibuja error; no lo conserva en estado | `AccesoViewModel.ingresar` / `PasoAcceso.PIN` | `BloqueoLocal.abrir`: comparación constante, intentos/espera persistidos, revisión de sesión |
+| `botonDesactivarPin` | Solicita desactivar con el actual | `AccesoViewModel.desactivar` | `BloqueoLocal.desactivar` verifica antes de quitar la derivación. No escribe Room |
+| `activity_inicio.xml / botonSeguridad` | `InicioActivity` abre Acceso con intención de configurar | `AccesoViewModel.actualizar` decide PIN o CONFIGURAR | Misma sesión local; configuración voluntaria para instalaciones anteriores |
+| `activity_inicio.xml / botonBloquear` | `InicioActivity` cierra sesión y abre Acceso (solo visible con PIN) | Bloqueo explícito | `BloqueoLocal.bloquear`; solo memoria, no elimina datos |
+| Inicio, Formulario y Operaciones / reentrada | Las tres extienden `ui/comun/ActivityProtegida` | Comprueba acceso antes de mostrar contenido; FLAG_SECURE con PIN | `FinanzasApp` prepara el acceso antes de sembrar; `CicloBloqueo` bloquea al detener la última Activity salvo rotación |
+
+`datos/preferencias/BloqueoLocal.kt` es el único dueño de credenciales, sesión y contador de intentos. Archivo `noBackupFilesDir/acceso.json`: AtomicFile con lectura posterior, sal, hash y marca de bienvenida; sin PIN claro. `AccesoUiState` contiene paso, nombre, existencia de PIN, ocupado y error; no secretos. El PIN no se guarda en SavedStateHandle. Las fórmulas, transacciones y esquema financiero no cambian.
+
+Pruebas en `ui/AccesoTest.kt`; `AyudaInterfaz.baseLimpia` completa la bienvenida solo en la instalación de prueba para que los recorridos financieros independientes sigan comenzando en Inicio. Se comprueba de forma separada la instalación nueva. [Estado ejecutado y límites](../README.md#incremento-8--bienvenida-y-bloqueo-local).
+
+Revisión ADB del incremento 8: PID 7128 → 7979 después de HOME / am kill / Recientes, PIN obligatorio; giro horizontal/vertical mantiene bloqueo y el ingreso Q 123.45 y saldo sobreviven. Capturas de bienvenida y límites en README. Se cerró por confirmación del usuario la revisión humana previa del segundo detalle, teclado/Guardar y tema.
+
+Regresión final del incremento 8: **85/85 sin red en API 37** (76 previas + 9 AccesoTest); core inicial **55/55**. API 24–25 y nueva función de PIN en teléfono pendientes. Room v2 y APIs sin cambios; la nueva siembra deja nombre vacío solo hasta completarlo, mientras INSERT OR IGNORE conserva todo usuario anterior.

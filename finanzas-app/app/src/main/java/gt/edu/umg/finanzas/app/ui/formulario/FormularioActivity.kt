@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.widget.EditText
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.Lifecycle
@@ -21,6 +20,7 @@ import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
 import gt.edu.umg.finanzas.app.R
 import gt.edu.umg.finanzas.app.databinding.ActivityFormularioBinding
+import gt.edu.umg.finanzas.app.ui.comun.ActivityProtegida
 import gt.edu.umg.finanzas.app.ui.comun.BarrasSistema
 import gt.edu.umg.finanzas.app.ui.comun.Fechas
 import gt.edu.umg.finanzas.app.ui.comun.TextoTasa
@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
  * Recibe los toques y el texto del formulario y se los pasa a FormularioViewModel; dibuja su estado.
  * Al guardar con éxito se cierra y Inicio, que observa Room, ya muestra los datos nuevos.
  */
-class FormularioActivity : AppCompatActivity() {
+class FormularioActivity : ActivityProtegida() {
 
     companion object {
         private const val COLUMNAS_CATEGORIAS = 4

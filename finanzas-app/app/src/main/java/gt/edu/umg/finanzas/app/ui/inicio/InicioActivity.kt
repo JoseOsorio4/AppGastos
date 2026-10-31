@@ -1,21 +1,24 @@
 package gt.edu.umg.finanzas.app.ui.inicio
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import gt.edu.umg.finanzas.app.FinanzasApp
 import gt.edu.umg.finanzas.app.R
+import gt.edu.umg.finanzas.app.databinding.ActivityInicioBinding
 import gt.edu.umg.finanzas.app.datos.repositorios.EstadoClima
 import gt.edu.umg.finanzas.app.datos.repositorios.EstadoReflexion
-import gt.edu.umg.finanzas.app.databinding.ActivityInicioBinding
+import gt.edu.umg.finanzas.app.ui.acceso.AccesoActivity
+import gt.edu.umg.finanzas.app.ui.comun.ActivityProtegida
 import gt.edu.umg.finanzas.app.ui.comun.BarrasSistema
 import gt.edu.umg.finanzas.app.ui.comun.ChipsPeriodo
 import gt.edu.umg.finanzas.app.ui.comun.DestinoPrincipal
@@ -24,10 +27,12 @@ import gt.edu.umg.finanzas.app.ui.comun.TextoTasa
 import gt.edu.umg.finanzas.core.InfoCore
 import gt.edu.umg.finanzas.core.reglas.Dinero
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Dibuja el estado de InicioViewModel y le envía las acciones del usuario. No calcula montos. */
-class InicioActivity : AppCompatActivity() {
+class InicioActivity : ActivityProtegida() {
 
     private lateinit var binding: ActivityInicioBinding
     private lateinit var chipsPeriodo: ChipsPeriodo
@@ -46,6 +51,13 @@ class InicioActivity : AppCompatActivity() {
         setContentView(binding.root)
         BarrasSistema.reservarEspacio(binding.root, arriba = binding.cabecera, abajo = binding.barraNavegacion.root)
 
+        binding.botonSeguridad.setOnClickListener {
+            startActivity(Intent(this, AccesoActivity::class.java).putExtra("configurarPin", true))
+        }
+        binding.botonBloquear.setOnClickListener {
+            (application as FinanzasApp).dependencias.bloqueo.bloquear()
+            startActivity(Intent(this, AccesoActivity::class.java))
+        }
         binding.textoConexionCore.text = getString(R.string.version_core, InfoCore.version)
         binding.tarjetaTasa.botonReintentarTasa.setOnClickListener { viewModel.actualizarTasa(forzar = true) }
         binding.tarjetaClima.botonReintentarClima.setOnClickListener { viewModel.actualizarClima(forzar = true) }
@@ -118,6 +130,16 @@ class InicioActivity : AppCompatActivity() {
             if (estado.error || estado.errorConsulta) R.string.reintentar_reflexion else R.string.actualizar_reflexion,
         )
         botonReintentarReflexion.isEnabled = !estado.cargando
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch {
+            binding.botonBloquear.isVisible = withContext(Dispatchers.IO) {
+                try { (application as FinanzasApp).dependencias.bloqueo.tienePin() }
+                catch (_: Exception) { false }
+            }
+        }
     }
 
     private fun pintar(estado: InicioUiState) {

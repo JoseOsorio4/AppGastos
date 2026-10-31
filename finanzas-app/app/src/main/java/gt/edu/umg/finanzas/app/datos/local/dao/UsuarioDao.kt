@@ -29,6 +29,9 @@ interface UsuarioDao {
     @Query("UPDATE Usuario SET reconstruccionPendiente = :pendiente WHERE idUsuario = :idUsuario")
     suspend fun marcarReconstruccion(idUsuario: Long, pendiente: Boolean): Int
 
+    @Query("UPDATE Usuario SET nombrePerfil = :nombre WHERE idUsuario = 1")
+    suspend fun cambiarNombre(nombre: String): Int
+
     @Query("SELECT COUNT(*) FROM Usuario")
     suspend fun contar(): Int
 }

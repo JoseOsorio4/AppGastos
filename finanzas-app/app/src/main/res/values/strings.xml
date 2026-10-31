@@ -96,4 +96,20 @@
     <string name="error_movimiento_no_encontrado">Este movimiento ya no existe.</string>
     <string name="error_cargar_movimiento">No se pudo cargar el movimiento.</string>
     <string name="cambiar_tema">Cambiar tema</string>
+    <string name="tu_nombre">¿Cómo te llamas?</string>
+    <string name="bienvenida_nombre">¡Bienvenido, %1$s!</string>
+    <string name="ingresar_pin">Ingresa tu PIN</string>
+    <string name="seguridad_local">Seguridad local</string>
+    <string name="preparando_acceso">Preparando Finanzas…</string>
+    <string name="nombre_acceso">Tu nombre</string>
+    <string name="pin_actual">PIN actual o de acceso</string>
+    <string name="pin_nuevo">Nuevo PIN de 6 dígitos</string>
+    <string name="pin_confirmacion">Confirma el nuevo PIN</string>
+    <string name="guardar_pin">Guardar PIN</string>
+    <string name="continuar_acceso">Continuar</string>
+    <string name="configurar_pin">Configurar PIN</string>
+    <string name="continuar_sin_pin">Continuar sin PIN</string>
+    <string name="desactivar_pin">Desactivar PIN</string>
+    <string name="bloquear_app">Bloquear</string>
+    <string name="aviso_pin">El PIN protege la entrada a esta app en este dispositivo; no cifra la base de datos. No hay recuperación de un PIN olvidado. No borres los datos ni desinstales la app para recuperarlo: perderías los movimientos locales.</string>
 </resources>

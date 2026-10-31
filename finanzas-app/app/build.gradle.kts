@@ -15,8 +15,8 @@ android {
         applicationId = "gt.edu.umg.finanzas.app"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.3.0"
+        versionCode = 2
+        versionName = "0.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val filtroRed = if (providers.gradleProperty("pruebasEnVivo").isPresent) "annotation" else "notAnnotation"
         testInstrumentationRunnerArguments[filtroRed] = "gt.edu.umg.finanzas.app.PruebaEnVivo"

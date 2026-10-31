@@ -675,6 +675,7 @@ Numeración trazable con la versión anterior. Tus 7 puntos corresponden así: 1
 | **5** | Reconstrucción del saldo, selector de tema y comprobaciones locales | Una BD de prueba con bandera pendiente y saldo erróneo queda correcta, la bandera se apaga y repetir no cambia nada; el selector Sistema/Claro/Oscuro persiste | Dato derivado ≠ migración de esquema |
 | **6** | GTQ/USD con Banguat, `Migracion1a2`, conversor | Caso e y comprobación de i en la interfaz; la migración conserva datos (§6.2); sin red: GTQ funciona y USD indica la tasa guardada o que falta | SOAP/XML, `BigDecimal`, fotografía de la tasa |
 | **7** | Clima de Jutiapa y reflexión | Cada tarjeta muestra sus estados; desactivar la red no afecta las finanzas ni las demás tarjetas | Caché con fecha, errores recuperables |
+| **8** | Bienvenida con nombre y PIN local opcional | Instalación nueva pide nombre; actualización conserva acceso y datos; PIN bloquea reentradas, cambia/desactiva con verificación; proceso/rotación no autorizan por sí solos | Estado de UI, sesión en memoria, derivación con sal y persistencia separada de Room |
 
 ### 14.1 Casos con resultado conocido
 
@@ -697,7 +698,7 @@ Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b
 
 ## 15. Estado real
 
-El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. El alcance implementado termina en el Inc. 6. El Inc. 7 permanece pendiente.
+El estado de cada comprobación (creado / compilado / ejecutado) vive en un solo lugar: **[README → Estado real](../README.md#estado-real)**. Los pasos para comprobarlo en Windows están en **[GUIA_WINDOWS.md](GUIA_WINDOWS.md)**. Los incrementos 0–7 están implementados. El incremento 8 autorizado añade únicamente bienvenida y bloqueo local; su verificación real se registra en el README.
 
 ---
 
@@ -729,3 +730,9 @@ No habrá `ARQUITECTURA.md`, `GUIA_DEFENSA.md` ni `PLAN_INCREMENTOS.md` separado
 - **v3.6:** Inc. 4 implementado. `NavegacionPrincipal` conecta la barra en Inicio y Operaciones; desde Operaciones, "Inicio" hace `finish()`. Los chips de período pasan a `chips_periodo.xml` con `ChipsPeriodo` y `PeriodoGuardado` en `ui/comun`, compartidos por las dos pantallas. Operaciones agrupa por día con `FilaOperacion`; el detalle y la confirmación son `DialogFragment`. El Formulario edita con el extra `idEnEdicion` y carga el movimiento una sola vez. Ninguna tabla cambia.
 - **v3.7:** Inc. 5 implementado. Aviso condicional, progreso y reintento en Inicio usando `ReconstructorSaldoRoom` existente. `PreferenciaTema` y `TemaDialogo` guardan y aplican Sistema/Claro/Oscuro; el arranque restaura la elección. Sin cambios del core, dependencias ni esquema.
 - **v3.8:** Inc. 6: migración explícita v1 → v2 y fotografía USD, POST Banguat verificado, caché de tasa y estados independientes, tarjeta de tasa, conversor de dos sentidos y edición histórica. El core sigue en 0.3.0. Pruebas con instalación `.pruebas` para proteger los datos existentes; sin clima ni reflexión.
+
+## 18. Bienvenida y bloqueo local (incremento 8)
+
+El usuario autoriza ampliar el alcance local, sin cuentas ni servidor. Nombre en Usuario existente; no cambia el esquema v2. La presencia de Usuario 1 antes de la siembra distingue actualización de instalación nueva. Nombre → bienvenida → PIN confirmado o continuación sin PIN; configurar después es voluntario. El PIN tiene seis dígitos, derivación con sal aleatoria, cinco errores/30 segundos y sesión solo en memoria. Cambiar/desactivar exige el actual. Navegación interna y rotación conservan la sesión; segundo plano y proceso nuevo la cierran.
+
+No es cifrado de Room ni recuperación de credenciales. No hay borrado de movimientos ni restablecimiento silencioso. La pantalla explica la falta de recuperación del PIN; el archivo de acceso es privado y fuera de copias del sistema. Un fallo de lectura cierra el acceso y muestra error. Rutas, parámetros concretos y pruebas en README y mapa.

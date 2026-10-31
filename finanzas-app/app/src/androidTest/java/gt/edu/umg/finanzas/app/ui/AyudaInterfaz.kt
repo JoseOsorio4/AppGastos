@@ -26,6 +26,7 @@ object AyudaInterfaz {
     fun baseLimpia() = runBlocking {
         check(app.packageName.endsWith(".pruebas")) { "Ejecuta con -PdatosPrueba para proteger los datos de uso diario" }
         app.inicializacion.await()
+        app.dependencias.bloqueo.completarBienvenida()
         app.dependencias.baseDatos.clearAllTables()
         assertTrue(app.dependencias.inicializador.inicializar() is Resultado.Ok)
     }
