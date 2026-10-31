@@ -10,6 +10,8 @@ import javax.crypto.spec.PBEKeySpec
 import org.json.JSONObject
 
 class BloqueoLocal(directorio: File) {
+    private companion object { const val NOMBRE_HEREDADO = "Principal" }
+
     private val archivo = AtomicFile(File(directorio, "acceso.json"))
     private var sesion = false
     private var generacion = 0L
@@ -24,14 +26,19 @@ class BloqueoLocal(directorio: File) {
         }
         catch (error: Exception) { archivo.failWrite(salida); throw error }
     }
-    @Synchronized fun preparar(existiaUsuario: Boolean) {
-        if (!archivo.baseFile.exists()) guardar(JSONObject().put("bienvenida", existiaUsuario))
+    @Synchronized fun preparar(nombrePerfilAnterior: String?) {
+        if (!archivo.baseFile.exists()) guardar(JSONObject()
+            .put("bienvenida", nombrePerfilAnterior != null && nombrePerfilAnterior != NOMBRE_HEREDADO)
+            .put("personalizacionOpcional", nombrePerfilAnterior == NOMBRE_HEREDADO))
     }
+    @Synchronized fun personalizacionOpcional(nombreActual: String) =
+        leer().optBoolean("personalizacionOpcional") && nombreActual == NOMBRE_HEREDADO
+    @Synchronized fun confirmarNombre() { guardar(leer().put("personalizacionOpcional", false)) }
     @Synchronized fun tienePin() = leer().has("hash")
     @Synchronized fun necesitaBienvenida() = !leer().optBoolean("bienvenida")
     @Synchronized fun bloqueado() = tienePin() && !sesion
     @Synchronized fun bloquear() { sesion = false; generacion++ }
-    @Synchronized fun completarBienvenida() { guardar(leer().put("bienvenida", true)) }
+    @Synchronized fun completarBienvenida() { guardar(leer().put("bienvenida", true).put("personalizacionOpcional", false)) }
     @Synchronized fun revision() = generacion
     @Synchronized fun abrir(pin: String, revision: Long): Boolean {
         val correcto = verificar(pin)

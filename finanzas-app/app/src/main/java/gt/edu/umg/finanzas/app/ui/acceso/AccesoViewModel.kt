@@ -12,7 +12,7 @@ import kotlinx.coroutines.withContext
 
 enum class PasoAcceso { CARGANDO, NOMBRE, BIENVENIDA, PIN, CONFIGURAR, LISTO }
 data class AccesoUiState(val paso: PasoAcceso = PasoAcceso.CARGANDO, val nombre: String = "",
-    val tienePin: Boolean = false, val ocupado: Boolean = false, val error: String? = null)
+    val tienePin: Boolean = false, val personalizacionOpcional: Boolean = false, val ocupado: Boolean = false, val error: String? = null)
 
 class AccesoViewModel(application: android.app.Application) : AndroidViewModel(application) {
     private val app = application as FinanzasApp
@@ -31,21 +31,23 @@ class AccesoViewModel(application: android.app.Application) : AndroidViewModel(a
     }
     fun actualizar(configurar: Boolean) = operar {
         val nombre = app.dependencias.baseDatos.usuarioDao().obtenerPorId(1)?.nombrePerfil.orEmpty()
+        val opcional = bloqueo.personalizacionOpcional(nombre)
         val anterior = mutable.value.paso
         val paso = when {
             bloqueo.bloqueado() -> PasoAcceso.PIN
             bloqueo.necesitaBienvenida() -> if (anterior == PasoAcceso.BIENVENIDA || anterior == PasoAcceso.CONFIGURAR)
-                anterior else if (nombre.isNotBlank()) PasoAcceso.BIENVENIDA else PasoAcceso.NOMBRE
+                anterior else if (opcional || nombre.isBlank()) PasoAcceso.NOMBRE else PasoAcceso.BIENVENIDA
             configurar -> PasoAcceso.CONFIGURAR
             else -> PasoAcceso.LISTO
         }
-        mutable.value = mutable.value.copy(paso = paso, nombre = nombre, tienePin = bloqueo.tienePin())
+        mutable.value = mutable.value.copy(paso = paso, nombre = nombre, tienePin = bloqueo.tienePin(), personalizacionOpcional = opcional)
     }
     fun nombre(texto: String) = operar {
         val nombre = texto.trim()
         require(nombre.length in 1..40 && nombre.none { it.isISOControl() }) { "Escribe un nombre de 1 a 40 caracteres." }
         check(app.dependencias.baseDatos.usuarioDao().cambiarNombre(nombre) == 1) { "No se pudo guardar el nombre. Reintenta." }
-        mutable.value = mutable.value.copy(nombre = nombre, paso = PasoAcceso.BIENVENIDA)
+        bloqueo.confirmarNombre()
+        mutable.value = mutable.value.copy(nombre = nombre, paso = PasoAcceso.BIENVENIDA, personalizacionOpcional = false)
     }
     fun configurar() { mutable.value = mutable.value.copy(paso = PasoAcceso.CONFIGURAR, error = null) }
     fun continuar() = operar { check(!bloqueo.bloqueado()); bloqueo.completarBienvenida(); mutable.value = mutable.value.copy(paso = PasoAcceso.LISTO) }

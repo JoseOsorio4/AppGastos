@@ -31,7 +31,7 @@ class FinanzasApp : Application() {
         AppCompatDelegate.setDefaultNightMode(dependencias.preferenciaTema.tema.value.modoNocturno)
         registerActivityLifecycleCallbacks(CicloBloqueo(this))
         inicializacion = alcance.async {
-            dependencias.bloqueo.preparar(dependencias.baseDatos.usuarioDao().obtenerPorId(1) != null)
+            dependencias.bloqueo.preparar(dependencias.baseDatos.usuarioDao().obtenerPorId(1)?.nombrePerfil)
             dependencias.inicializador.inicializar().also { resultado ->
                 if (resultado is Resultado.ErrorAlmacenamiento) {
                     Log.e(ETIQUETA, "No se pudieron crear los datos iniciales", resultado.causa)

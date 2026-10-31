@@ -431,15 +431,15 @@ Al terminar cada incremento: cambia "Pendiente" por la ruta y la función reales
 
 | Control / ruta XML | Activity y acción | Estado / coordinación | Datos y regla |
 |---|---|---|---|
-| `activity_acceso.xml / entradaNombre, botonAcceso` | `ui/acceso/AccesoActivity` entrega el nombre | `AccesoViewModel.nombre` valida 1–40 caracteres y pasa a BIENVENIDA | `UsuarioDao.cambiarNombre` actualiza solo `Usuario.nombrePerfil`; core/saldo sin cambios |
+| `activity_acceso.xml / entradaNombre, botonAcceso` | `ui/acceso/AccesoActivity` entrega el nombre | `AccesoViewModel.nombre` valida 1–40 caracteres, confirma la personalización y pasa a BIENVENIDA | `UsuarioDao.cambiarNombre` actualiza solo `Usuario.nombrePerfil`; core/saldo sin cambios |
 | `tituloAcceso, botonConfigurarPin` | Dibuja «Bienvenido, nombre»; abre configuración | `PasoAcceso.BIENVENIDA` → `CONFIGURAR` | Nombre leído de Room; al reabrir un nombre ya guardado se omite la pregunta; no cuenta remota |
-| `botonContinuar` | Continuar sin PIN o Volver desde ajustes | `AccesoViewModel.continuar` | `BloqueoLocal.completarBienvenida`; nunca permite salir de un bloqueo activo |
+| `botonContinuar` | Saltar y entrar sin PIN en NOMBRE heredado opcional; Continuar sin PIN en BIENVENIDA o Volver desde ajustes | `AccesoViewModel.continuar` | `BloqueoLocal.completarBienvenida` persiste la decisión y apaga `personalizacionOpcional`; nunca permite salir de un bloqueo activo |
 | `entradaPinNuevo, entradaPinConfirmacion, botonAcceso` | Entrega los textos y limpia los campos | `AccesoViewModel.guardar`, estado ocupado/error | `BloqueoLocal.cambiar`: seis dígitos, confirmación, actual si existía; sal y derivación en archivo privado |
 | `entradaPinActual, botonAcceso, errorAcceso` | Recibe el PIN y dibuja error; no lo conserva en estado | `AccesoViewModel.ingresar` / `PasoAcceso.PIN` | `BloqueoLocal.abrir`: comparación constante, intentos/espera persistidos, revisión de sesión |
 | `botonDesactivarPin` | Solicita desactivar con el actual | `AccesoViewModel.desactivar` | `BloqueoLocal.desactivar` verifica antes de quitar la derivación. No escribe Room |
 | `activity_inicio.xml / botonSeguridad` | `InicioActivity` abre Acceso con intención de configurar | `AccesoViewModel.actualizar` decide PIN o CONFIGURAR | Misma sesión local; configuración voluntaria para instalaciones anteriores |
 | `activity_inicio.xml / botonBloquear` | `InicioActivity` cierra sesión y abre Acceso (solo visible con PIN) | Bloqueo explícito | `BloqueoLocal.bloquear`; solo memoria, no elimina datos |
-| Inicio, Formulario y Operaciones / reentrada | Las tres extienden `ui/comun/ActivityProtegida` | Comprueba acceso antes de mostrar contenido; FLAG_SECURE con PIN | `FinanzasApp` prepara el acceso antes de sembrar; `CicloBloqueo` bloquea al detener la última Activity salvo rotación |
+| Inicio, Formulario y Operaciones / reentrada | Las tres extienden `ui/comun/ActivityProtegida` | Comprueba acceso antes de mostrar contenido; FLAG_SECURE con PIN | `FinanzasApp` pasa el nombre anterior (o null si no existe usuario) a `BloqueoLocal.preparar` antes de sembrar; `CicloBloqueo` bloquea al detener la última Activity salvo rotación |
 
 `datos/preferencias/BloqueoLocal.kt` es el único dueño de credenciales, sesión y contador de intentos. Archivo `noBackupFilesDir/acceso.json`: AtomicFile con lectura posterior, sal, hash y marca de bienvenida; sin PIN claro. `AccesoUiState` contiene paso, nombre, existencia de PIN, ocupado y error; no secretos. El PIN no se guarda en SavedStateHandle. Las fórmulas, transacciones y esquema financiero no cambian.
 
@@ -448,3 +448,11 @@ Pruebas en `ui/AccesoTest.kt`; `AyudaInterfaz.baseLimpia` completa la bienvenida
 Revisión ADB del incremento 8: PID 7128 → 7979 después de HOME / am kill / Recientes, PIN obligatorio; giro horizontal/vertical mantiene bloqueo y el ingreso Q 123.45 y saldo sobreviven. Capturas de bienvenida y límites en README. Se cerró por confirmación del usuario la revisión humana previa del segundo detalle, teclado/Guardar y tema.
 
 Regresión final del incremento 8: **85/85 sin red en API 37** (76 previas + 9 AccesoTest); core inicial **55/55**. API 24–25 y nueva función de PIN en teléfono pendientes. Room v2 y APIs sin cambios; la nueva siembra deja nombre vacío solo hasta completarlo, mientras INSERT OR IGNORE conserva todo usuario anterior.
+
+### Auditoría del perfil heredado (0.4.1)
+
+`BloqueoLocal.preparar(nombrePerfilAnterior)` distingue null / «Principal» / nombre personalizado al crear el archivo de acceso. `personalizacionOpcional` queda guardada en ese archivo; `confirmarNombre` la apaga al guardar el nombre, y `completarBienvenida` al saltar o continuar. No se reabre una decisión ya completada. `AccesoUiState.personalizacionOpcional` permite a `AccesoActivity.pintar` mostrar «Tu bienvenida (opcional)» y el `botonContinuar` con «Saltar y entrar sin PIN» usando recursos de `strings.xml`; se reutiliza `activity_acceso.xml` sin alterar el diseño financiero.
+
+Pruebas: `ui/PersonalizacionActualizacionTest.kt` cubre «Principal» → personalizar y bienvenida, «Principal» → saltar sin PIN y reapertura, nombre personalizado → acceso directo. `AccesoTest.bienvenida_nombre_y_pin_opcional_en_pantalla` conserva el alta nueva → nombre requerido y bienvenida, sin botón para saltar la pregunta inicial. Los perfiles antiguos comparan usuario, saldo, movimientos y preferencias reales antes/después. `ui/AccesoTest.kt` sigue comprobando PIN; `AyudaInterfaz.esperarAccesoListo` comparte la espera de IO entre ambas clases. Recorridos dirigidos **12/12 en API 37**.
+
+Regresión de esta auditoría: **88/88 sin red en API 37**, paquete `.pruebas`; core **55/55** y compilación normal **0.4.1 (código 3)** correctos. No se instala el APK normal ni se modifica su base; la actualización en el teléfono y API 24–25 quedan pendientes.

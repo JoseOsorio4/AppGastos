@@ -112,4 +112,6 @@
     <string name="desactivar_pin">Desactivar PIN</string>
     <string name="bloquear_app">Bloquear</string>
     <string name="aviso_pin">El PIN protege la entrada a esta app en este dispositivo; no cifra la base de datos. No hay recuperación de un PIN olvidado. No borres los datos ni desinstales la app para recuperarlo: perderías los movimientos locales.</string>
+    <string name="personalizar_bienvenida">Tu bienvenida (opcional)</string>
+    <string name="saltar_personalizacion">Saltar y entrar sin PIN</string>
 </resources>

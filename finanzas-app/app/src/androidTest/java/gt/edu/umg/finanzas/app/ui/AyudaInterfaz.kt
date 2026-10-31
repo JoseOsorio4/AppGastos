@@ -13,6 +13,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.platform.app.InstrumentationRegistry
 import gt.edu.umg.finanzas.app.FinanzasApp
+import gt.edu.umg.finanzas.app.ui.acceso.AccesoActivity
 import gt.edu.umg.finanzas.core.resultado.Resultado
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
@@ -65,4 +66,24 @@ object AyudaInterfaz {
             }
         }
     }
+    // La derivación del PIN termina fuera del hilo que espera Espresso.
+    fun esperarAccesoListo() {
+        val instrumento = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+        val limite = System.currentTimeMillis() + 15_000
+        while (true) {
+            var ocupado = false
+            instrumento.runOnMainSync {
+                val actividades = androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED)
+                ocupado = actividades.filterIsInstance<AccesoActivity>().any {
+                    val estado = androidx.lifecycle.ViewModelProvider(it)[gt.edu.umg.finanzas.app.ui.acceso.AccesoViewModel::class.java].estado.value
+                    estado.ocupado || estado.paso == gt.edu.umg.finanzas.app.ui.acceso.PasoAcceso.CARGANDO
+                }
+            }
+            if (!ocupado) return
+            check(System.currentTimeMillis() < limite) { "El acceso no terminó de responder" }
+            Thread.sleep(50)
+        }
+    }
+
 }

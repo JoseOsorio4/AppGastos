@@ -65,7 +65,7 @@ class AccesoActivity : AppCompatActivity() {
         val pin = estado.paso == PasoAcceso.PIN
         val ajustes = estado.paso == PasoAcceso.CONFIGURAR
         vista.tituloAcceso.text = if (bienvenida) getString(R.string.bienvenida_nombre, estado.nombre) else getString(when {
-            nombre -> R.string.tu_nombre; pin -> R.string.ingresar_pin; ajustes -> R.string.seguridad_local; else -> R.string.preparando_acceso
+            nombre -> if (estado.personalizacionOpcional) R.string.personalizar_bienvenida else R.string.tu_nombre; pin -> R.string.ingresar_pin; ajustes -> R.string.seguridad_local; else -> R.string.preparando_acceso
         })
         vista.entradaNombre.isVisible = nombre
         vista.entradaPinActual.isVisible = pin || ajustes && estado.tienePin
@@ -75,8 +75,12 @@ class AccesoActivity : AppCompatActivity() {
         vista.botonAcceso.isVisible = nombre || pin || ajustes || estado.error != null
         vista.botonAcceso.setText(if (ajustes) R.string.guardar_pin else R.string.continuar_acceso)
         vista.botonConfigurarPin.isVisible = bienvenida
-        vista.botonContinuar.isVisible = bienvenida || ajustes
-        vista.botonContinuar.setText(if (estado.tienePin) R.string.volver else R.string.continuar_sin_pin)
+        vista.botonContinuar.isVisible = bienvenida || ajustes || nombre && estado.personalizacionOpcional
+        vista.botonContinuar.setText(when {
+            nombre && estado.personalizacionOpcional -> R.string.saltar_personalizacion
+            estado.tienePin -> R.string.volver
+            else -> R.string.continuar_sin_pin
+        })
         vista.botonDesactivarPin.isVisible = ajustes && estado.tienePin
         vista.errorAcceso.text = estado.error
         vista.errorAcceso.isVisible = estado.error != null
