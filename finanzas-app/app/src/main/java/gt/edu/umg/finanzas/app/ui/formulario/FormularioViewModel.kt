@@ -52,11 +52,10 @@ class FormularioViewModel(
     init {
         if (tipoCambio != null) {
             viewModelScope.launch { tipoCambio.estado.collect { tasa -> _estado.update { it.copy(estadoTasa = tasa) } } }
-            actualizarTasa()
+            if (idEnEdicion == null) actualizarTasa()
         }
-        // Tras rotar o recrear el proceso, los campos ya vienen de SavedStateHandle: no se vuelve a
-        // cargar el movimiento para no borrar lo que el usuario cambió.
-        if (idEnEdicion != null && estadoGuardado.get<Boolean>(CLAVE_CARGADO) != true) cargarMovimiento(idEnEdicion)
+        // Al recrear se relee la fotografía de Room, sin pisar los campos que el usuario ya cambió.
+        if (idEnEdicion != null) cargarMovimiento(idEnEdicion, estadoGuardado.get<Boolean>(CLAVE_CARGADO) != true)
         // Las categorías se leen de Room según el tipo elegido; no hace falta guardarlas en SavedStateHandle.
         viewModelScope.launch {
             _estado.map { it.tipo }
@@ -129,7 +128,7 @@ class FormularioViewModel(
         cambiarCampos { it.copy(descripcion = texto, errores = it.errores.copy(descripcion = null)) }
     }
 
-    private fun cargarMovimiento(id: Long) {
+    private fun cargarMovimiento(id: Long, completarCampos: Boolean) {
         _estado.update { it.copy(cargandoMovimiento = true) }
         viewModelScope.launch {
             when (val leido = servicio.obtenerParaEditar(id)) {
@@ -137,16 +136,16 @@ class FormularioViewModel(
                     val movimiento = leido.valor
                     val conversion = movimiento.conversion
                     cambiarCampos {
-                        it.copy(
+                        val campos = if (completarCampos) it.copy(
                             tipo = movimiento.tipo,
                             montoTexto = Dinero.aTexto(conversion?.montoOriginalCentavos ?: movimiento.montoCentavos),
                             moneda = if (conversion == null) Moneda.GTQ else Moneda.USD,
-                            tasaHistorica = conversion?.tasa,
                             idCategoria = movimiento.idCategoria,
                             fecha = movimiento.fecha,
                             descripcion = movimiento.descripcion,
-                            cargandoMovimiento = false,
-                        )
+                        ) else it
+                        campos.copy(tasaHistorica = conversion?.tasa, recargoHistorico = conversion?.recargoGtqPorUsd,
+                            tipoHistorico = movimiento.tipo, cargandoMovimiento = false)
                     }
                     estadoGuardado[CLAVE_CARGADO] = true
                 }
@@ -218,6 +217,8 @@ class FormularioViewModel(
         estadoGuardado[CLAVE_TASA_HISTORICA] = campos.tasaHistorica?.gtqPorUsd?.toPlainString()
         estadoGuardado[CLAVE_FECHA_TASA] = campos.tasaHistorica?.fechaReferencia?.toString()
         estadoGuardado[CLAVE_FUENTE_TASA] = campos.tasaHistorica?.fuente
+        estadoGuardado[CLAVE_RECARGO_HISTORICO] = campos.recargoHistorico?.toPlainString()
+        estadoGuardado[CLAVE_TIPO_HISTORICO] = campos.tipoHistorico?.name
     }
 
     private fun leerCampos() = FormularioUiState(
@@ -231,6 +232,8 @@ class FormularioViewModel(
         tasaHistorica = estadoGuardado.get<String>(CLAVE_TASA_HISTORICA)?.let {
             TasaCambio(BigDecimal(it), LocalDate.parse(estadoGuardado[CLAVE_FECHA_TASA]), checkNotNull(estadoGuardado[CLAVE_FUENTE_TASA]))
         },
+        recargoHistorico = estadoGuardado.get<String>(CLAVE_RECARGO_HISTORICO)?.let(::BigDecimal),
+        tipoHistorico = estadoGuardado.get<String>(CLAVE_TIPO_HISTORICO)?.let(TipoMovimiento::valueOf),
     )
 
     companion object {
@@ -241,6 +244,8 @@ class FormularioViewModel(
         private const val CLAVE_TASA_HISTORICA = "tasaHistorica"
         private const val CLAVE_FECHA_TASA = "fechaTasa"
         private const val CLAVE_FUENTE_TASA = "fuenteTasa"
+        private const val CLAVE_RECARGO_HISTORICO = "recargoHistorico"
+        private const val CLAVE_TIPO_HISTORICO = "tipoHistorico"
         internal const val CLAVE_TIPO = "tipo"
         internal const val CLAVE_MONTO = "montoTexto"
         internal const val CLAVE_CATEGORIA = "idCategoria"

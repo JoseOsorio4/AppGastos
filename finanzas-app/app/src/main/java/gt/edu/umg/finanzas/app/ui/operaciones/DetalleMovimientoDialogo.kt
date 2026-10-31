@@ -17,11 +17,9 @@ import gt.edu.umg.finanzas.app.databinding.DialogoDetalleMovimientoBinding
 import gt.edu.umg.finanzas.app.ui.comun.Fechas
 import gt.edu.umg.finanzas.app.ui.comun.MontoConSigno
 import gt.edu.umg.finanzas.app.ui.comun.RecursosCategoria
-import gt.edu.umg.finanzas.app.ui.comun.TextoTasa
+import gt.edu.umg.finanzas.app.ui.comun.TextoConversionUsd
 import gt.edu.umg.finanzas.app.ui.formulario.FormularioActivity
-import gt.edu.umg.finanzas.core.dominio.Moneda
 import gt.edu.umg.finanzas.core.dominio.MovimientoVista
-import gt.edu.umg.finanzas.core.reglas.Dinero
 import kotlinx.coroutines.launch
 
 /**
@@ -77,9 +75,7 @@ class DetalleMovimientoDialogo : DialogFragment() {
         )
         vista.textoDescripcionDetalle.text = movimiento.descripcion
         vista.textoConversionDetalle.isVisible = movimiento.conversion != null
-        vista.textoConversionDetalle.text = movimiento.conversion?.let {
-            "${getString(R.string.original_usd, Dinero.formatear(it.montoOriginalCentavos, Moneda.USD))}\n${TextoTasa.referencia(contexto, it.tasa)}"
-        }
+        vista.textoConversionDetalle.text = TextoConversionUsd.detalle(contexto, movimiento)
     }
 
     companion object {

@@ -7,6 +7,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import gt.edu.umg.finanzas.core.dominio.Moneda
 import gt.edu.umg.finanzas.core.dominio.TipoMovimiento
+import gt.edu.umg.finanzas.core.reglas.ConversorMoneda
 import java.math.BigDecimal
 
 /**
@@ -54,4 +55,7 @@ data class TransaccionEntity(
     @ColumnInfo(defaultValue = "'1'") val tasaGtqPorUsd: BigDecimal = BigDecimal.ONE,
     val fechaTasaEpochDay: Long? = null,
     val fuenteTasa: String? = null,
+    @ColumnInfo(defaultValue = "'0'") val recargoGtqPorUsd: BigDecimal = BigDecimal.ZERO,
+    @ColumnInfo(defaultValue = "'1'") val tasaAplicadaGtqPorUsd: BigDecimal =
+        ConversorMoneda.tasaAplicada(tasaGtqPorUsd, recargoGtqPorUsd),
 )

@@ -17,7 +17,7 @@ import gt.edu.umg.finanzas.app.datos.local.entidades.UsuarioEntity
  */
 @Database(
     entities = [UsuarioEntity::class, CategoriaEntity::class, TransaccionEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 @TypeConverters(Convertidores::class)
@@ -33,7 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
         // Sin fallbackToDestructiveMigration: si falta una migración, la app falla en lugar de borrar datos.
         fun crear(context: Context, nombreArchivo: String = NOMBRE_ARCHIVO): AppDatabase =
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, nombreArchivo)
-                .addMigrations(Migracion1a2)
+                .addMigrations(Migracion1a2, Migracion2a3)
                 .build()
     }
 }

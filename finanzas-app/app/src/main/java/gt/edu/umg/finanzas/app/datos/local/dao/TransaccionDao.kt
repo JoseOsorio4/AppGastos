@@ -63,6 +63,7 @@ interface TransaccionDao {
         """
         SELECT t.idTransaccion, t.tipo, t.montoCentavos, t.descripcion, t.fechaEpochDay,
                t.monedaOriginal, t.montoOriginalCentavos, t.tasaGtqPorUsd, t.fechaTasaEpochDay, t.fuenteTasa,
+               t.recargoGtqPorUsd, t.tasaAplicadaGtqPorUsd,
                c.clave AS claveCategoria, c.nombre AS nombreCategoria
         FROM Transaccion t JOIN Categoria c ON c.idCategoria = t.idCategoria
         WHERE t.fechaEpochDay BETWEEN :desde AND :hasta

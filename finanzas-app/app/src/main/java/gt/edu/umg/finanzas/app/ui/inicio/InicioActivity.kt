@@ -94,6 +94,7 @@ class InicioActivity : ActivityProtegida() {
                 launch {
                     viewModel.estadoTasa.collect { tasa ->
                         binding.tarjetaTasa.textoTasa.text = TextoTasa.paraTarjeta(this@InicioActivity, tasa)
+                        binding.tarjetaTasa.textoRecargoEstimado.text = TextoTasa.avisoRecargo(this@InicioActivity, tasa.dato?.tasa)
                         binding.tarjetaTasa.botonReintentarTasa.isEnabled = !tasa.cargando
                         binding.tarjetaTasa.botonConversor.isEnabled = tasa.dato != null
                     }

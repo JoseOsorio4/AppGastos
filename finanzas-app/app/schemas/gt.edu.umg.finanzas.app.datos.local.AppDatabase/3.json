@@ -1,0 +1,266 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "77eb5649de93d6b6d43da300b9fe0fbf",
+    "entities": [
+      {
+        "tableName": "Usuario",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idUsuario` INTEGER NOT NULL, `nombrePerfil` TEXT NOT NULL, `saldoCentavos` INTEGER NOT NULL, `reconstruccionPendiente` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`idUsuario`))",
+        "fields": [
+          {
+            "fieldPath": "idUsuario",
+            "columnName": "idUsuario",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombrePerfil",
+            "columnName": "nombrePerfil",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "saldoCentavos",
+            "columnName": "saldoCentavos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reconstruccionPendiente",
+            "columnName": "reconstruccionPendiente",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "idUsuario"
+          ]
+        }
+      },
+      {
+        "tableName": "Categoria",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idCategoria` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `clave` TEXT NOT NULL, `nombre` TEXT NOT NULL, `tipo` TEXT NOT NULL, `activa` INTEGER NOT NULL DEFAULT 1)",
+        "fields": [
+          {
+            "fieldPath": "idCategoria",
+            "columnName": "idCategoria",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clave",
+            "columnName": "clave",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nombre",
+            "columnName": "nombre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activa",
+            "columnName": "activa",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "idCategoria"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_Categoria_clave",
+            "unique": true,
+            "columnNames": [
+              "clave"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_Categoria_clave` ON `${TABLE_NAME}` (`clave`)"
+          }
+        ]
+      },
+      {
+        "tableName": "Transaccion",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idTransaccion` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `idUsuario` INTEGER NOT NULL, `idCategoria` INTEGER NOT NULL, `tipo` TEXT NOT NULL, `montoCentavos` INTEGER NOT NULL, `descripcion` TEXT NOT NULL, `fechaEpochDay` INTEGER NOT NULL, `monedaOriginal` TEXT NOT NULL DEFAULT 'GTQ', `montoOriginalCentavos` INTEGER NOT NULL DEFAULT 0, `tasaGtqPorUsd` TEXT NOT NULL DEFAULT '1', `fechaTasaEpochDay` INTEGER, `fuenteTasa` TEXT, `recargoGtqPorUsd` TEXT NOT NULL DEFAULT '0', `tasaAplicadaGtqPorUsd` TEXT NOT NULL DEFAULT '1', FOREIGN KEY(`idUsuario`) REFERENCES `Usuario`(`idUsuario`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`idCategoria`) REFERENCES `Categoria`(`idCategoria`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "idTransaccion",
+            "columnName": "idTransaccion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idUsuario",
+            "columnName": "idUsuario",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idCategoria",
+            "columnName": "idCategoria",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "montoCentavos",
+            "columnName": "montoCentavos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcion",
+            "columnName": "descripcion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaEpochDay",
+            "columnName": "fechaEpochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "monedaOriginal",
+            "columnName": "monedaOriginal",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'GTQ'"
+          },
+          {
+            "fieldPath": "montoOriginalCentavos",
+            "columnName": "montoOriginalCentavos",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "tasaGtqPorUsd",
+            "columnName": "tasaGtqPorUsd",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'1'"
+          },
+          {
+            "fieldPath": "fechaTasaEpochDay",
+            "columnName": "fechaTasaEpochDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fuenteTasa",
+            "columnName": "fuenteTasa",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "recargoGtqPorUsd",
+            "columnName": "recargoGtqPorUsd",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'0'"
+          },
+          {
+            "fieldPath": "tasaAplicadaGtqPorUsd",
+            "columnName": "tasaAplicadaGtqPorUsd",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'1'"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "idTransaccion"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_Transaccion_fechaEpochDay",
+            "unique": false,
+            "columnNames": [
+              "fechaEpochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Transaccion_fechaEpochDay` ON `${TABLE_NAME}` (`fechaEpochDay`)"
+          },
+          {
+            "name": "index_Transaccion_tipo_fechaEpochDay",
+            "unique": false,
+            "columnNames": [
+              "tipo",
+              "fechaEpochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Transaccion_tipo_fechaEpochDay` ON `${TABLE_NAME}` (`tipo`, `fechaEpochDay`)"
+          },
+          {
+            "name": "index_Transaccion_idCategoria",
+            "unique": false,
+            "columnNames": [
+              "idCategoria"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Transaccion_idCategoria` ON `${TABLE_NAME}` (`idCategoria`)"
+          },
+          {
+            "name": "index_Transaccion_idUsuario",
+            "unique": false,
+            "columnNames": [
+              "idUsuario"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Transaccion_idUsuario` ON `${TABLE_NAME}` (`idUsuario`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "Usuario",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "idUsuario"
+            ],
+            "referencedColumns": [
+              "idUsuario"
+            ]
+          },
+          {
+            "table": "Categoria",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "idCategoria"
+            ],
+            "referencedColumns": [
+              "idCategoria"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '77eb5649de93d6b6d43da300b9fe0fbf')"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="aviso_recargo_usd">Para gastos en USD: +Q %1$s por cada USD (recargo estimado); tasa aplicada Q %2$s por USD.</string>
+    <string name="aviso_recargo_sin_tasa">Para gastos en USD: +Q %1$s por cada USD (recargo estimado). La tasa aplicada se mostrará cuando haya referencia.</string>
+    <string name="referencia_oficial_usd">Referencia oficial: %1$s</string>
+    <string name="condiciones_recargo_usd">Recargo estimado: Q %1$s por cada USD\nTasa aplicada: Q %2$s por USD</string>
+    <string name="recargo_historico">Se conserva el recargo guardado de este movimiento.</string>
+    <string name="recargo_cambio_tipo">Al cambiar el tipo se conserva la referencia histórica y se aplica el recargo del tipo elegido.</string>
+    <string name="desglose_recargo_usd">Equivale a %1$s\nReferencia oficial: %2$s\nRecargo estimado: %3$s\nDesglose ajustado al centavo para coincidir con el total.</string>
+</resources>

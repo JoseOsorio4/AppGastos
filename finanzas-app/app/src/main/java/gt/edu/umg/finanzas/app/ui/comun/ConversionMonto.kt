@@ -1,10 +1,13 @@
 package gt.edu.umg.finanzas.app.ui.comun
 
+import gt.edu.umg.finanzas.core.dominio.ConversionAplicada
+import gt.edu.umg.finanzas.core.dominio.DesgloseConversion
 import gt.edu.umg.finanzas.core.dominio.Moneda
 import gt.edu.umg.finanzas.core.dominio.TasaCambio
 import gt.edu.umg.finanzas.core.reglas.ConversorMoneda
 import gt.edu.umg.finanzas.core.reglas.Dinero
 import gt.edu.umg.finanzas.core.resultado.Resultado
+import java.math.BigDecimal
 
 enum class SentidoConversion(val entrada: Moneda, val salida: Moneda) {
     USD_A_GTQ(Moneda.USD, Moneda.GTQ),
@@ -13,19 +16,26 @@ enum class SentidoConversion(val entrada: Moneda, val salida: Moneda) {
 
 /** Adaptación del texto de pantalla al core; aquí no hay fórmulas ni redondeos. */
 object ConversionMonto {
-    fun calcular(texto: String, sentido: SentidoConversion, tasa: TasaCambio?): Resultado<Long>? {
+    fun calcular(texto: String, sentido: SentidoConversion, tasa: TasaCambio?): Resultado<Long>? =
+        adaptar(texto, tasa) { monto, referencia ->
+            when (sentido) {
+                SentidoConversion.USD_A_GTQ -> ConversorMoneda.usdAGtq(monto, referencia)
+                SentidoConversion.GTQ_A_USD -> ConversorMoneda.gtqAUsd(monto, referencia)
+            }
+        }
+
+    fun paraMovimiento(texto: String, tasa: TasaCambio?, recargo: BigDecimal): Resultado<DesgloseConversion>? =
+        adaptar(texto, tasa) { monto, referencia ->
+            ConversorMoneda.desglosar(ConversionAplicada(monto, referencia, recargo))
+        }
+
+    private fun <T> adaptar(texto: String, tasa: TasaCambio?, calcular: (Long, TasaCambio) -> T): Resultado<T>? {
         if (texto.isBlank() || tasa == null) return null
         val monto = when (val leido = Dinero.desdeTexto(texto)) {
             is Resultado.Ok -> leido.valor
             is Resultado.Fallo -> return leido
         }
-        return try {
-            Resultado.Ok(when (sentido) {
-                SentidoConversion.USD_A_GTQ -> ConversorMoneda.usdAGtq(monto, tasa)
-                SentidoConversion.GTQ_A_USD -> ConversorMoneda.gtqAUsd(monto, tasa)
-            })
-        } catch (_: ArithmeticException) {
-            Resultado.ErrorNegocio("El resultado es demasiado grande")
-        }
+        return try { Resultado.Ok(calcular(monto, tasa)) }
+        catch (_: ArithmeticException) { Resultado.ErrorNegocio("El resultado es demasiado grande") }
     }
 }

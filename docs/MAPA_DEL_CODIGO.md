@@ -473,3 +473,19 @@ Regresión de esta auditoría: **88/88 sin red en API 37**, paquete `.pruebas`; 
 Ejecutadas las cuatro pruebas nuevas en tamaño normal **4/4** y en **360 × 640 dp / fuente 2.0, 4/4**, siempre en API 37, con Gboard inferior y temas claro/oscuro. Capturas finales en `referencias/capturas/acceso-*.png` y comparaciones en INTERFAZ; PIN activo conserva protección de capturas. Pendiente de comprobar el nuevo diseño en el teléfono y API 24–25.
 
 Regresión final de 0.4.2 **92/92 sin red**, 0 fallos/errores/omitidas: AccesoTest 9, PersonalizacionActualizacionTest 3, AccesoAparienciaTest 2, TransicionAccesoTest 2 y las 76 pruebas previas. Core inicial **55/55** y APK normal **0.4.2 (código 4)** compilados; instalación normal, esquema, datos financieros y APIs sin cambios.
+
+### Recargo estimado USD (app 0.5.0 / core 0.4.0 / Room v3)
+
+| Función | Presentación y coordinación | Core / almacenamiento |
+|---|---|---|
+| Aviso bajo tasa oficial | tarjeta_tasa.xml / textoRecargoEstimado; InicioActivity → TextoTasa.avisoRecargo | ConversorMoneda calcula aplicada; cliente, lector y caché no alteran la referencia |
+| Vista previa | activity_formulario.xml / textoTasaFormulario y textoConversionPrevia existentes; FormularioActivity → TextoConversionUsd | FormularioUiState → ConversionMonto → ConversorMoneda; sin fórmulas en Activity |
+| Edición restaurada | FormularioViewModel.cargarMovimiento; SavedStateHandle conserva referencia, recargo y tipo histórico | Relee fotografía de Room sin pisar campos editados ni consultar API |
+| Reglas | ConversionAplicada añade recargo; DesgloseConversion nombra referencia/recargo/total | ConversorMoneda.recargoPara y tasaAplicada; ValidadorMovimiento recibe anterior y aplica la política histórica |
+| Escritura atómica | OperacionesMovimientoRoom entrega anterior al core | TransaccionEntity/Mapeos guardan oficial, recargo, aplicada, original, fecha y fuente junto con movimiento/saldo |
+| Detalle | DetalleMovimientoDialogo → TextoConversionUsd | TransaccionDao → MovimientoFila → Mapeos; total GTQ realmente guardado, sin red |
+| Migración | Migracion2a3 registrada en AppDatabase v3; schemas/…/3.json | ADD COLUMN y copia textual de tasa previa; cero recargo anterior. v1→v2 intacta |
+
+Pruebas añadidas: RecargoUsdTest (8 core), RecargoUsdRoomTest (3), Migracion2a3Test (2), FormularioViewModelTest (+2), RecargoUsdInterfazTest (4). Ejecutadas dirigidas: core 63/63, Room/ViewModel 13/13 y UI USD 7/7. Migración conserva nombre, saldo, bandera y categoría archivada; edición/reapertura no duplica el recargo. El fixture de SavedStateHandle no equivale a muerte real del proceso.
+
+Regresión completa sin red: 102/103 correctas; una prueba existente de PIN fue interrumpida por Espresso. Repetición aislada del mismo caso, sin cambiar código: 1/1 correcta. No se declara una corrida única 103/103 verde. APK normal 0.5.0 código 5 compilado; teléfono y repetición completa sin interrupción pendientes.

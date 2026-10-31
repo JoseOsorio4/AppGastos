@@ -8,7 +8,6 @@ import gt.edu.umg.finanzas.core.contratos.OperacionesMovimiento
 import gt.edu.umg.finanzas.core.dominio.CampoMovimiento
 import gt.edu.umg.finanzas.core.dominio.Categoria
 import gt.edu.umg.finanzas.core.dominio.DatosMovimiento
-import gt.edu.umg.finanzas.core.dominio.Moneda
 import gt.edu.umg.finanzas.core.dominio.Transaccion
 import gt.edu.umg.finanzas.core.dominio.Usuario
 import gt.edu.umg.finanzas.core.reglas.CalculoSaldo
@@ -50,12 +49,8 @@ class OperacionesMovimientoRoom(
     override suspend fun editar(id: Long, datos: DatosMovimiento, hoy: LocalDate): Resultado<Unit> = enTransaccion {
         val anterior = transacciones.obtenerPorId(id)?.aDominio() ?: return@enTransaccion Resultado.NoEncontrado
         val categoria = leerCategoria(datos) ?: return@enTransaccion categoriaInexistente()
-        // En edición USD se conserva la tasa del registro, incluso si la caché ya tiene otra.
-        val tasaAnterior = anterior.conversion?.tasa
-        val datosConTasa = if (datos.moneda == Moneda.USD && tasaAnterior != null) {
-            datos.copy(tasa = tasaAnterior)
-        } else datos
-        val nueva = when (val validacion = ValidadorMovimiento.validar(datosConTasa, categoria, hoy, anterior.idCategoria)) {
+        // El core decide la tasa y el recargo desde la fotografía leída dentro de esta transacción.
+        val nueva = when (val validacion = ValidadorMovimiento.validar(datos, categoria, hoy, anterior)) {
             is Resultado.Ok -> validacion.valor
             is Resultado.Fallo -> return@enTransaccion validacion
         }

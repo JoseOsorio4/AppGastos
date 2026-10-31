@@ -1,7 +1,7 @@
 [versions]
 agp = "9.1.1"
 # Debe ser la misma versión que <version> en finanzas-core/pom.xml.
-finanzasCore = "0.3.0"
+finanzasCore = "0.4.0"
 appcompat = "1.7.1"
 material = "1.14.0"
 coreKtx = "1.19.1"

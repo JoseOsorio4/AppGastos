@@ -69,7 +69,7 @@ class ValidadorMovimientoTest {
         val gasto = ValidadorMovimiento.validar(datos(monto = "10.00", moneda = Moneda.USD, tasa = tasa), alimentacion, hoy)
             .esperarOk()
 
-        assertEquals(7_660L, gasto.montoCentavos)
+        assertEquals(7_960L, gasto.montoCentavos)
         val conversion = checkNotNull(gasto.conversion)
         assertEquals(1_000L, conversion.montoOriginalCentavos)
         assertEquals("7.66000", conversion.tasa.gtqPorUsd.toPlainString())
@@ -110,7 +110,8 @@ class ValidadorMovimientoTest {
         val archivada = alimentacion.copy(activa = false)
 
         ValidadorMovimiento.validar(datos(), archivada, hoy).esperarErrorNegocio()
-        ValidadorMovimiento.validar(datos(), archivada, hoy, idCategoriaAnterior = archivada.idCategoria).esperarOk()
+        val anterior = Gasto(1, archivada.idCategoria, 3000, "Anterior", hoy)
+        ValidadorMovimiento.validar(datos(), archivada, hoy, anterior).esperarOk()
     }
 
     @Test

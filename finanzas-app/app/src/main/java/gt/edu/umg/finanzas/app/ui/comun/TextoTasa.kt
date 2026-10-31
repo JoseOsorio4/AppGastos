@@ -10,10 +10,18 @@ import gt.edu.umg.finanzas.app.R
 import gt.edu.umg.finanzas.app.datos.repositorios.EstadoTasa
 import gt.edu.umg.finanzas.core.dominio.Periodo
 import gt.edu.umg.finanzas.core.dominio.TasaCambio
+import gt.edu.umg.finanzas.core.reglas.ConversorMoneda
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 object TextoTasa {
+    fun avisoRecargo(contexto: Context, tasa: TasaCambio?): String {
+        val recargo = ConversorMoneda.RECARGO_ESTIMADO_GASTO_USD
+        return if (tasa == null) contexto.getString(R.string.aviso_recargo_sin_tasa, recargo.toPlainString())
+        else contexto.getString(R.string.aviso_recargo_usd, recargo.toPlainString(),
+            ConversorMoneda.tasaAplicada(tasa.gtqPorUsd, recargo).toPlainString())
+    }
+
     fun paraTarjeta(contexto: Context, estado: EstadoTasa): CharSequence {
         val texto = estado(contexto, estado)
         if (estado.dato == null) return texto

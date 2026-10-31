@@ -122,7 +122,7 @@ flowchart LR
 ### 3.3 Formulario (`ui/formulario`) — crear y editar
 - `grupoTipo` (Ingreso/Gasto), `campoMonto`, `grupoMoneda` (GTQ/USD: **solo aparece desde el Inc. 6**), categorías en una cuadrícula de 4 columnas con icono y nombre (`listaCategorias`), que muestra todas las del tipo elegido, `campoFecha`, `campoDescripcion` (obligatoria, 1–60 caracteres).
 - Accesos rápidos `chipSumar5/10/20/50`, como en la maqueta: suman en la moneda elegida y no evitan la validación.
-- Con USD: `textoConversionPrevia` = "Equivale a Q 94.56 · tasa 7.66285 · Banguat 21/10/2026" (valores de ejemplo).
+- Con USD: `textoTasaFormulario` muestra referencia, recargo y aplicada; `textoConversionPrevia` muestra equivalente y desglose. Ejemplo de gasto nuevo: US$ 10.00 con 7.64187 + 0.30 → Q 79.42.
 - `botonGuardar` queda deshabilitado mientras `guardando = true`; `botonCancelar` cierra sin guardar.
 - En edición, el título cambia a "Editar movimiento" y los campos vienen del movimiento guardado.
 - Con letra grande del sistema (Inc. 4) la cuadrícula baja a 3 o 2 columnas para no partir nombres como "Entretenimiento" a mitad de palabra.
@@ -300,6 +300,8 @@ app/src/main/res/
 | `tasaGtqPorUsd` | 6 | TEXT NOT NULL DEFAULT `'1'` | `BigDecimal.toPlainString()`, sin pérdida |
 | `fechaTasaEpochDay` | 6 | INTEGER NULL | fecha de referencia del proveedor; NULL en GTQ |
 | `fuenteTasa` | 6 | TEXT NULL | p. ej. `"Banco de Guatemala — referencia"`; NULL en GTQ |
+| `recargoGtqPorUsd` | 0.5.0 | TEXT NOT NULL DEFAULT `'0'` | recargo estimado histórico por USD |
+| `tasaAplicadaGtqPorUsd` | 0.5.0 | TEXT NOT NULL DEFAULT `'1'` | oficial + recargo, conservada exactamente |
 
 **Índices:** `Transaccion(fechaEpochDay)`, `Transaccion(tipo, fechaEpochDay)` y `Transaccion(idCategoria)` (Room pide indexar la columna hija de una FK). Las sumas por período **no** cuestan lo mismo siempre: recorren las filas del intervalo, y los índices evitan recorrer toda la tabla.
 
@@ -318,6 +320,8 @@ app/src/main/res/
 - Prueba con `MigrationTestHelper`: insertar filas en v1, migrar y comprobar montos, tipo, categoría, saldo y `montoOriginalCentavos = montoCentavos`.
 
 Implementado en `datos/local/Migracion1a2.kt` y registrado en `AppDatabase.crear`. Los esquemas 1 y 2 están versionados. `Migracion1a2Test` crea su propio archivo v1 con datos, valida el esquema v2 y lo abre con los DAO actuales; no utiliza la base de uso diario.
+
+**v2→v3 (0.5.0):** Migracion2a3 añade recargoGtqPorUsd TEXT NOT NULL DEFAULT cero y tasaAplicadaGtqPorUsd TEXT NOT NULL DEFAULT uno; copia textualmente tasaGtqPorUsd a la aplicada. No toca montos, saldo, usuario, categorías ni banderas. AppDatabase registra las dos migraciones y versiona 3.json; 1.json, 2.json y Migracion1a2 quedan intactos. Migracion2a3Test valida v2 con USD/GTQ y la cadena v1→v3.
 
 ### 6.3 Tipo y categoría
 - `tipo` se repite en `Transaccion` para reconstruir `Ingreso`/`Gasto` sin JOIN y para filtrar con el índice `(tipo, fechaEpochDay)`.
@@ -351,17 +355,16 @@ Implementado en `datos/local/Migracion1a2.kt` y registrado en `AppDatabase.crear
 - Ese es el **único** redondeo; ocurre una vez, al final. Ejemplos con una tasa ficticia `t = 7.66285`: US$ 12.34 → 1234 × 7.66285 = 9455.9569 → **Q 94.56**. Q 100.00 → 10000 ÷ 7.66285 = 1304.997… → **US$ 13.05**.
 - `TasaCambio` exige `t > 0`, fecha de referencia y fuente no vacía.
 
-### 7.3 Fotografía de la conversión
-- En un movimiento USD, `ValidadorMovimiento` calcula `montoCentavos` con `ConversorMoneda` a partir del monto original y la `TasaCambio` que viaja en `DatosMovimiento`. La pantalla **nunca** envía el monto en Q ya calculado.
-- En GTQ: `montoOriginalCentavos = montoCentavos`, tasa `1`, fecha y fuente NULL.
-- **Una tasa nueva no recalcula nada guardado.** El saldo y los totales usan `montoCentavos`, que no cambia.
-- **Editar:**
-  - Cambiar solo la descripción, fecha o categoría conserva la conversión.
-  - Cambiar el monto USD usa la **tasa histórica** del movimiento y lo indica en pantalla ("Se conserva la tasa del 21/10/2026").
-  - Usar una tasa nueva requiere tocar **"Usar tasa actual"** (opcional del Inc. 6).
-  - Cambiar USD → GTQ elimina la conversión. GTQ → USD necesita una tasa disponible.
+### 7.3 Fotografía y recargo estimado (0.5.0)
 
-En el Inc. 6 no se añade la opción opcional «Usar tasa actual». La edición que permanece en USD conserva siempre la tasa del registro, también si cambia el monto: el ViewModel la presenta y `OperacionesMovimientoRoom.editar` la toma del movimiento anterior antes de validar. La consulta de una referencia nueva solo cambia la caché, nunca las filas anteriores.
+Solo gastos USD nuevos: Q 0.30 adicionales por cada USD; 7.64187 + 0.30 = 7.94187. US$ 10.00 → Q 79.42 (Q 76.42 + Q 3.00). Ingresos USD, GTQ y conversor general mantienen la referencia sin recargo. ConversorMoneda opera con BigDecimal y redondea el total una vez con HALF_UP. DesgloseConversion presenta referencia redondeada + diferencia hasta el total: US$ 0.07 → Q 0.53 + Q 0.03 = Q 0.56. El detalle usa el total guardado.
+
+ConversionAplicada conserva monto original, tasa oficial con fecha/fuente y recargo histórico; Room guarda también la tasa aplicada. ValidadorMovimiento recibe el movimiento anterior dentro de la transacción, no un total ni recargo impuesto por la UI.
+
+- Mientras siga siendo gasto USD, conservar tasa y recargo históricos, incluso si cambia el monto. Los gastos anteriores a v3 mantienen cero.
+- Cambiar a ingreso USD mantiene referencia histórica y quita el recargo. Cambiar de ingreso a gasto USD mantiene esa referencia y aplica 0.30 una vez.
+- Guardar USD→GTQ descarta la fotografía (tasa 1, recargo 0, fecha/fuente NULL). Una edición posterior GTQ→USD usa la referencia disponible entonces. Alternar sin guardar conserva la fotografía original.
+- No existe «Usar tasa actual». Abrir una edición relee la fotografía de Room sin pisar campos restaurados ni consultar la API para recalcular el USD anterior. Una tasa nueva nunca modifica el historial ni el saldo.
 
 ### 7.4 Sin internet
 | Situación | Comportamiento |
@@ -471,7 +474,7 @@ suspend fun editar(id, datos, hoy): Resultado<Unit> =
 4. `guardar()` envía `DatosMovimiento` con esa `TasaCambio`. La escritura en Room no espera a la red.
 5. El validador recalcula el monto base con la misma regla y el flujo sigue como en 9.1.
 
-Implementado: la consulta comienza al abrir Inicio o Formulario, en una corrutina independiente. USD solo se habilita si hay una tasa disponible o una histórica del registro en edición. `FormularioUiState` expone moneda, tasa efectiva y vista previa; `ConversionMonto` delega en `Dinero.desdeTexto` y `ConversorMoneda`. Los datos enviados a Guardar contienen texto, moneda y tasa, y ninguna operación de Room consulta la red. `SavedStateHandle` conserva la moneda y los campos de la tasa histórica para no perderla al recuperar una edición ya cargada.
+Implementado: la consulta comienza al abrir Inicio o un Formulario nuevo; la edición relee su fotografía de Room sin consultar la API. USD solo se habilita si hay una tasa disponible o una histórica del registro en edición. `FormularioUiState` expone moneda, tasa efectiva y vista previa; `ConversionMonto` delega en `Dinero.desdeTexto` y `ConversorMoneda`. Los datos enviados a Guardar contienen texto, moneda y tasa, y ninguna operación de Room consulta la red. `SavedStateHandle` conserva la moneda y los campos de la tasa histórica para no perderla al recuperar una edición ya cargada.
 
 ### 9.4 Inicio: filtro y anillo
 ```
@@ -535,7 +538,7 @@ data class SegmentoGasto(val clave: String, val nombre: String, val totalCentavo
 object Dinero { fun desdeTexto(t: String): Resultado<Long>; fun formatear(c: Long, m: Moneda): String }
 object ConversorMoneda { fun usdAGtq(c: Long, t: TasaCambio): Long; fun gtqAUsd(c: Long, t: TasaCambio): Long }
 object ValidadorMovimiento { fun validar(d: DatosMovimiento, c: Categoria, hoy: LocalDate,
-                                         idCategoriaAnterior: Long? = null): Resultado<Transaccion> }  // anterior: solo al editar
+                                         anterior: Transaccion? = null): Resultado<Transaccion> }  // anterior: solo al editar
 object CalculoSaldo { fun deltaCrear(n: Transaccion): Long; fun deltaEditar(a: Transaccion, n: Transaccion): Long
                       fun deltaEliminar(a: Transaccion): Long
                       fun aplicar(saldoActual: Long, delta: Long): Resultado<Long>   // ErrorNegocio si desborda
@@ -594,7 +597,7 @@ class ServicioFinanzas(usuarios: RepositorioUsuario, categorias: RepositorioCate
 - Se distinguen la **fecha del proveedor** y el **momento de consulta**. Estas frecuencias son decisiones nuestras, no garantías de los proveedores.
 - Las Activities y los ViewModels nunca contienen URLs ni lectores de respuesta.
 
-El Inc. 6 concretó la tasa con `EstadoTasa` en `RepositorioTipoCambio`, observado por Inicio, Formulario y Conversor. El Inc. 7 añade dos flujos independientes, sin unirlos a las consultas financieras. `CacheServicios` usa claves separadas en SharedPreferences `servicios`; Room sigue en v2 con sus tres tablas. El caché diario de tasa se decide por la fecha de consulta en Guatemala; Reintentar puede forzar una consulta explícita. Una respuesta fallida conserva los metadatos anteriores.
+El Inc. 6 concretó la tasa con `EstadoTasa` en `RepositorioTipoCambio`, observado por Inicio, Formulario y Conversor. El Inc. 7 añade dos flujos independientes, sin unirlos a las consultas financieras. `CacheServicios` usa claves separadas en SharedPreferences `servicios`; Room conserva sus tres tablas (v3 desde 0.5.0). El caché diario de tasa se decide por la fecha de consulta en Guatemala; Reintentar puede forzar una consulta explícita. Una respuesta fallida conserva los metadatos anteriores.
 
 ### 11.2 Banguat — `TipoCambioDia`
 - Documentación: https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx?op=TipoCambioDia. Es un servicio **SOAP/XML**.
@@ -603,6 +606,8 @@ El Inc. 6 concretó la tasa con `EstadoTasa` en `RepositorioTipoCambio`, observa
 - Se muestra como "Referencia Banguat", no como compra/venta de un banco comercial.
 - **Comprobado antes de escribir el lector:** el 29/10/2026 la [operación oficial](https://www.banguat.gob.gt/variables/ws/TipoCambio.asmx?op=TipoCambioDia) respondió y un POST SOAP 1.1 devolvió HTTP 200, fecha `29/10/2026` y referencia `7.64382`. La respuesta sin modificar y su procedencia están en `app/src/androidTest/assets/banguat/`. El sobre usa `http://schemas.xmlsoap.org/soap/envelope/`, la operación vacía `TipoCambioDia` y SOAPAction `"http://www.banguat.gob.gt/variables/ws/TipoCambioDia"`.
 - `ClienteBanguat` consulta y parsea fuera del hilo principal; `LectorRespuestaBanguat` sigue la ruta completa con espacios XML y rechaza DTD, datos ausentes o ambiguos y fecha/tasa inválidas. `BanguatTest` comprueba el fixture y ejecuta una consulta real desde Android. No se distribuye una tasa ficticia como respaldo de producción.
+
+Desde 0.5.0, la tarjeta conserva la referencia oficial y añade debajo la explicación de +Q 0.30 por cada USD de gasto con su tasa aplicada. Es una estimación de la app; cliente, lector, caché y conversor general no alteran la referencia recibida.
 
 ### 11.3 Open-Meteo — clima
 - **Verificado e implementado el 30/10/2026:** `ClienteOpenMeteo` hace GET de `current=temperature_2m,weather_code`, zona `America/Guatemala`, con coordenadas **14.28491, −89.88798**. El geocodificador devolvió Jutiapa, país GT, Departamento de Jutiapa, municipio Jutiapa, código PPLA. No hay GPS ni permisos de ubicación.
@@ -687,7 +692,7 @@ Ejecutados en el Inc. 2 con `connectedDebugAndroidTest` (emulador API 37): a y b
 - **b.** Q 1,000 ingreso → Q 750 (gasto Q 250) → Q 700 (gasto editado a Q 300) → Q 1,300 (ese movimiento pasa a ingreso Q 300) → Q 300 (se borra el ingreso de Q 1,000) → **Q 0** (se borra el ingreso restante de Q 300).
 - **c.** Una falla provocada en `actualizarSaldo` (DAO de prueba que lanza) después del INSERT: el número de movimientos y el saldo **no cambian**; el resultado es `ErrorAlmacenamiento`.
 - **d.** Cerrar y volver a abrir la base (y en la interfaz, cerrar la app a la fuerza): los movimientos y el saldo se conservan.
-- **e.** Registrar US$ 10.00 con una tasa ficticia de 7.66000 guarda `montoCentavos = 7660`. Guardar después una tasa nueva de 7.70000: el movimiento sigue en 7660 con `tasaGtqPorUsd = "7.66000"` y el saldo no cambia.
+- **e.** Registrar un ingreso de US$ 10.00 con una tasa ficticia de 7.66000 guarda `montoCentavos = 7660`. Guardar después una tasa nueva de 7.70000: el movimiento sigue en 7660 con `tasaGtqPorUsd = "7.66000"` y el saldo no cambia.
 - **f.** `"12,50"` → error. `"12.505"` → error. `"0"` → error. `"12.5"` → 1250.
 - **g.** Redondeo con la tasa 7.66285: US$ 12.34 → Q 94.56; Q 100.00 → US$ 13.05.
 - **h.** Períodos para el 22/10/2026 según la tabla de §3.2. El anillo con gastos de Q 30 y Q 20 da 6000 y 4000 puntos básicos (60 % y 40 %).

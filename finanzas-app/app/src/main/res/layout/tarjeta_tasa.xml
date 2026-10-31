@@ -25,6 +25,12 @@
             android:layout_marginTop="@dimen/separacion_servicio"
             android:accessibilityLiveRegion="polite"
             android:textAppearance="@style/TextAppearance.Finanzas.Metadatos" />
+        <TextView
+            android:id="@+id/textoRecargoEstimado"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/separacion_servicio"
+            android:textAppearance="@style/TextAppearance.Finanzas.Metadatos" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/botonConversor"
             android:layout_width="match_parent"

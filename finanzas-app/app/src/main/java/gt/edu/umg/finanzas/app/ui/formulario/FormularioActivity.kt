@@ -24,11 +24,11 @@ import gt.edu.umg.finanzas.app.ui.comun.ActivityProtegida
 import gt.edu.umg.finanzas.app.ui.comun.BarrasSistema
 import gt.edu.umg.finanzas.app.ui.comun.Fechas
 import gt.edu.umg.finanzas.app.ui.comun.TextoTasa
+import gt.edu.umg.finanzas.app.ui.comun.TextoConversionUsd
 import gt.edu.umg.finanzas.core.dominio.Moneda
 import gt.edu.umg.finanzas.core.dominio.Periodo
 import gt.edu.umg.finanzas.core.dominio.TipoMovimiento
 import gt.edu.umg.finanzas.core.dominio.Transaccion
-import gt.edu.umg.finanzas.core.reglas.Dinero
 import gt.edu.umg.finanzas.core.resultado.Resultado
 import kotlinx.coroutines.launch
 
@@ -151,13 +151,18 @@ class FormularioActivity : ActivityProtegida() {
         binding.botonMonedaUsd.isEnabled = estado.usdDisponible
         binding.campoMonto.prefixText = estado.moneda.simbolo
         binding.textoTasaFormulario.isVisible = estado.moneda == Moneda.USD || !estado.usdDisponible
-        binding.textoTasaFormulario.text = if (estado.moneda == Moneda.USD && estado.tasaHistorica != null) {
-            "${TextoTasa.referencia(this, estado.tasaHistorica)}\n${getString(R.string.tasa_historica, Fechas.texto(estado.tasaHistorica.fechaReferencia))}"
-        } else TextoTasa.estado(this, estado.estadoTasa)
+        binding.textoTasaFormulario.text = estado.tasa?.let { tasa ->
+            val referencia = if (estado.tasaHistorica == null) TextoTasa.estado(this, estado.estadoTasa) else TextoTasa.referencia(this, tasa)
+            val condiciones = TextoConversionUsd.condiciones(this, tasa, estado.recargoGtqPorUsd, referencia)
+            if (estado.tasaHistorica == null) condiciones else {
+                val avisoRecargo = if (estado.tipo == estado.tipoHistorico) R.string.recargo_historico else R.string.recargo_cambio_tipo
+                "$condiciones\n${getString(R.string.tasa_historica, Fechas.texto(tasa.fechaReferencia))}\n${getString(avisoRecargo)}"
+            }
+        } ?: TextoTasa.estado(this, estado.estadoTasa)
         val previa = if (estado.moneda == Moneda.USD) estado.conversionPrevia else null
         binding.textoConversionPrevia.isVisible = previa != null
         binding.textoConversionPrevia.text = when (previa) {
-            is Resultado.Ok -> getString(R.string.conversion_previa, Dinero.formatear(previa.valor))
+            is Resultado.Ok -> TextoConversionUsd.resumen(this, previa.valor, estado.recargoGtqPorUsd.signum() > 0)
             is Resultado.ErrorNegocio -> previa.mensaje
             else -> ""
         }

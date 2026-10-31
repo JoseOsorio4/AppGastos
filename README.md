@@ -34,7 +34,72 @@ El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`.
 
 ## Estado real
 
-Último incremento implementado y verificado en API 37: **8 — bienvenida con nombre y PIN local opcional**. Conserva el core 0.3.0, Room v2, las tres APIs y la apariencia financiera aprobada por el usuario.
+Incrementos 0–8 implementados. Ajuste autorizado posterior: **recargo estimado para gastos USD**, app **0.5.0 (código 5)**, core **0.4.0**, Room **v3**. Conserva las tres APIs y el estilo actual.
+
+### Recargo estimado de gastos USD — 31/10/2026
+
+**Q 0.30 adicionales por cada USD de un gasto**: Q 7.64187 + Q 0.30 = **Q 7.94187 por USD**. US$ 10.00 → **Q 79.42** (referencia Q 76.42 + recargo estimado Q 3.00). No es porcentaje, cargo único, impuesto ni comisión oficial. Ingresos USD, GTQ y conversor general mantienen el cálculo de referencia.
+
+La tarjeta conserva la tasa oficial y añade `textoRecargoEstimado`. El formulario muestra oficial, fecha/fuente, recargo por USD, aplicada y equivalente antes de guardar; el detalle utiliza la fotografía guardada. Las fórmulas están en el core, sin duplicarlas en Activity/XML.
+
+**Edición:** mientras siga como gasto USD, conserva tasa y recargo históricos, también al cambiar el monto. Un gasto anterior sigue con cero. Cambiar a ingreso USD conserva la referencia histórica y quita el recargo; cambiar de ingreso a gasto USD aplica 0.30 usando esa referencia. Guardar USD→GTQ descarta la fotografía; una edición posterior GTQ→USD usa la referencia disponible entonces. Alternar sin guardar no descarta la fotografía original. No existe «Usar tasa actual» ni se consulta la API para recalcular un gasto antiguo.
+
+**Migración v2→v3:** añade `recargoGtqPorUsd` con cero y `tasaAplicadaGtqPorUsd` copiada textualmente de la tasa anterior. No recalcula importes ni saldos; conserva las tres tablas, categorías, usuario y banderas. Migracion1a2 y esquemas 1/2 intactos; esquema 3 exportado. El total se redondea una sola vez con HALF_UP; el desglose absorbe el ajuste al centavo: US$ 0.07 → Q 0.53 + Q 0.03 = **Q 0.56**.
+
+Base inicial `main c5ebcc3`, solo `app/img.png` sin seguimiento. Antes de editar: core **55/55** y app compilada. Ejecutadas: core **63/63** con Maven e instalación en .m2; **13/13** dirigidas Room/ViewModel, incluidas migraciones v2→v3 y v1→v3 con datos; **7/7** recorridos UI USD en claro/oscuro, incluidos los tres anteriores. Las tasas 7.64187 y 9.00000 de estas capturas son **datos de prueba**, no nuevas consultas oficiales ni respaldo de producción. [Capturas del recargo](docs/referencias/INTERFAZ.md#recargo-estimado-de-gastos-usd-050).
+
+APK normal **0.5.0 (código 5)** compilado sin `-PdatosPrueba`, ID normal verificado. Instalar como actualización, sin desinstalar; ruta y SHA-256 más abajo. Base normal/WAL e img.png mantienen sus hashes iniciales.
+
+Pendientes de entorno: instalar y revisar este cambio en el teléfono; API 24–25; no se repiten APIs en vivo ni muerte real del proceso. Solo se prueba `.pruebas` en API 37; la instalación normal y sus datos quedan protegidos.
+
+Regresión ejecutada sin red en API 37: **102/103 correctas**; AccesoTest.configurar_bloquear_rotar_ingresar_cambiar_y_desactivar_desde_ui fue interrumpida con «Espresso interrogation of the main thread is interrupted». Repetida aisladamente con el mismo APK y sin cambiar código: **1/1 correcta**, incluidos configuración, bloqueo, giro, PIN incorrecto/correcto, cambio y desactivación. Todos los casos tienen ejecución correcta; no se presenta la corrida completa como 103/103 verde. Queda pendiente una nueva corrida única sin interrupciones y la comprobación en teléfono.
+
+Archivos de este ajuste (rutas exactas del repositorio):
+
+- `README.md`
+- `docs/DISENO_FINANZAS.md`
+- `docs/MAPA_DEL_CODIGO.md`
+- `docs/referencias/INTERFAZ.md`
+- `finanzas-app/app/build.gradle.kts`
+- `finanzas-app/app/src/androidTest/java/gt/edu/umg/finanzas/app/ui/FormularioViewModelTest.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/datos/local/AppDatabase.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/datos/local/Mapeos.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/datos/local/OperacionesMovimientoRoom.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/datos/local/dao/MovimientoFila.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/datos/local/dao/TransaccionDao.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/datos/local/entidades/TransaccionEntity.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/ui/comun/ConversionMonto.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/ui/comun/TextoTasa.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/ui/formulario/FormularioActivity.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/ui/formulario/FormularioUiState.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/ui/formulario/FormularioViewModel.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/ui/inicio/InicioActivity.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/ui/operaciones/DetalleMovimientoDialogo.kt`
+- `finanzas-app/app/src/main/res/layout/tarjeta_tasa.xml`
+- `finanzas-app/gradle/libs.versions.toml`
+- `finanzas-core/pom.xml`
+- `finanzas-core/src/main/kotlin/gt/edu/umg/finanzas/core/dominio/ConversionAplicada.kt`
+- `finanzas-core/src/main/kotlin/gt/edu/umg/finanzas/core/reglas/ConversorMoneda.kt`
+- `finanzas-core/src/main/kotlin/gt/edu/umg/finanzas/core/reglas/ValidadorMovimiento.kt`
+- `finanzas-core/src/test/kotlin/gt/edu/umg/finanzas/core/fakes/OperacionesMovimientoEnMemoria.kt`
+- `finanzas-core/src/test/kotlin/gt/edu/umg/finanzas/core/reglas/ValidadorMovimientoTest.kt`
+- `docs/referencias/capturas/recargo-antiguo-detalle.png`
+- `docs/referencias/capturas/recargo-detalle-claro.png`
+- `docs/referencias/capturas/recargo-detalle-oscuro.png`
+- `docs/referencias/capturas/recargo-formulario-claro.png`
+- `docs/referencias/capturas/recargo-formulario-oscuro.png`
+- `docs/referencias/capturas/recargo-redondeo.png`
+- `docs/referencias/capturas/recargo-tarjeta-claro.png`
+- `docs/referencias/capturas/recargo-tarjeta-oscuro.png`
+- `finanzas-app/app/schemas/gt.edu.umg.finanzas.app.datos.local.AppDatabase/3.json`
+- `finanzas-app/app/src/androidTest/java/gt/edu/umg/finanzas/app/datos/local/Migracion2a3Test.kt`
+- `finanzas-app/app/src/androidTest/java/gt/edu/umg/finanzas/app/datos/local/RecargoUsdRoomTest.kt`
+- `finanzas-app/app/src/androidTest/java/gt/edu/umg/finanzas/app/ui/RecargoUsdInterfazTest.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/datos/local/Migracion2a3.kt`
+- `finanzas-app/app/src/main/java/gt/edu/umg/finanzas/app/ui/comun/TextoConversionUsd.kt`
+- `finanzas-app/app/src/main/res/values/strings_conversion.xml`
+- `finanzas-core/src/main/kotlin/gt/edu/umg/finanzas/core/dominio/DesgloseConversion.kt`
+- `finanzas-core/src/test/kotlin/gt/edu/umg/finanzas/core/reglas/RecargoUsdTest.kt`
 
 ### Incremento 8 — bienvenida y bloqueo local
 
@@ -74,7 +139,7 @@ Revisión manual ADB en API 37: instalación nueva de `.pruebas`, nombre Ana, bi
 
 **Pendientes de entorno:** probar el incremento 8 en tu teléfono y en API 24–25 (solo está disponible API 37); restauración de backup en otro dispositivo y fallos físicos de escritura del almacén del PIN no forzados. La actualización se verificó con un fixture Room existente (usuario, movimiento y saldo), sin archivo de acceso previo; no se instaló este APK en tu teléfono. No se repiten consultas en vivo a las tres APIs en este incremento.
 
-Compilación final normal **sin `-PdatosPrueba`**: correcta. APK **0.4.2 (código 4)**, ID `gt.edu.umg.finanzas.app`, ruta exacta **`C:\Users\Brianita\Proyectos\AppGastos\finanzas-app\app\build\outputs\apk\debug\app-debug.apk`**. SHA-256: `17AB8A8845D68F209F8660A5AA80D21F5D0158E1CE23F1E593621BAA3D3B1925`. Se instaló solo `.pruebas` para revisión; nunca el APK normal encima de tus datos. Base normal, WAL e `img.png` conservan los hashes iniciales y la imagen queda fuera del commit. Red, teclado y giro del emulador se restauraron a sus valores iniciales.
+Compilación final normal **sin `-PdatosPrueba`**: correcta. APK **0.5.0 (código 5)**, ID `gt.edu.umg.finanzas.app`, ruta exacta **`C:\Users\Brianita\Proyectos\AppGastos\finanzas-app\app\build\outputs\apk\debug\app-debug.apk`**. SHA-256: `EE885BE9D72B4464FD67267F01B31034E4BBB6E4F8F3A6DFC29A4F732FFD4406`. Se instaló solo `.pruebas` para revisión; nunca el APK normal encima de tus datos. Base normal, WAL e `img.png` conservan los hashes iniciales y la imagen queda fuera del commit. Red, teclado y giro del emulador se restauraron a sus valores iniciales.
 
 Actualiza el teléfono **sin desinstalar**: tus movimientos y el acceso sin PIN se conservan. **Seguridad local** permite activarlo voluntariamente; anota el PIN de forma segura antes de usarlo, pues no hay recuperación desde la app. Repetir la suite: `-PdatosPrueba :app:connectedDebugAndroidTest`; solo acceso: añadir `'-Pandroid.testInstrumentationRunnerArguments.class=gt.edu.umg.finanzas.app.ui.AccesoTest'`.
 

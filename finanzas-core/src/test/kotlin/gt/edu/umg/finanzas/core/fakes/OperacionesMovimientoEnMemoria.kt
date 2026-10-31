@@ -39,7 +39,7 @@ class OperacionesMovimientoEnMemoria(private val almacen: AlmacenEnMemoria) : Op
         val actual = almacen.estado.value
         val anterior = actual.transacciones[id] ?: return Resultado.NoEncontrado
         val categoria = actual.categoria(datos.idCategoria) ?: return categoriaInexistente()
-        val nueva = when (val validacion = ValidadorMovimiento.validar(datos, categoria, hoy, anterior.idCategoria)) {
+        val nueva = when (val validacion = ValidadorMovimiento.validar(datos, categoria, hoy, anterior)) {
             is Resultado.Ok -> validacion.valor
             is Resultado.Fallo -> return validacion
         }

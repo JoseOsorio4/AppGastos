@@ -15,6 +15,7 @@ import gt.edu.umg.finanzas.core.dominio.TasaCambio
 import gt.edu.umg.finanzas.core.dominio.TipoMovimiento
 import gt.edu.umg.finanzas.core.dominio.Transaccion
 import gt.edu.umg.finanzas.core.dominio.Usuario
+import gt.edu.umg.finanzas.core.reglas.ConversorMoneda
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -32,7 +33,8 @@ fun CategoriaInicial.aEntity(): CategoriaEntity =
 /** La columna `tipo` decide qué subclase se reconstruye; sus invariantes se comprueban al construirla. */
 fun TransaccionEntity.aDominio(): Transaccion {
     val fecha = LocalDate.ofEpochDay(fechaEpochDay)
-    val conversion = conversionDe(monedaOriginal, montoOriginalCentavos, tasaGtqPorUsd, fechaTasaEpochDay, fuenteTasa)
+    val conversion = conversionDe(monedaOriginal, montoOriginalCentavos, tasaGtqPorUsd,
+        fechaTasaEpochDay, fuenteTasa, recargoGtqPorUsd, tasaAplicadaGtqPorUsd)
     return when (tipo) {
         TipoMovimiento.INGRESO -> Ingreso(idTransaccion, idCategoria, montoCentavos, descripcion, fecha, conversion)
         TipoMovimiento.GASTO -> Gasto(idTransaccion, idCategoria, montoCentavos, descripcion, fecha, conversion)
@@ -54,6 +56,10 @@ fun Transaccion.aEntity(idTransaccion: Long): TransaccionEntity {
         tasaGtqPorUsd = conversion?.tasa?.gtqPorUsd ?: BigDecimal.ONE,
         fechaTasaEpochDay = conversion?.tasa?.fechaReferencia?.toEpochDay(),
         fuenteTasa = conversion?.tasa?.fuente,
+        recargoGtqPorUsd = conversion?.recargoGtqPorUsd ?: BigDecimal.ZERO,
+        tasaAplicadaGtqPorUsd = conversion?.let {
+            ConversorMoneda.tasaAplicada(it.tasa.gtqPorUsd, it.recargoGtqPorUsd)
+        } ?: BigDecimal.ONE,
     )
 }
 
@@ -66,11 +72,17 @@ fun MovimientoFila.aVista(): MovimientoVista =
         fecha = LocalDate.ofEpochDay(fechaEpochDay),
         claveCategoria = claveCategoria,
         nombreCategoria = nombreCategoria,
-        conversion = conversionDe(monedaOriginal, montoOriginalCentavos, tasaGtqPorUsd, fechaTasaEpochDay, fuenteTasa),
+        conversion = conversionDe(monedaOriginal, montoOriginalCentavos, tasaGtqPorUsd,
+            fechaTasaEpochDay, fuenteTasa, recargoGtqPorUsd, tasaAplicadaGtqPorUsd),
     )
 
-private fun conversionDe(moneda: Moneda, original: Long, tasa: BigDecimal, fecha: Long?, fuente: String?): ConversionAplicada? =
-    if (moneda == Moneda.GTQ) null else ConversionAplicada(
+private fun conversionDe(moneda: Moneda, original: Long, tasa: BigDecimal, fecha: Long?, fuente: String?,
+    recargo: BigDecimal, aplicada: BigDecimal): ConversionAplicada? {
+    if (moneda == Moneda.GTQ) return null
+    check(aplicada.compareTo(ConversorMoneda.tasaAplicada(tasa, recargo)) == 0) { "Fotografía USD incoherente" }
+    return ConversionAplicada(
         original,
         TasaCambio(tasa, LocalDate.ofEpochDay(checkNotNull(fecha)), checkNotNull(fuente)),
+        recargo,
     )
+}

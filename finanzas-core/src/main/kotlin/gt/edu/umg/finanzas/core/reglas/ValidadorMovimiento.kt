@@ -19,21 +19,20 @@ import java.time.LocalDate
 object ValidadorMovimiento {
 
     /**
-     * [idCategoriaAnterior] solo se envía al editar: permite conservar una categoría archivada
-     * que el movimiento ya tenía, sin ofrecerla para movimientos nuevos.
+     * [anterior] conserva la categoría archivada y la fotografía USD dentro de la misma operación.
      */
     fun validar(
         datos: DatosMovimiento,
         categoria: Categoria,
         hoy: LocalDate,
-        idCategoriaAnterior: Long? = null,
+        anterior: Transaccion? = null,
     ): Resultado<Transaccion> {
         require(categoria.idCategoria == datos.idCategoria) { "Se recibió otra categoría que la elegida" }
 
         if (categoria.tipo != datos.tipo) {
             return rechazo("La categoría no corresponde al tipo de movimiento", CampoMovimiento.CATEGORIA)
         }
-        if (!categoria.activa && categoria.idCategoria != idCategoriaAnterior) {
+        if (!categoria.activa && categoria.idCategoria != anterior?.idCategoria) {
             return rechazo("Esa categoría ya no está disponible", CampoMovimiento.CATEGORIA)
         }
 
@@ -48,7 +47,9 @@ object ValidadorMovimiento {
             Moneda.GTQ -> null
             Moneda.USD -> ConversionAplicada(
                 montoOriginal,
-                datos.tasa ?: return rechazo("Sin tasa disponible. Conéctate para obtenerla", CampoMovimiento.MONEDA),
+                anterior?.conversion?.tasa ?: datos.tasa
+                    ?: return rechazo("Sin tasa disponible. Conéctate para obtenerla", CampoMovimiento.MONEDA),
+                ConversorMoneda.recargoPara(datos.tipo, anterior?.tipo, anterior?.conversion?.recargoGtqPorUsd),
             )
         }
 
@@ -86,7 +87,7 @@ object ValidadorMovimiento {
     private fun montoEnQuetzales(montoOriginal: Long, conversion: ConversionAplicada?): Resultado<Long> {
         if (conversion == null) return Resultado.Ok(montoOriginal)
         val enQuetzales = try {
-            ConversorMoneda.usdAGtq(montoOriginal, conversion.tasa)
+            ConversorMoneda.usdAGtq(conversion)
         } catch (e: ArithmeticException) {
             Long.MAX_VALUE
         }

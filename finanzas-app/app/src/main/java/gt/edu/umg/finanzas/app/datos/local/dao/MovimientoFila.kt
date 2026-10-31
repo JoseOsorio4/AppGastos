@@ -18,4 +18,6 @@ data class MovimientoFila(
     val tasaGtqPorUsd: BigDecimal,
     val fechaTasaEpochDay: Long?,
     val fuenteTasa: String?,
+    val recargoGtqPorUsd: BigDecimal,
+    val tasaAplicadaGtqPorUsd: BigDecimal,
 )

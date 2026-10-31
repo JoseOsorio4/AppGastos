@@ -255,3 +255,17 @@ El clima, la tasa y la reflexión son tarjetas secundarias bajo el contenido fin
 En los incrementos 3 y 4 se compara la app en el emulador con esta referencia: jerarquía visual, navegación, cuadrícula, estado vacío, teclado y conservación del formulario al rotar. Se revisa también con el tema oscuro y letra grande.
 
 El diseño define los modelos y reglas; este documento define la disposición visual. Las rutas y funciones implementadas se consultan en [el mapa](../MAPA_DEL_CODIGO.md).
+
+## Recargo estimado de gastos USD (0.5.0)
+
+Se mantiene el diseño actual. La tarjeta muestra la referencia oficial y un TextView inferior explica **+Q 0.30 por cada USD de gasto**, con tasa aplicada; no altera el texto ni el dato oficial. Formulario reutiliza textoTasaFormulario y textoConversionPrevia para mostrar referencia/fecha/fuente, recargo, aplicada y total antes de guardar. El detalle reutiliza textoConversionDetalle y muestra exclusivamente la fotografía guardada. No se llama impuesto ni cargo bancario real.
+
+| Vista | Claro | Oscuro |
+|---|---|---|
+| Referencia y aviso | ![Tasa clara](capturas/recargo-tarjeta-claro.png) | ![Tasa oscura](capturas/recargo-tarjeta-oscuro.png) |
+| Gasto antes de guardar | ![Formulario claro](capturas/recargo-formulario-claro.png) | ![Formulario oscuro](capturas/recargo-formulario-oscuro.png) |
+| Detalle histórico | ![Detalle claro](capturas/recargo-detalle-claro.png) | ![Detalle oscuro](capturas/recargo-detalle-oscuro.png) |
+
+[Detalle anterior con cero recargo](capturas/recargo-antiguo-detalle.png) · [US$ 0.07: desglose Q 0.53 + Q 0.03 = Q 0.56](capturas/recargo-redondeo.png).
+
+Capturas de `.pruebas` en API 37, con referencias **de prueba** 7.64187 y 9.00000, no peticiones reales. Se ejecutaron gasto nuevo en ambos temas, detalle/edición con tasa futura, gasto anterior sin recargo, redondeo y conversor sin recargo. No se repitió esta ampliación con fuente 2.0 ni en teléfono/API 24–25. El desplazamiento y estilos existentes se conservan.
