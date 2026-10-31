@@ -1,13 +1,13 @@
-<?xml
-    version="1.0"
-    encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?android:attr/colorBackground">
+    android:background="@color/acceso_fondo">
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollAcceso"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true">
@@ -15,92 +15,206 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="24dp"
+            android:gravity="center_vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+                <ImageView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:src="@mipmap/ic_launcher"
+                    android:importantForAccessibility="no" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginStart="8dp">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/app_name"
+                        android:textAppearance="?attr/textAppearanceTitleLarge"
+                        android:textStyle="bold"
+                        android:textColor="@color/acceso_titulo" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/acceso_lema"
+                        android:textAppearance="@style/TextAppearance.Finanzas.Metadatos" />
+                </LinearLayout>
+            </LinearLayout>
+            <ImageView
+                android:id="@+id/ilustracionAcceso"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:src="@drawable/ilustracion_acceso_billetera"
+                android:scaleType="fitCenter"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:id="@+id/ideaAcceso"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/acceso_idea"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="@color/acceso_azul"
+                android:gravity="center"
+                android:layout_marginTop="8dp" />
             <TextView
                 android:id="@+id/tituloAcceso"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/preparando_acceso"
-                android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                android:layout_marginBottom="24dp"/>
-            <EditText
-                android:id="@+id/entradaNombre"
+                android:textAppearance="@style/TextAppearance.Finanzas.AccesoTitulo"
+                android:gravity="center"
+                android:layout_marginTop="8dp"
+                android:accessibilityHeading="true" />
+            <TextView
+                android:id="@+id/detalleAcceso"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="56dp"
+                android:textAppearance="@style/TextAppearance.Finanzas.Cuerpo"
+                android:textColor="@color/color_texto_secundario"
+                android:gravity="center"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/campoNombre"
+                style="@style/Widget.Finanzas.AccesoCampo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:hint="@string/nombre_acceso"
-                android:inputType="textPersonName"
-                android:maxLength="40"
-                android:saveEnabled="true"
-                android:visibility="gone"/>
-            <EditText
-                android:id="@+id/entradaPinActual"
+                android:visibility="gone">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/entradaNombre"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="60dp"
+                    android:textAppearance="@style/TextAppearance.Finanzas.Cuerpo"
+                    android:inputType="textPersonName"
+                    android:imeOptions="actionDone"
+                    android:maxLength="40"
+                    android:saveEnabled="true" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/campoPinActual"
+                style="@style/Widget.Finanzas.AccesoCampo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="56dp"
                 android:hint="@string/pin_actual"
-                android:inputType="numberPassword"
-                android:maxLength="6"
-                android:saveEnabled="false"
-                android:visibility="gone"/>
-            <EditText
-                android:id="@+id/entradaPinNuevo"
+                android:visibility="gone">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/entradaPinActual"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="60dp"
+                    android:textAppearance="@style/TextAppearance.Finanzas.Cuerpo"
+                    android:inputType="numberPassword"
+                    android:imeOptions="actionNext"
+                    android:maxLength="6"
+                    android:saveEnabled="false" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/campoPinNuevo"
+                style="@style/Widget.Finanzas.AccesoCampo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="56dp"
                 android:hint="@string/pin_nuevo"
-                android:inputType="numberPassword"
-                android:maxLength="6"
-                android:saveEnabled="false"
-                android:visibility="gone"/>
-            <EditText
-                android:id="@+id/entradaPinConfirmacion"
+                android:visibility="gone">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/entradaPinNuevo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="60dp"
+                    android:textAppearance="@style/TextAppearance.Finanzas.Cuerpo"
+                    android:inputType="numberPassword"
+                    android:imeOptions="actionNext"
+                    android:maxLength="6"
+                    android:saveEnabled="false" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/campoPinConfirmacion"
+                style="@style/Widget.Finanzas.AccesoCampo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="56dp"
                 android:hint="@string/pin_confirmacion"
-                android:inputType="numberPassword"
-                android:maxLength="6"
-                android:saveEnabled="false"
-                android:visibility="gone"/>
+                android:visibility="gone">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/entradaPinConfirmacion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="60dp"
+                    android:textAppearance="@style/TextAppearance.Finanzas.Cuerpo"
+                    android:inputType="numberPassword"
+                    android:imeOptions="actionNext"
+                    android:maxLength="6"
+                    android:saveEnabled="false" />
+            </com.google.android.material.textfield.TextInputLayout>
             <TextView
                 android:id="@+id/avisoPin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/aviso_pin"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:layout_marginVertical="16dp"
-                android:visibility="gone"/>
+                android:textAppearance="@style/TextAppearance.Finanzas.Metadatos"
+                android:layout_marginTop="16dp"
+                android:visibility="gone" />
             <TextView
                 android:id="@+id/errorAcceso"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="?attr/colorError"
-                android:accessibilityLiveRegion="polite"/>
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/botonAcceso"
+                android:textAppearance="@style/TextAppearance.Finanzas.Detalle"
+                android:layout_marginTop="12dp"
+                android:accessibilityLiveRegion="polite"
+                android:visibility="gone" />
+            <LinearLayout
+                android:id="@+id/accionesAcceso"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/continuar_acceso"
-                android:visibility="gone"/>
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/botonConfigurarPin"
+                android:orientation="vertical"
+                android:layout_marginTop="16dp">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/botonAcceso"
+                    style="@style/Widget.Finanzas.AccesoBoton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/continuar_acceso"
+                    android:visibility="gone" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/botonContinuar"
+                    style="@style/Widget.Finanzas.AccesoSecundario"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:backgroundTint="@color/acceso_continuar_fondo"
+                    android:textColor="@color/acceso_continuar_texto"
+                    android:text="@string/continuar_sin_pin"
+                    android:visibility="gone" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/botonConfigurarPin"
+                    style="@style/Widget.Finanzas.AccesoSecundario"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/configurar_pin"
+                    android:visibility="gone" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/botonDesactivarPin"
+                    style="@style/Widget.Finanzas.AccesoSecundario"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/desactivar_pin"
+                    android:visibility="gone" />
+            </LinearLayout>
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/configurar_pin"
-                android:visibility="gone"/>
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/botonContinuar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/continuar_sin_pin"
-                android:visibility="gone"/>
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/botonDesactivarPin"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/desactivar_pin"
-                android:visibility="gone"/>
+                android:text="@string/acceso_datos_locales"
+                android:textAppearance="@style/TextAppearance.Finanzas.Metadatos"
+                android:gravity="center"
+                android:layout_marginTop="16dp" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

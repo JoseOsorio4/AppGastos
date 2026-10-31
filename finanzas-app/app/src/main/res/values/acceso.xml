@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="acceso_duracion">220</integer>
+    <dimen name="acceso_desplazamiento">12dp</dimen>
+    <color name="acceso_fondo">#F5FCF9</color>
+    <color name="acceso_titulo">#103D35</color>
+    <color name="acceso_azul">#076BB3</color>
+    <color name="acceso_onda_suave">#DAF6F0</color>
+    <color name="acceso_onda_azul">#B4ECF6</color>
+    <color name="acceso_campo">#FFFFFF</color>
+    <color name="acceso_borde">#8DAEA4</color>
+    <string name="acceso_lema">Tus gastos, en tus manos</string>
+    <string name="acceso_idea">Tus finanzas, más claras</string>
+    <string name="acceso_nombre_detalle">Empecemos por tu nombre.</string>
+    <string name="acceso_nombre_opcional">Puedes personalizar tu bienvenida o entrar como hasta ahora.</string>
+    <string name="acceso_saludo_detalle">Un lugar para organizar lo que entra y lo que sale, a tu ritmo.</string>
+    <string name="acceso_pin_detalle">Un PIN local de 6 dígitos para proteger la entrada a tus movimientos.</string>
+    <string name="acceso_desbloquear_detalle">Tu información se queda en este teléfono. Ingresa para continuar.</string>
+    <string name="acceso_datos_locales">Solo en tu teléfono. Sin cuentas ni correo.</string>
+    <style
+        name="TextAppearance.Finanzas.AccesoTitulo"
+        parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:textSize">32sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/acceso_titulo</item>
+    </style>
+    <style
+        name="Widget.Finanzas.AccesoCampo"
+        parent="Widget.Finanzas.Campo">
+        <item name="boxBackgroundColor">@color/acceso_campo</item>
+        <item name="boxStrokeColor">@color/acceso_campo_borde</item>
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="android:layout_marginTop">12dp</item>
+    </style>
+    <style
+        name="Widget.Finanzas.AccesoBoton"
+        parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/color_acento</item>
+        <item name="android:textColor">@color/color_sobre_acento</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:minHeight">60dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+        <item name="android:insetTop">4dp</item>
+        <item name="android:insetBottom">4dp</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="icon">@drawable/ic_acceso_flecha</item>
+        <item name="iconTint">@color/color_sobre_acento</item>
+        <item name="iconGravity">textEnd</item>
+    </style>
+    <style
+        name="Widget.Finanzas.AccesoSecundario"
+        parent="Widget.Material3.Button.TextButton">
+        <item name="android:minHeight">52dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/acceso_titulo</item>
+        <item name="cornerRadius">24dp</item>
+    </style>
+</resources>

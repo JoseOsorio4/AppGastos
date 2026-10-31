@@ -177,6 +177,44 @@ La billetera corresponde a `.pruebas`; el Android genérico contiguo corresponde
 
 Pendientes: teclado y launcher en el teléfono del usuario, API 24–25 (sin imagen instalada), otros launchers y uso de la capa monocroma. La prueba del segundo detalle **con la propia interacción del usuario** sigue expresamente pendiente. Los resultados anteriores de ciclo de vida no se dan por repetidos por cambiar el XML.
 
+## Bienvenida y acceso — presentación 0.4.2
+
+Referencia recibida: maqueta «Onboarding de Finanzas en tres pantallas» (nombre, saludo, configurar PIN). Se toman composición, verde/amarillo, acentos azul/turquesa e idea de billetera/escudo; se adapta con recursos vectoriales originales y componentes Material nativos. No se incluyen saldo de ejemplo ni saldo real, correo, cuentas ni servidor. Inicio, tarjetas, anillo y navegación financiera no cambian.
+
+`activity_acceso.xml` conserva las entradas y botones probados. Marca e ilustración preceden al título y explicación; campo de nombre con etiqueta flotante; en saludo, «Continuar sin PIN» amarillo y «Configurar PIN» secundario; en ajustes, PIN nuevo y confirmación reales, aviso de no recuperación, Guardar y continuación sin PIN. Con PIN existente se mantienen PIN actual, cambio, desactivación y Volver. El nombre heredado «Principal» sigue ofreciendo «Saltar y entrar sin PIN»; no se reabre una bienvenida ya completada.
+
+### Claro y oscuro
+
+| Estado | Claro | Oscuro |
+|---|---|---|
+| Pedir nombre | ![Nombre claro](capturas/acceso-nombre-claro.png) | ![Nombre oscuro](capturas/acceso-nombre-oscuro.png) |
+| Saludar | ![Saludo claro](capturas/acceso-saludo-claro.png) | ![Saludo oscuro](capturas/acceso-saludo-oscuro.png) |
+| Configurar PIN opcional | ![Configurar claro](capturas/acceso-configurar-claro.png) | ![Configurar oscuro](capturas/acceso-configurar-oscuro.png) |
+
+Los colores de fondo, texto, ondas y campos tienen variantes nocturnas exclusivas del acceso. Títulos 32sp, cuerpo/botones 17sp y nota local/aviso 14sp; las etiquetas flotantes conservan el contexto del campo al escribir. El nombre puede ocupar varias líneas en el saludo; no se reduce ni se recorta para caber.
+
+### Teclado y letra grande
+
+| Comprobación | Claro | Oscuro |
+|---|---|---|
+| Nombre con teclado, tamaño normal | ![Nombre y teclado claro](capturas/acceso-nombre-teclado-claro.png) | ![Nombre y teclado oscuro](capturas/acceso-nombre-teclado-oscuro.png) |
+| Confirmación con teclado, tamaño normal | ![PIN y teclado claro](capturas/acceso-pin-teclado-claro.png) | ![PIN y teclado oscuro](capturas/acceso-pin-teclado-oscuro.png) |
+| Nombre, 360 × 640 dp / fuente 2.0 | ![Nombre estrecho claro](capturas/acceso-nombre-teclado-claro-estrecho.png) | ![Nombre estrecho oscuro](capturas/acceso-nombre-teclado-oscuro-estrecho.png) |
+| Confirmación, 360 × 640 dp / fuente 2.0 | ![PIN estrecho claro](capturas/acceso-pin-teclado-claro-estrecho.png) | ![PIN estrecho oscuro](capturas/acceso-pin-teclado-oscuro-estrecho.png) |
+| Saludo con fuente 2.0 | ![Saludo estrecho claro](capturas/acceso-saludo-claro-estrecho.png) | ![Saludo estrecho oscuro](capturas/acceso-saludo-oscuro-estrecho.png) |
+
+En pantalla estrecha/letra grande el contenido se desplaza verticalmente, sin suprimir campos, advertencias ni botones. Las capturas muestran partes sucesivas del contenido. Solo se usan datos de `.pruebas`; las capturas de configuración se toman antes de activar el PIN. El bloqueo activo conserva FLAG_SECURE; no se deshabilita para capturar.
+
+### Movimiento
+
+`TransicionAcceso` presenta ilustración, título, descripción y acciones en paralelo durante 220 ms: alpha y desplazamiento de 12dp con desaceleración. Sin delay, espera de bienvenida ni bloqueo de botones por animación. Se dispara al cambiar de paso, no al emitir ocupado/error. Al detener la Activity se cancela y restablecen alpha/posición. La duración sigue la escala nativa y se omite con animaciones desactivadas ([ValueAnimator](https://developer.android.com/reference/android/animation/ValueAnimator#areAnimatorsEnabled())). No hay parpadeo, bucles, animación del dinero ni lectura financiera.
+
+Para repetir la revisión: `-PdatosPrueba :app:connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=gt.edu.umg.finanzas.app.ui.AccesoAparienciaTest,gt.edu.umg.finanzas.app.ui.TransicionAccesoTest'`; añadir `'-Pandroid.testInstrumentationRunnerArguments.perfilCapturas=estrecho'` para nombrar las capturas del perfil 360 × 640 dp/fuente 2.0 (la resolución y escala se configuran en el emulador). Los PNG se escriben en `/sdcard/Download/usabilidad-acceso-*.png`. Las pruebas de transición ajustan temporalmente Animator a 1/0 y restauran su valor anterior.
+
+En esta revisión se selecciona `$env:ANDROID_SERIAL='emulator-5554'` para Gradle y `adb -s emulator-5554` para las capturas, sin operar el teléfono conectado. Preparación de Gboard del emulador: `settings put secure show_ime_with_hard_keyboard 1` y `settings put secure stylus_handwriting_enabled 0`. Así se comprueba el IME inferior convencional, no la barra flotante de escritura a mano; la app no cambia esas preferencias. Las capturas se repitieron después de ajustar el borde sin foco en oscuro. En letra grande la espera inicial del test comprueba la existencia del campo y después se desplaza hasta él; no exige que toda la pantalla quepa sin desplazamiento.
+
+Resultados finales: apariencia/transición **4/4** en tamaño normal y **4/4** en 360 × 640 dp/fuente 2.0; regresión completa **92/92 sin red**, API 37. Capturas revisadas en ambos temas con teclado inferior y desplazamiento hasta los botones. Se restauran las preferencias del emulador. APK normal 0.4.2 compilado; apariencia, teclado y transiciones en el teléfono y API 24–25 siguen pendientes.
+
 ## Vistas y conexiones
 
 | Vista | Orden y controles | De dónde sale lo que muestra |

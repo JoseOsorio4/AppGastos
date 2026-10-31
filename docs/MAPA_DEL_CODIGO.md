@@ -456,3 +456,20 @@ Regresión final del incremento 8: **85/85 sin red en API 37** (76 previas + 9 A
 Pruebas: `ui/PersonalizacionActualizacionTest.kt` cubre «Principal» → personalizar y bienvenida, «Principal» → saltar sin PIN y reapertura, nombre personalizado → acceso directo. `AccesoTest.bienvenida_nombre_y_pin_opcional_en_pantalla` conserva el alta nueva → nombre requerido y bienvenida, sin botón para saltar la pregunta inicial. Los perfiles antiguos comparan usuario, saldo, movimientos y preferencias reales antes/después. `ui/AccesoTest.kt` sigue comprobando PIN; `AyudaInterfaz.esperarAccesoListo` comparte la espera de IO entre ambas clases. Recorridos dirigidos **12/12 en API 37**.
 
 Regresión de esta auditoría: **88/88 sin red en API 37**, paquete `.pruebas`; core **55/55** y compilación normal **0.4.1 (código 3)** correctos. No se instala el APK normal ni se modifica su base; la actualización en el teléfono y API 24–25 quedan pendientes.
+
+### Presentación del acceso (0.4.2)
+
+| Elemento | Dónde se dibuja | Conexión y responsabilidad |
+|---|---|---|
+| Marca e ilustración | `activity_acceso.xml / ilustracionAcceso`, `drawable/ilustracion_acceso_billetera.xml`, `ilustracion_acceso_seguridad.xml`; logo existente `mipmap/ic_launcher` | `AccesoActivity.pintar` elige billetera para nombre/saludo y escudo para PIN/ajustes. Vectores decorativos propios, sin importe ni datos de Room |
+| Título y explicación | `tituloAcceso`, `ideaAcceso`, `detalleAcceso`; textos/estilos en `values/acceso.xml` | Activity traduce el mismo paso del ViewModel a textos. No cambia `AccesoViewModel` ni sus decisiones |
+| Nombre y PIN | `campoNombre`, `campoPinActual`, `campoPinNuevo`, `campoPinConfirmacion` envuelven las entradas existentes con Material TextInputLayout | La Activity muestra el contenedor correspondiente; acciones y limpieza de PIN conservadas. `scrollAcceso` y `BarrasSistema` reservan teclado y permiten alcanzar acciones; PIN sigue fuera del estado guardado |
+| Acciones principales y secundarias | Mismos IDs `botonAcceso`, `botonContinuar`, `botonConfigurarPin`, `botonDesactivarPin`; estilos AccesoBoton/AccesoSecundario y selectores `color/acceso_*` | En saludo, `botonContinuar` amarillo; en nombre heredado conserva «Saltar y entrar sin PIN». Mismos listeners, ViewModel y almacén de 0.4.1 |
+| Tema y letra | `values/acceso.xml`, `values-night/acceso.xml` | Recursos exclusivos del acceso, tamaños sp y contenido desplazable. No afectan tarjetas, anillo ni otras pantallas |
+| Transición | `ui/acceso/TransicionAcceso.kt`, `acceso_duracion`, `acceso_desplazamiento` | `AccesoActivity` la llama solo al cambiar de paso y la detiene en onStop. AnimatorSet de alpha/translationY; respeta escala del sistema, sin esperas ni reglas de acceso |
+
+`ui/AccesoAparienciaTest.kt` recorre nombre → saludo → configurar → continuar sin PIN, en claro/oscuro; comprueba cursor sobre IME inferior, texto conservado, acciones alcanzables, ausencia de la vista de saldo y capturas. `ui/TransicionAccesoTest.kt` prueba interacción durante la transición, cancelación sin residuos y contenido inmediato con escala 0; restaura la escala al terminar. `AccesoTest` y `PersonalizacionActualizacionTest` conservan los recorridos funcionales de 0.4.1.
+
+Ejecutadas las cuatro pruebas nuevas en tamaño normal **4/4** y en **360 × 640 dp / fuente 2.0, 4/4**, siempre en API 37, con Gboard inferior y temas claro/oscuro. Capturas finales en `referencias/capturas/acceso-*.png` y comparaciones en INTERFAZ; PIN activo conserva protección de capturas. Pendiente de comprobar el nuevo diseño en el teléfono y API 24–25.
+
+Regresión final de 0.4.2 **92/92 sin red**, 0 fallos/errores/omitidas: AccesoTest 9, PersonalizacionActualizacionTest 3, AccesoAparienciaTest 2, TransicionAccesoTest 2 y las 76 pruebas previas. Core inicial **55/55** y APK normal **0.4.2 (código 4)** compilados; instalación normal, esquema, datos financieros y APIs sin cambios.

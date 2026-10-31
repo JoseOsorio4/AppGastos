@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="acceso_fondo">#102320</color>
+    <color name="acceso_titulo">#D9F6EA</color>
+    <color name="acceso_azul">#88D7FF</color>
+    <color name="acceso_onda_suave">#1C413A</color>
+    <color name="acceso_onda_azul">#164955</color>
+    <color name="acceso_campo">#192F2B</color>
+    <color name="acceso_borde">#7CA79B</color>
+</resources>
