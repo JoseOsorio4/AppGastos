@@ -3,6 +3,7 @@ package gt.edu.umg.finanzas.app.ui.formulario
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Bundle
 import android.widget.EditText
 import androidx.activity.SystemBarStyle
@@ -40,7 +41,7 @@ class FormularioActivity : AppCompatActivity() {
     companion object {
         private const val COLUMNAS_CATEGORIAS = 4
         // Ancho que necesita "Entretenimiento" con letra normal; con letra grande crece en proporción.
-        private const val ANCHO_CELDA_DP = 80f
+        private const val ANCHO_CELDA_DP = 104f
         private const val ETIQUETA_SELECTOR = "selectorFecha"
 
         /** Desde el botón Añadir de la barra inferior. */
@@ -70,9 +71,25 @@ class FormularioActivity : AppCompatActivity() {
         BarrasSistema.reservarEspacio(
             binding.root,
             arriba = binding.barraSuperior,
-            abajo = binding.contenidoFormulario,
+            // Reducir el viewport permite seguir el campo y su cursor sobre el IME.
+            abajo = binding.root,
             incluirTeclado = true,
         )
+        var altoAnterior = -1
+        var posicionAnterior = -1
+        binding.root.viewTreeObserver.addOnGlobalLayoutListener {
+            val alto = binding.contenidoFormulario.height
+            val posicion = binding.campoDescripcion.top
+            if (alto != altoAnterior || posicion != posicionAnterior) {
+                altoAnterior = alto
+                posicionAnterior = posicion
+                // Esperar todo el layout incluye el teclado y las categorías que llegan de Room.
+                mostrarCampoEnfocado()
+            }
+        }
+        binding.entradaDescripcion.setOnFocusChangeListener { vista, tieneFoco ->
+            if (tieneFoco) vista.post(::mostrarCampoEnfocado)
+        }
 
         binding.listaCategorias.layoutManager = GridLayoutManager(this, columnasCategorias())
         binding.listaCategorias.adapter = categorias
@@ -89,6 +106,12 @@ class FormularioActivity : AppCompatActivity() {
                 viewModel.estado.collect(::pintar)
             }
         }
+    }
+
+    private fun mostrarCampoEnfocado() {
+        val enfocado = currentFocus as? EditText ?: return
+        val campo = if (enfocado == binding.entradaDescripcion) binding.campoDescripcion else enfocado
+        campo.requestRectangleOnScreen(Rect(0, 0, campo.width, campo.height), true)
     }
 
     private fun conectarAcciones() {
@@ -162,11 +185,11 @@ class FormularioActivity : AppCompatActivity() {
         binding.botonGuardar.setText(if (estado.guardando) R.string.guardando else R.string.guardar)
     }
 
-    // Cuatro columnas con letra normal; con letra grande, tres o dos, para no partir un nombre a mitad de palabra.
+    // El ancho crece con la letra para que los nombres sigan completos.
     private fun columnasCategorias(): Int {
         val configuracion = resources.configuration
         val anchoCelda = ANCHO_CELDA_DP * configuracion.fontScale
-        return (configuracion.screenWidthDp / anchoCelda).toInt().coerceIn(2, COLUMNAS_CATEGORIAS)
+        return (configuracion.screenWidthDp / anchoCelda).toInt().coerceIn(1, COLUMNAS_CATEGORIAS)
     }
 
     // Reescribir un EditText con el mismo texto movería el cursor al inicio mientras el usuario escribe.

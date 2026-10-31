@@ -22,4 +22,6 @@
     <color name="color_ingreso">#7DD8A1</color>
     <color name="color_gasto">#FF9C93</color>
     <color name="color_error">#FFB4AB</color>
+    <color name="color_superficie_servicio">#202E28</color>
+    <color name="color_borde_servicio">#40574C</color>
 </resources>

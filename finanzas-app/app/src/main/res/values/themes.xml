@@ -16,6 +16,11 @@
         <item name="colorOutline">@color/color_borde</item>
         <item name="colorError">@color/color_error</item>
         <item name="android:windowBackground">@color/color_fondo</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.Finanzas.Metadatos</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.Finanzas.Detalle</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.Finanzas.Cuerpo</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.Finanzas.Control</item>
+        <item name="textInputOutlinedStyle">@style/Widget.Finanzas.Campo</item>
     </style>
 
     <!-- Chips de período sobre la cabecera verde. -->
@@ -49,12 +54,48 @@
         <item name="android:textColor">@color/color_sobre_cabecera</item>
         <item name="autoSizeTextType">uniform</item>
         <item name="autoSizeMinTextSize">9sp</item>
-        <item name="autoSizeMaxTextSize">12sp</item>
+        <item name="autoSizeMaxTextSize">14sp</item>
     </style>
 
-    <style name="TextAppearance.Finanzas.Etiqueta" parent="TextAppearance.Material3.LabelMedium">
+    <style name="TextAppearance.Finanzas.Etiqueta" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:textColor">@color/color_texto_secundario</item>
         <item name="android:textAllCaps">true</item>
         <item name="android:letterSpacing">0.08</item>
+    </style>
+    <style name="TextAppearance.Finanzas.Metadatos" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/color_texto_secundario</item>
+    </style>
+    <style name="TextAppearance.Finanzas.Detalle" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textSize">16sp</item>
+    </style>
+    <style name="TextAppearance.Finanzas.Cuerpo" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textSize">17sp</item>
+    </style>
+    <style name="TextAppearance.Finanzas.Control" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textSize">15sp</item>
+    </style>
+    <style name="TextAppearance.Finanzas.Categoria" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">13sp</item>
+    </style>
+    <style name="TextAppearance.Finanzas.ValorServicio" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textSize">@dimen/texto_valor_servicio</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/color_primario</item>
+    </style>
+    <style name="TextAppearance.Finanzas.Reflexion" parent="TextAppearance.Finanzas.Cuerpo">
+        <item name="android:textSize">18sp</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+    <style name="Widget.Finanzas.TarjetaServicio" parent="Widget.Finanzas.Tarjeta">
+        <item name="cardBackgroundColor">@color/color_superficie_servicio</item>
+        <item name="strokeColor">@color/color_borde_servicio</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardCornerRadius">20dp</item>
+    </style>
+    <style name="Widget.Finanzas.Campo" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="hintTextAppearance">@style/TextAppearance.Finanzas.Metadatos</item>
+        <item name="counterTextAppearance">@style/TextAppearance.Finanzas.Metadatos</item>
+        <item name="errorTextAppearance">@style/TextAppearance.Finanzas.Metadatos</item>
     </style>
 </resources>

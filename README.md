@@ -34,7 +34,33 @@ El core se instala **antes** de abrir la app, porque Gradle lo busca en `~/.m2`.
 
 ## Estado real
 
-Último incremento funcional verificado: **7 — clima y reflexión RV1909 con Dabar, caché y respaldo local**, ejecutado en API 37. La revisión final siguiente actualiza el estado de los pendientes; no añade funciones ni rediseña pantallas.
+Último incremento funcional verificado: **7 — clima y reflexión RV1909 con Dabar, caché y respaldo local**, ejecutado en API 37. La mejora de usabilidad siguiente conserva esas funciones, el core 0.3.0, Room v2 y las tres APIs.
+
+### Usabilidad, teclado y recursos visuales — 30/10/2026
+
+Se partió de `main`, HEAD `93540ad`, con únicamente `finanzas-app/app/img.png` sin seguimiento. Antes de editar: `mvn clean install` **55/55** y `-PdatosPrueba :app:installDebug` correctos (compilación e instalación de la línea base). No se cambian dependencias, versiones, modelos, reglas, repositorios ni datos de la instalación normal.
+
+| Objetivo | Implementación y resultado comprobado |
+|---|---|
+| Descripción visible con teclado | Reproducido en API 37 con Gboard: el inset como relleno del ScrollView dejaba el campo bajo el teclado. En pantalla estrecha, la nueva medición de categorías también desplazaba el campo. `FormularioActivity` reserva el inset en la raíz, `activity_formulario.xml` usa `NestedScrollView` y la Activity solicita mostrar el campo enfocado tras completar el layout cuando cambia su geometría. No se cierra el teclado ni se reescribe el texto por este ajuste |
+| Crear y editar, claro y oscuro | `TecladoFormularioTest`: **4/4** en 360 × 640 dp y fuente **2.0**, comprobando campo/cursor por encima del IME antes y durante escritura, texto conservado y desplazamiento hasta Guardar con teclado abierto |
+| Tipografía | `values/themes.xml`: metadatos 14sp, detalles 16sp, cuerpo 17sp, cita 18sp, controles 15sp y categorías 13sp. La cuadrícula ajusta de 1 a 4 columnas según ancho y letra; la barra inferior conserva reducción limitada para Operaciones. Resultado del período presenta etiqueta e importe en líneas separadas |
+| Tarjetas de servicios | Los tres `tarjeta_*.xml`, colores claros/oscuros y dimensiones comunes: iconos, valor destacado, metadatos, fondo sutil, borde de 1dp y elevación de 1dp. `TextoTasa.paraTarjeta` solo destaca la primera línea del texto existente; no calcula ni modifica tasas. Se conservan fuentes, fechas, atribución y **Reina Valera 1909** |
+| Detalle con letra grande | Reproducidos botones sin altura en detalle USD largo. `dialogo_detalle_movimiento.xml` ahora se desplaza y presenta acciones de ancho completo. `LegibilidadTest` **2/2** en 360 × 640 dp/fuente 2.0: Q 9,999,999.99 con etiqueta y detalle USD largo con acciones legibles y edición del monto original |
+| Tema | `opcionTema` es un icono claro/oscuro, área de **48 × 48dp**, descripción «Cambiar tema». Conserva el diálogo Sistema/Claro/Oscuro, ViewModel y persistencia |
+| Launcher | Recursos vectoriales propios de billetera/moneda, verde y amarillo: normal en `mipmap-anydpi`, adaptable en `mipmap-anydpi-v26` y capa monocroma en `v33`; `AndroidManifest.xml` declara icon y roundIcon. No procede de `img.png` |
+
+Las respuestas de Banguat/Open-Meteo/Dabar utilizadas para comparar las tarjetas son los **fixtures reales ya versionados**, cargados solo en la caché de `.pruebas`; no son nuevas peticiones en vivo ni datos incluidos como respaldo de producción. `ServiciosVisualesTest` verifica metadatos, traducción y botón accesible en ambos temas; también ejecutado con pantalla estrecha/fuente 2.0. [Comparaciones, capturas y alcance](docs/referencias/INTERFAZ.md#mejora-de-usabilidad-teclado-y-apariencia).
+
+**Pendientes conservados:** comprobar el teclado en tu teléfono y con su IME; API 24–25 (solo hay emulador API 37); launcher de otros fabricantes y visualización monocroma; **segundo detalle con tu propia interacción**, que sigue a tu cargo en el emulador. Las pruebas automatizadas del detalle no sustituyen esa comprobación. Las pruebas JUnit en vivo de Banguat y Dabar y la muerte real del proceso no se repitieron por este cambio visual.
+
+Para repetir los cuatro recorridos del teclado: `-PdatosPrueba :app:connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=gt.edu.umg.finanzas.app.ui.TecladoFormularioTest'`. La suite habitual incluye las nuevas pruebas; los nombres de captura aceptan `'-Pandroid.testInstrumentationRunnerArguments.perfilCapturas=estrecho'` para distinguir perfiles. Capturas del emulador en `/sdcard/Download/usabilidad-*.png`.
+
+Resultados finales: suite habitual **76/76**, 0 fallos/errores/omitidas, con wifi/datos desactivados en API 37 (69 anteriores + 7 nuevas). Recorridos visuales adicionales: sin tasa ni clima, error/reintento en claro/oscuro; carga real de Open-Meteo y recuperación a **21.0 °C · Despejado**, medición 30/10/2026 20:00, consulta 20:02; al cortar otra vez la red conserva ese dato y muestra error. Launcher adaptable revisado sobre fondos claro/oscuro en Pixel Launcher API 37; el recurso normal para API 24–25 y la capa monocroma solo están creados y compilados, pendientes de ejecución en esos modos.
+
+`:app:assembleDebug` final **sin -PdatosPrueba**: correcto. APK normal en `finanzas-app/app/build/outputs/apk/debug/app-debug.apk`, applicationId comprobado `gt.edu.umg.finanzas.app`, versión 0.3.0 (código 1), SHA-256 `D790F5FE6C72BA95DE366608604BA749371F42FE37AABA374ECB62F649010813`. No se instaló encima de la app normal. La base normal, su WAL e `img.png` conservan los hashes iniciales. Emulador restaurado a 1080 × 2400 px/densidad 420/fuente 1.0, wifi/datos y tema del sistema claro; ajustes de IME restaurados. `.pruebas` conserva su propia instalación para revisión.
+
+Al actualizar el teléfono, instalar el APK normal como actualización, **sin desinstalar la app existente**. Revisar Descripción al crear y editar (claro/oscuro, texto largo, teclado propio), desplazar hasta Guardar, letra grande, tarjetas y fuentes, las tres opciones de tema y el icono. Si el instalador rechaza la actualización, conservar los datos y comunicar el mensaje antes de cambiar la instalación.
 
 ### Revisión final de pendientes — 30/10/2026
 

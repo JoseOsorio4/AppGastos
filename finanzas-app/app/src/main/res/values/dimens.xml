@@ -1,0 +1,5 @@
+<resources>
+    <dimen name="texto_valor_servicio">22sp</dimen>
+    <dimen name="relleno_servicio">20dp</dimen>
+    <dimen name="separacion_servicio">12dp</dimen>
+</resources>

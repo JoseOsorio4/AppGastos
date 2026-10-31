@@ -39,7 +39,7 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/contenidoFormulario"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -274,5 +274,5 @@
                     android:text="@string/guardar" />
             </LinearLayout>
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>

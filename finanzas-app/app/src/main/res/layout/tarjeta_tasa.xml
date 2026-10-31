@@ -1,30 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Widget.Finanzas.Tarjeta"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.Finanzas.TarjetaServicio"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/relleno_servicio">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/tipo_cambio"
-            android:textAppearance="@style/TextAppearance.Finanzas.Etiqueta" />
+            android:textAppearance="@style/TextAppearance.Finanzas.Etiqueta"
+            android:drawablePadding="12dp"
+            android:gravity="center_vertical"
+            app:drawableStartCompat="@drawable/ic_tasa"
+            app:drawableTint="?attr/colorPrimary" />
         <TextView
             android:id="@+id/textoTasa"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/separacion_servicio"
             android:accessibilityLiveRegion="polite"
-            android:textAppearance="?attr/textAppearanceBodyMedium" />
+            android:textAppearance="@style/TextAppearance.Finanzas.Metadatos" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/botonConversor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/separacion_servicio"
             android:text="@string/convertir" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/botonReintentarTasa"

@@ -1,18 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Widget.Finanzas.Tarjeta"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.Finanzas.TarjetaServicio"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/relleno_servicio">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/reflexion_dia"
-            android:textAppearance="@style/TextAppearance.Finanzas.Etiqueta" />
+            android:textAppearance="@style/TextAppearance.Finanzas.Etiqueta"
+            android:drawablePadding="12dp"
+            android:gravity="center_vertical"
+            app:drawableStartCompat="@drawable/ic_reflexion"
+            app:drawableTint="?attr/colorPrimary" />
         <LinearLayout
             android:id="@+id/contenidoReflexion"
             android:layout_width="match_parent"
@@ -22,14 +27,14 @@
                 android:id="@+id/textoReflexion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="@dimen/separacion_servicio"
                 android:accessibilityLiveRegion="polite"
-                android:textAppearance="?attr/textAppearanceBodyLarge" />
+                android:textAppearance="@style/TextAppearance.Finanzas.Reflexion" />
             <TextView
                 android:id="@+id/textoFuenteReflexion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/separacion_servicio"
                 android:textAppearance="?attr/textAppearanceBodySmall" />
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/botonReintentarReflexion"
@@ -43,7 +48,7 @@
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/separacion_servicio"
             android:text="@string/ocultar_reflexion" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

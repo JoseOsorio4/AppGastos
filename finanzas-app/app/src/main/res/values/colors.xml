@@ -39,4 +39,7 @@
     <color name="color_categoria_regalo">#C2298A</color>
     <color name="color_categoria_otros_ingresos">#5B6B67</color>
     <color name="color_categoria_generica">#7A8784</color>
+    <color name="color_superficie_servicio">#F8FCF9</color>
+    <color name="color_borde_servicio">#D2E2D9</color>
+    <color name="color_icono_fondo">#1E463E</color>
 </resources>

@@ -81,7 +81,7 @@ class InicioActivity : AppCompatActivity() {
                 launch { viewModel.estadoReflexion.collect(::pintarReflexion) }
                 launch {
                     viewModel.estadoTasa.collect { tasa ->
-                        binding.tarjetaTasa.textoTasa.text = TextoTasa.estado(this@InicioActivity, tasa)
+                        binding.tarjetaTasa.textoTasa.text = TextoTasa.paraTarjeta(this@InicioActivity, tasa)
                         binding.tarjetaTasa.botonReintentarTasa.isEnabled = !tasa.cargando
                         binding.tarjetaTasa.botonConversor.isEnabled = tasa.dato != null
                     }

@@ -32,7 +32,8 @@
         android:importantForAccessibility="no"
         android:letterSpacing="0"
         android:maxLines="2"
-        android:textAppearance="?attr/textAppearanceLabelMedium"
-        android:textSize="11sp"
+        android:textAppearance="@style/TextAppearance.Finanzas.Categoria"
+        android:breakStrategy="simple"
+        android:hyphenationFrequency="none"
         tools:text="Alimentación" />
 </LinearLayout>

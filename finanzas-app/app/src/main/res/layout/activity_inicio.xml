@@ -35,13 +35,15 @@
                 android:textAppearance="?attr/textAppearanceLabelLarge"
                 android:textColor="@color/color_sobre_cabecera_secundario" />
 
-            <com.google.android.material.button.MaterialButton
+            <ImageButton
                 android:id="@+id/opcionTema"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/tema"
-                android:textColor="@color/color_sobre_cabecera" />
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/cambiar_tema"
+                android:src="@drawable/ic_tema"
+                app:tint="@color/color_sobre_cabecera" />
         </LinearLayout>
 
         <!-- Saldo histórico de la tabla Usuario: no depende del período elegido. -->
@@ -218,20 +220,20 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal"
+                    android:orientation="vertical"
                     android:padding="16dp">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:text="@string/resultado_periodo"
                         android:textAppearance="?attr/textAppearanceLabelLarge" />
 
                     <TextView
                         android:id="@+id/textoResultado"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:textAppearance="?attr/textAppearanceTitleMedium"
                         android:textStyle="bold"
                         tools:text="+Q 2,845.00" />

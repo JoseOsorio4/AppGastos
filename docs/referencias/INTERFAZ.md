@@ -105,6 +105,78 @@ La imagen contiene montos y símbolos de demostración. En Android, el saldo se 
 - Se vació **solo `.pruebas`** para un arranque sin caché ni red. La tarjeta presentó la misma referencia del día desde **Catálogo local · eBible · Reina-Valera 1909**, con error y reintento. Reiniciar sin red conservó ese respaldo y su fuente local. Al restaurar internet y pulsar Actualizar se [recuperó la fuente remota](capturas/inc7-dabar-recuperado.png) y desapareció el error; se observó «Preparando la reflexión…» durante la petición.
 - Las pruebas instrumentadas verificaron estos metadatos en claro/oscuro, respaldo, reintento sin red y recreación de Inicio. Las capturas se obtuvieron con acciones de ADB sobre `.pruebas`; no se tocaron datos normales. Wifi/datos quedaron restaurados. API 24–25, letra grande de toda la app y los pendientes anteriores conservan su estado.
 
+## Mejora de usabilidad: teclado y apariencia
+
+Revisión del 30/10/2026 sobre API 37, instalación `.pruebas`. Conserva la referencia Canva: cabeceras verdes, acento amarillo, destinos Inicio/Añadir/Operaciones y orden de las tarjetas **tasa → clima → reflexión**, bajo el contenido financiero. Core, Room, consultas y proveedores no cambian.
+
+### Descripción y teclado
+
+| Antes, escala normal | Crear claro, después | Editar oscuro, después |
+|---|---|---|
+| ![Teclado antes](capturas/usabilidad-teclado-antes.png) | ![Crear claro](capturas/usabilidad-teclado-crear-claro-normal.png) | ![Editar oscuro](capturas/usabilidad-teclado-editar-oscuro-normal.png) |
+
+El problema se reprodujo con Gboard: el inset inferior se añadía al relleno del ScrollView y Descripción quedaba bajo el IME. Con letra grande, abrir el teclado volvía a medir la cuadrícula y desplazaba el campo. El inset ahora reduce el área del contenedor desde la raíz; el XML usa `NestedScrollView` y la Activity pide mostrar el campo enfocado tras cambios de geometría del layout completo. El seguimiento no se repite al desplazar normalmente hasta Guardar. No se oculta el teclado, no se mueven campos de orden y no se modifica el borrador por esta corrección. Se conserva `adjustResize` en el manifiesto. [Guía Android de bordes e insets](https://developer.android.com/develop/ui/views/layout/edge-to-edge).
+
+| Crear claro, 360 × 640 dp / fuente 2.0 | Editar oscuro, mismo perfil | Guardar con teclado abierto |
+|---|---|---|
+| ![Crear estrecho](capturas/usabilidad-teclado-crear-claro-estrecho.png) | ![Editar estrecho](capturas/usabilidad-teclado-editar-oscuro-estrecho.png) | ![Guardar estrecho](capturas/usabilidad-guardar-estrecho.png) |
+
+`TecladoFormularioTest` comprueba los cuatro cruces crear/editar × claro/oscuro: teclado visible, campo y cursor por encima de su borde, escritura conservada y Guardar alcanzable sin cerrarlo. En un campo de una sola línea, una descripción larga se desplaza horizontalmente con el cursor; no se recorta su contenido guardado. Las capturas usan datos exclusivos de prueba. El teléfono del usuario no está conectado a este entorno: sigue pendiente comprobar su tamaño y teclado reales.
+
+### Lectura y tarjetas
+
+Los tamaños se concentran en `values/themes.xml`: metadatos 14sp, detalles 16sp, cuerpo 17sp, reflexión 18sp, controles 15sp, categorías 13sp y valor de servicio 22sp desde `dimens.xml`. El saldo conserva su jerarquía. La cuadrícula usa de 1 a 4 columnas según ancho/letra; con 360dp/fuente 2.0 usa una, para conservar los nombres completos. Resultado del período separa etiqueta e importe para que no compitan por ancho.
+
+Las tres tarjetas comparten relleno 20dp, separación principal 12dp, radio 20dp, borde 1dp y elevación 1dp. Fondos suaves distintos en claro/oscuro; iconos de banco, clima y libro. La tasa destaca solo la primera línea; fecha/fuente/consulta siguen en el texto existente. La reflexión conserva la traducción **Reina Valera 1909**, referencia y proveedor. Los botones, atribuciones y reintentos conservan sus conexiones.
+
+| Servicio claro | Servicio oscuro |
+|---|---|
+| ![Tasa clara](capturas/usabilidad-servicios-claro-tasa.png) | ![Tasa oscura](capturas/usabilidad-servicios-oscuro-tasa.png) |
+| ![Clima claro](capturas/usabilidad-servicios-claro-clima.png) | ![Clima oscuro](capturas/usabilidad-servicios-oscuro-clima.png) |
+| ![Reflexión clara](capturas/usabilidad-servicios-claro-reflexion.png) | ![Reflexión oscura](capturas/usabilidad-servicios-oscuro-reflexion.png) |
+
+Estas comparaciones cargan **las respuestas reales ya guardadas en assets de pruebas**: Banguat 7.64382 del 29/10/2026, Open-Meteo 18.3 °C del 30/10/2026 y Filipenses 4:13 de Dabar. El instante de consulta corresponde a la preparación de la caché de prueba; no representa una nueva consulta remota. No se distribuyen fixtures como datos de producción. `ServiciosVisualesTest` verifica metadatos, traducción y acceso de tema en ambos temas, también con fuente 2.0. Para textos mayores que el área visible, la prueba desplaza hasta su inicio y luego hasta los botones: pedir ver el 90 % de todo el texto mediante Espresso `scrollTo` era imposible y se corrigió la acción de prueba, sin reducir la letra.
+
+| Atribución del clima con fuente 2.0 | Metadatos y acciones de reflexión, fuente 2.0 |
+|---|---|
+| ![Clima estrecho](capturas/usabilidad-servicios-claro-clima-estrecho.png) | ![Reflexión estrecha](capturas/usabilidad-servicios-oscuro-reflexion-estrecho.png) |
+
+Con letra 2.0 las tarjetas requieren desplazamiento vertical; las capturas muestran partes sucesivas del contenido, no campos eliminados. Los períodos siguen desplazándose horizontalmente. Los importes largos pueden ocupar dos líneas en Ingresos/Gastos, conservando todos los dígitos.
+
+| Resultado con Q 9,999,999.99 | Detalle USD largo y acciones alcanzables |
+|---|---|
+| ![Importe grande](capturas/usabilidad-importe-grande-estrecho.png) | ![Detalle largo](capturas/usabilidad-detalle-largo-estrecho.png) |
+
+Se reprodujo que el detalle USD largo dejaba las acciones con altura cero. Solo su XML cambia: contenido desplazable y botones de ancho completo en dos filas, con las palabras completas. `LegibilidadTest` verifica llegar a ambos, su texto y abrir Editar con el monto original. No cambia la lógica del diálogo ni cierra el pendiente del segundo detalle con interacción propia del usuario.
+
+### Sin red, carga y reintento
+
+| Sin red, claro | Sin red, oscuro | Carga real, oscuro |
+|---|---|---|
+| ![Sin red claro](capturas/usabilidad-servicios-sin-red-claro.png) | ![Sin red oscuro](capturas/usabilidad-servicios-sin-red-oscuro.png) | ![Carga](capturas/usabilidad-servicios-carga-oscuro.png) |
+
+Recorrido por ADB sin caché inicial de servicios: tasa no disponible y Convertir deshabilitado, clima sin datos con error, reflexión local RV1909 disponible. Reintentar clima sin red conserva el estado. Al restablecer wifi/datos se capturó «Consultando el clima…», botón deshabilitado y atribución visible; respondió **21.0 °C · Despejado**, medición 30/10/2026 20:00, consulta 20:02. Esta sí fue una petición real de Open-Meteo desde Android, independiente de las capturas con fixtures. No se repitieron Banguat/Dabar en vivo.
+
+| Clima recuperado | Dato conservado con error al cortar otra vez la red |
+|---|---|
+| ![Recuperado](capturas/usabilidad-servicios-clima-recuperado.png) | ![Guardado y error](capturas/usabilidad-servicios-guardado-error.png) |
+
+La revisión final habitual pasó **76/76** con red desactivada; incluye independencia de las tarjetas, caché/respaldo, conversor, movimientos, persistencia de tema y rotación de diálogos. No equivale a ejecutar de nuevo la muerte real del proceso ni a probar un teléfono físico. Después se restauró la conectividad del emulador.
+
+### Tema y launcher
+
+`opcionTema` es ahora un icono claro/oscuro de contraste, blanco sobre la cabecera, con área 48 × 48dp, ripple y descripción «Cambiar tema». Conserva Sistema, Claro y Oscuro y su persistencia. `ServiciosVisualesTest` comprueba descripción y área táctil; las pruebas existentes comprueban las tres preferencias.
+
+Launcher propio vectorial: billetera blanca y moneda amarilla sobre verde, sin usar `app/img.png`. Normal para API 24–25; adaptable con fondo/frente desde API 26 y capa monocroma desde API 33. La figura se mantiene en la zona central del recurso de 108dp. [Reglas Android de iconos adaptables](https://developer.android.com/develop/ui/compose/system/icon_design_adaptive). No se añade biblioteca ni pantalla inicial.
+
+| Pixel Launcher claro | Pixel Launcher oscuro |
+|---|---|
+| ![Launcher claro](capturas/usabilidad-launcher-claro.png) | ![Launcher oscuro](capturas/usabilidad-launcher-oscuro.png) |
+
+La billetera corresponde a `.pruebas`; el Android genérico contiguo corresponde a la instalación normal anterior, que no se actualizó durante la revisión. El frente deja margen dentro de la máscara circular. El icono adaptable se ejecutó en API 37; el recurso normal API 24–25 y la capa monocroma se crearon y compilaron, pero no se ejecutaron en esos modos. Se restauró el tema del sistema claro.
+
+Pendientes: teclado y launcher en el teléfono del usuario, API 24–25 (sin imagen instalada), otros launchers y uso de la capa monocroma. La prueba del segundo detalle **con la propia interacción del usuario** sigue expresamente pendiente. Los resultados anteriores de ciclo de vida no se dan por repetidos por cambiar el XML.
+
 ## Vistas y conexiones
 
 | Vista | Orden y controles | De dónde sale lo que muestra |

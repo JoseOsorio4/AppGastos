@@ -95,4 +95,5 @@
     <string name="editar_movimiento">Editar movimiento</string>
     <string name="error_movimiento_no_encontrado">Este movimiento ya no existe.</string>
     <string name="error_cargar_movimiento">No se pudo cargar el movimiento.</string>
+    <string name="cambiar_tema">Cambiar tema</string>
 </resources>
